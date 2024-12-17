@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Mail, CreditCard } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { auth, googleProvider } from "@/lib/firebase";
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 
 interface LoginDialogProps {
   open: boolean;
@@ -13,17 +15,50 @@ interface LoginDialogProps {
 export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSignUp) {
-      setShowPayment(true);
-    } else {
-      // Handle login
+  const handleGoogleSignIn = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
       toast({
-        title: "Login functionality coming soon",
-        description: "Please try again later",
+        title: "Successfully signed in",
+        description: `Welcome ${user.email}!`,
+      });
+      
+      setShowPayment(true);
+    } catch (error: any) {
+      toast({
+        title: "Error signing in",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, email, password);
+        setShowPayment(true);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+        onOpenChange(false);
+      }
+      
+      toast({
+        title: isSignUp ? "Account created" : "Successfully signed in",
+        description: isSignUp ? "Please complete your subscription" : "Welcome back!",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
       });
     }
   };
@@ -80,7 +115,7 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
               : 'Log in to your pump.fun account'}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+        <form onSubmit={handleEmailSignIn} className="space-y-4 pt-4">
           {isSignUp && (
             <Input
               placeholder="Username"
@@ -90,31 +125,28 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
           <Input
             type="email"
             placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="bg-[#13141F]/50 border-[#2A2F3C] text-white"
           />
           <Input
             type="password"
             placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="bg-[#13141F]/50 border-[#2A2F3C] text-white"
           />
           <Button type="submit" className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]">
             {isSignUp ? 'Sign Up' : 'Log In'}
           </Button>
-          {isSignUp && (
-            <Button
-              type="button"
-              className="w-full bg-red-500 hover:bg-red-600"
-              onClick={() => {
-                toast({
-                  title: "Google Sign Up coming soon",
-                  description: "Please try again later",
-                });
-              }}
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              Sign up with Gmail
-            </Button>
-          )}
+          <Button
+            type="button"
+            className="w-full bg-red-500 hover:bg-red-600"
+            onClick={handleGoogleSignIn}
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            Sign {isSignUp ? 'up' : 'in'} with Gmail
+          </Button>
           <Button
             type="button"
             variant="ghost"
