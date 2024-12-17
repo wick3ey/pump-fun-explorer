@@ -19,7 +19,7 @@ export const TokenBoard = () => {
       const newToken = {
         symbol: data.symbol,
         name: data.name,
-        marketCap: calculateMarketCap(data.price, data.totalSupply),
+        marketCap: calculateMarketCap(data.price),
         age: "new",
         transactions: data.transactions || 0,
         holders: data.holders || 0,
