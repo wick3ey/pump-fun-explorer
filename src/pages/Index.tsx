@@ -1,8 +1,32 @@
 import { TokenBoard } from "@/components/TokenBoard";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { useState } from "react";
+import { useTokenStore } from "@/stores/tokenStore";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const { tokens } = useTokenStore();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    if (query.length >= 30) { // Likely a contract address
+      const foundToken = tokens.find(token => 
+        token.contractAddress.toLowerCase() === query.toLowerCase()
+      );
+
+      if (foundToken) {
+        navigate(`/token/${foundToken.symbol}`);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#13141F] text-white">
       <main className="container mx-auto px-4 pt-24 pb-12">
@@ -12,10 +36,12 @@ const Index = () => {
             <Input 
               placeholder="Search token by ticker or address..." 
               className="w-full pl-10 bg-[#1A1F2C] border-[#2A2F3C] text-white placeholder:text-gray-400"
+              value={searchQuery}
+              onChange={handleSearch}
             />
           </div>
         </div>
-        <TokenBoard />
+        <TokenBoard searchQuery={searchQuery} />
       </main>
     </div>
   );

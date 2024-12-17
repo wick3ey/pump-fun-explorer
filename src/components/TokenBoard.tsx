@@ -10,7 +10,11 @@ import { useTokenStore } from "@/stores/tokenStore";
 import { useToast } from "@/components/ui/use-toast";
 import { TokenData } from "@/types/token";
 
-export const TokenBoard = () => {
+interface TokenBoardProps {
+  searchQuery?: string;
+}
+
+export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedTimeframe, setSelectedTimeframe] = useState("1h");
@@ -76,6 +80,17 @@ export const TokenBoard = () => {
     setSortBy(sort);
   };
 
+  const getFilteredTokens = (tokens: TokenData[]) => {
+    return tokens.filter(token => {
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        token.symbol.toLowerCase().includes(searchLower) ||
+        token.name.toLowerCase().includes(searchLower) ||
+        token.contractAddress.toLowerCase().includes(searchLower)
+      );
+    });
+  };
+
   const getSortedTokens = (tokens: TokenData[]) => {
     return [...tokens].sort((a, b) => {
       switch (sortBy) {
@@ -93,10 +108,10 @@ export const TokenBoard = () => {
     });
   };
 
-  const sortedTokens = getSortedTokens(tokens);
+  const filteredTokens = getFilteredTokens(tokens);
+  const sortedTokens = getSortedTokens(filteredTokens);
 
   const calculatePercentageIncrease = (token: TokenData) => {
-    // This is a placeholder calculation - adjust based on your actual data
     return ((token.marketCap || 0) / 40000 * 100 - 100).toFixed(1);
   };
 
