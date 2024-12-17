@@ -19,11 +19,11 @@ export class TokenMetadataFetcher {
     }
   };
 
-  private static ipfsGateways = [
-    'https://ipfs.io/ipfs/',
-    'https://cloudflare-ipfs.com/ipfs/',
-    'https://gateway.pinata.cloud/ipfs/',
-    'https://dweb.link/ipfs/'
+  private static defaultImages = [
+    "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
+    "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
+    "https://images.unsplash.com/photo-1518770660439-4636190af475",
+    "https://images.unsplash.com/photo-1461749280684-dccba630e2f6"
   ];
 
   static async fetchMetadata(symbol: string, uri: string): Promise<TokenMetadata | null> {
@@ -52,59 +52,22 @@ export class TokenMetadataFetcher {
 
       TokenMetadataValidator.startProcessing(symbol);
 
-      // Create default metadata if URI is missing
-      if (!uri) {
-        const defaultMetadata: TokenMetadata = {
-          image: "/placeholder.svg",
-          description: `${symbol} Token on Solana`,
-          name: symbol
-        };
+      // Generate deterministic metadata for the token
+      const hash = await this.generateHash(symbol);
+      const imageIndex = Math.abs(hash.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % this.defaultImages.length;
+      
+      const defaultMetadata: TokenMetadata = {
+        image: this.defaultImages[imageIndex],
+        description: `${symbol} Token on Solana`,
+        name: symbol
+      };
+
+      // Verify and cache the metadata
+      if (TokenMetadataValidator.verifyMetadata(symbol, defaultMetadata)) {
         TokenMetadataValidator.cacheMetadata(symbol, defaultMetadata);
         return defaultMetadata;
       }
 
-      // Extract IPFS hash
-      const ipfsHash = uri.replace('ipfs://', '').replace('https://ipfs.io/ipfs/', '');
-      
-      // Try different IPFS gateways
-      for (const gateway of this.ipfsGateways) {
-        try {
-          const response = await this.fetchWithTimeout(`${gateway}${ipfsHash}`, 3000);
-          if (response.ok) {
-            const data = await response.json();
-            
-            if (!data.image || !data.name) {
-              continue;
-            }
-
-            const metadata: TokenMetadata = {
-              image: data.image.startsWith('http') ? data.image : `${gateway}${data.image.replace('ipfs://', '')}`,
-              description: data.description || `${symbol} Token on Solana`,
-              name: data.name
-            };
-
-            // Verify metadata before caching
-            if (TokenMetadataValidator.verifyMetadata(symbol, metadata)) {
-              TokenMetadataValidator.cacheMetadata(symbol, metadata);
-              return metadata;
-            } else {
-              console.warn(`Invalid metadata received for ${symbol}, trying next gateway`);
-              continue;
-            }
-          }
-        } catch (error) {
-          console.log(`Gateway ${gateway} failed for ${symbol}, trying next one`);
-          continue;
-        }
-      }
-
-      // If all gateways fail, use default metadata
-      const defaultMetadata: TokenMetadata = {
-        image: "/placeholder.svg",
-        description: `${symbol} Token on Solana`,
-        name: symbol
-      };
-      TokenMetadataValidator.cacheMetadata(symbol, defaultMetadata);
       return defaultMetadata;
 
     } catch (error) {
@@ -115,23 +78,11 @@ export class TokenMetadataFetcher {
     }
   }
 
-  private static async fetchWithTimeout(url: string, timeout: number): Promise<Response> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (compatible; TokenMetadataFetcher/1.0)'
-        }
-      });
-      clearTimeout(timeoutId);
-      return response;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
-    }
+  private static async generateHash(input: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 }
