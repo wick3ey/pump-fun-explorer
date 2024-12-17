@@ -4,7 +4,7 @@ import { TokenData } from '@/types/token';
 
 const TOTAL_SUPPLY = 1_000_000_000; // 1 billion tokens
 
-export const calculateMarketCap = (price: number, totalSupply: number = TOTAL_SUPPLY): number => {
+export const calculateMarketCap = (price: number): number => {
   return price * TOTAL_SUPPLY;
 };
 
