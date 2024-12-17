@@ -21,15 +21,62 @@ export class TokenMetadataFetcher {
 
   private static readonly MAX_RETRIES = 3;
   private static readonly RETRY_DELAY = 2000;
-  private static readonly FETCH_TIMEOUT = 5000;
-  private static processingQueue: string[] = [];
-  private static isProcessing = false;
+  private static readonly FETCH_TIMEOUT = 10000; // Increased timeout
+  private static readonly BACKUP_GATEWAYS = [
+    'https://ipfs.io/ipfs/',
+    'https://cloudflare-ipfs.com/ipfs/',
+    'https://gateway.pinata.cloud/ipfs/'
+  ];
 
-  static async fetchMetadata(symbol: string, uri?: string): Promise<TokenMetadata | null> {
+  private static async fetchWithTimeout(url: string, timeout: number, attempt: number): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, timeout);
+
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  private static async tryFetchFromGateways(cid: string, attempt: number): Promise<Response> {
+    const errors: Error[] = [];
+
+    for (const gateway of this.BACKUP_GATEWAYS) {
+      try {
+        const url = `${gateway}${cid}`;
+        console.log(`Attempting fetch from gateway ${gateway}, attempt ${attempt}`);
+        const response = await this.fetchWithTimeout(url, this.FETCH_TIMEOUT, attempt);
+        return response;
+      } catch (error) {
+        errors.push(error as Error);
+        console.warn(`Failed to fetch from ${gateway}:`, error);
+        continue;
+      }
+    }
+
+    throw new Error(`All gateways failed: ${errors.map(e => e.message).join(', ')}`);
+  }
+
+  static async fetchMetadata(symbol: string, uri?: string): Promise<TokenMetadata> {
     try {
       if (!symbol) {
         console.error('No symbol provided for metadata fetch');
-        return null;
+        return this.getDefaultMetadata(symbol);
       }
 
       // Layer 1: Check hardcoded metadata
@@ -45,34 +92,16 @@ export class TokenMetadataFetcher {
 
       // If no URI provided, return default metadata
       if (!uri) {
-        const defaultMetadata: TokenMetadata = {
-          image: "/placeholder.svg",
-          description: `${symbol} Token on Solana`,
-          name: symbol
-        };
-        TokenMetadataValidator.cacheMetadata(symbol, defaultMetadata);
-        return defaultMetadata;
+        return this.getDefaultMetadata(symbol);
       }
 
-      let retryCount = 0;
-      while (retryCount < this.MAX_RETRIES) {
+      // Extract CID if it's an IPFS URI
+      const cid = uri.replace('https://ipfs.io/ipfs/', '');
+      
+      let lastError: Error | null = null;
+      for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
         try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), this.FETCH_TIMEOUT);
-
-          const response = await fetch(uri, {
-            signal: controller.signal,
-            headers: {
-              'Accept': 'application/json'
-            }
-          });
-
-          clearTimeout(timeoutId);
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
+          const response = await this.tryFetchFromGateways(cid, attempt);
           const data = await response.json();
           
           const metadata: TokenMetadata = {
@@ -88,25 +117,31 @@ export class TokenMetadataFetcher {
 
           throw new Error('Metadata verification failed');
         } catch (error) {
-          retryCount++;
-          if (retryCount < this.MAX_RETRIES) {
-            await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY));
+          lastError = error as Error;
+          console.warn(`Attempt ${attempt} failed:`, error);
+          
+          if (attempt < this.MAX_RETRIES) {
+            await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY * attempt));
           }
         }
       }
 
-      // If all retries fail, return default metadata
-      const defaultMetadata: TokenMetadata = {
-        image: "/placeholder.svg",
-        description: `${symbol} Token on Solana`,
-        name: symbol
-      };
-      TokenMetadataValidator.cacheMetadata(symbol, defaultMetadata);
-      return defaultMetadata;
+      console.error('All fetch attempts failed:', lastError);
+      return this.getDefaultMetadata(symbol);
 
     } catch (error) {
       console.error('Error in fetchMetadata:', error);
-      return null;
+      return this.getDefaultMetadata(symbol);
     }
+  }
+
+  private static getDefaultMetadata(symbol: string): TokenMetadata {
+    const defaultMetadata: TokenMetadata = {
+      image: "/placeholder.svg",
+      description: `${symbol} Token on Solana`,
+      name: symbol
+    };
+    TokenMetadataValidator.cacheMetadata(symbol, defaultMetadata);
+    return defaultMetadata;
   }
 }
