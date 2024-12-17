@@ -15,30 +15,28 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
   const [isBuying, setIsBuying] = useState(true);
   const [amount, setAmount] = useState("");
 
-  // Mock wallet balance - in a real app, this would come from your wallet connection
-  const mockBalance = 10.5; // SOL
+  const mockBalance = 10.5;
 
   const handleMaxClick = () => {
     if (isBuying) {
       setAmount(mockBalance.toString());
     } else {
-      // Mock token balance - in a real app, this would come from your wallet
-      setAmount("1000000"); // Token amount
+      setAmount("1000000");
     }
   };
 
   return (
     <Card className="bg-[#1A1F2C] border-[#2A2F3C]">
-      <CardContent className="p-6 space-y-6">
+      <CardContent className="p-4 md:p-6 space-y-4 md:space-y-6">
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
           <div>
-            <h2 className="text-xl font-bold text-white">{symbol}</h2>
-            <p className="text-gray-400">Trading on Solana 🚀</p>
+            <h2 className="text-lg md:text-xl font-bold text-white">{symbol}</h2>
+            <p className="text-sm text-gray-400">Trading on Solana 🚀</p>
           </div>
         </div>
 
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2">
           <Button 
             className={`flex-1 ${isBuying ? 'bg-[#22c55e] hover:bg-[#16a34a] text-black' : 'bg-transparent border border-[#22c55e] text-[#22c55e]'}`}
             onClick={() => setIsBuying(true)}
@@ -75,11 +73,11 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1 bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
+              className="bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
               onClick={() => setAmount("0.1")}
             >
               0.1 SOL
@@ -87,7 +85,7 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1 bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
+              className="bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
               onClick={() => setAmount("0.5")}
             >
               0.5 SOL
@@ -95,7 +93,7 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="flex-1 bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
+              className="bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
               onClick={() => setAmount("1")}
             >
               1 SOL
@@ -143,7 +141,7 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
           </div>
         </div>
 
-        <div className="flex space-x-4 pt-4 border-t border-[#2A2F3C]">
+        <div className="flex justify-center space-x-4 pt-4 border-t border-[#2A2F3C]">
           <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
             <Twitter className="h-4 w-4" />
           </Button>
@@ -157,7 +155,7 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
 
         <div className="pt-4 border-t border-[#2A2F3C]">
           <p className="text-sm text-gray-400">Contract Address:</p>
-          <p className="text-sm font-mono text-white">{symbol}...vqs6</p>
+          <p className="text-sm font-mono text-white break-all">{symbol}...vqs6</p>
         </div>
       </CardContent>
     </Card>

@@ -51,21 +51,23 @@ const TokenProfile = () => {
         {token && <TokenHeader {...token} />}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <TokenChart symbol={symbol || ''} />
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-[#1A1F2C] rounded-lg p-4 md:p-0">
+              <TokenChart symbol={symbol || ''} />
+            </div>
+            <div className="md:hidden">
+              <TokenInfo symbol={symbol || ''} />
+            </div>
+            <ChatTransactionToggle />
           </div>
-          <div>
+          <div className="hidden md:block space-y-6">
             <TokenInfo symbol={symbol || ''} />
+            <VoiceChat tokenSymbol={symbol || ''} />
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <ChatTransactionToggle />
-          </div>
-          <div>
-            <VoiceChat tokenSymbol={symbol || ''} />
-          </div>
+        <div className="md:hidden mt-6">
+          <VoiceChat tokenSymbol={symbol || ''} />
         </div>
       </div>
     </div>

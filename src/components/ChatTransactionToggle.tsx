@@ -13,7 +13,7 @@ export const ChatTransactionToggle = () => {
         <Button
           variant={showChat ? "ghost" : "default"}
           onClick={() => setShowChat(false)}
-          className="flex-1"
+          className="flex-1 text-sm md:text-base"
         >
           <History className="mr-2 h-4 w-4" />
           Recent Transactions
@@ -21,7 +21,7 @@ export const ChatTransactionToggle = () => {
         <Button
           variant={showChat ? "default" : "ghost"}
           onClick={() => setShowChat(true)}
-          className="flex-1"
+          className="flex-1 text-sm md:text-base"
         >
           <MessageSquare className="mr-2 h-4 w-4" />
           Open Chat
