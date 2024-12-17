@@ -12,14 +12,23 @@ import { useTokenStore } from "@/stores/tokenStore";
 export const TokenBoard = () => {
   const navigate = useNavigate();
   const [selectedTimeframe, setSelectedTimeframe] = useState("1h");
-  const { tokens, addToken } = useTokenStore();
+  const { tokens, addToken, updateMarketCaps } = useTokenStore();
 
   useEffect(() => {
-    tokenWebSocket.onNewToken((data) => {
+    // Update market caps every 60 seconds
+    const intervalId = setInterval(() => {
+      updateMarketCaps();
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, [updateMarketCaps]);
+
+  useEffect(() => {
+    tokenWebSocket.onNewToken(async (data) => {
       const newToken = {
         symbol: data.symbol,
         name: data.name,
-        initialSolAmount: data.initialSolAmount || 1, // Default to 1 SOL
+        initialSolAmount: data.initialSolAmount || 1,
         age: "new",
         transactions: data.transactions || 0,
         holders: data.holders || 0,
@@ -29,7 +38,7 @@ export const TokenBoard = () => {
         marketCap: 0, // This will be calculated in the store
       };
 
-      addToken(newToken);
+      await addToken(newToken);
     });
 
     return () => {
