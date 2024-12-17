@@ -81,12 +81,12 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
   };
 
   const getFilteredTokens = (tokens: TokenData[]) => {
+    const searchLower = searchQuery.toLowerCase();
     return tokens.filter(token => {
-      const searchLower = searchQuery.toLowerCase();
       return (
         token.symbol.toLowerCase().includes(searchLower) ||
         token.name.toLowerCase().includes(searchLower) ||
-        token.contractAddress.toLowerCase().includes(searchLower)
+        (token.contractAddress && token.contractAddress.toLowerCase().includes(searchLower))
       );
     });
   };
