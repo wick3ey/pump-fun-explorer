@@ -22,7 +22,8 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
   const [sortBy, setSortBy] = useState("newest");
   const { tokens, addToken, updateMarketCaps, searchTokens } = useTokenStore();
   const [kingOfHill, setKingOfHill] = useState<TokenData | null>(null);
-  const updateInterval = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<NodeJS.Timeout>();
+  const prevTokensRef = useRef(tokens);
 
   const updateTokenAges = useCallback(() => {
     const updatedTokens = tokens.map(token => ({
@@ -30,25 +31,30 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
       age: calculateAge(token.timestamp)
     }));
     
-    if (JSON.stringify(updatedTokens) !== JSON.stringify(tokens)) {
+    // Only update if market caps have actually changed
+    if (JSON.stringify(updatedTokens) !== JSON.stringify(prevTokensRef.current)) {
+      prevTokensRef.current = updatedTokens;
       updateMarketCaps().catch(console.error);
     }
   }, [tokens, updateMarketCaps]);
 
   // Update token ages every minute
   useEffect(() => {
+    // Clear existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    // Initial update
     updateTokenAges();
     
-    // Clear existing interval before setting a new one
-    if (updateInterval.current) {
-      clearInterval(updateInterval.current);
-    }
+    // Set new interval
+    intervalRef.current = setInterval(updateTokenAges, 60000);
     
-    updateInterval.current = setInterval(updateTokenAges, 60000);
-    
+    // Cleanup
     return () => {
-      if (updateInterval.current) {
-        clearInterval(updateInterval.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
     };
   }, [updateTokenAges]);
@@ -60,7 +66,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
       .filter(token => (token.marketCap || 0) >= KING_THRESHOLD)
       .sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0))[0];
     
-    if (newKing && (!kingOfHill || newKing.marketCap > (kingOfHill.marketCap || 0))) {
+    if (newKing && (!kingOfHill || newKing.marketCap !== kingOfHill.marketCap)) {
       setKingOfHill(newKing);
     }
   }, [tokens]);
@@ -95,7 +101,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
     setSortBy(sort);
   };
 
-  const getSortedTokens = (tokens: TokenData[]) => {
+  const getSortedTokens = useCallback((tokens: TokenData[]) => {
     const filteredTokens = searchQuery ? searchTokens(searchQuery) : tokens;
 
     return filteredTokens.sort((a, b) => {
@@ -112,7 +118,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
           return 0;
       }
     });
-  };
+  }, [sortBy, searchQuery, searchTokens]);
 
   const calculatePercentageIncrease = (token: TokenData) => {
     const GRADUATION_THRESHOLD = 40000;
