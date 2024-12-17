@@ -9,6 +9,19 @@ import { useState } from "react";
 export const TokenInfo = () => {
   const [slippage, setSlippage] = useState(1);
   const [isBuying, setIsBuying] = useState(true);
+  const [amount, setAmount] = useState("");
+
+  // Mock wallet balance - in a real app, this would come from your wallet connection
+  const mockBalance = 10.5; // SOL
+
+  const handleMaxClick = () => {
+    if (isBuying) {
+      setAmount(mockBalance.toString());
+    } else {
+      // Mock token balance - in a real app, this would come from your wallet
+      setAmount("1000000"); // PENGU amount
+    }
+  };
 
   return (
     <Card className="bg-[#1A1F2C] border-[#2A2F3C]">
@@ -23,13 +36,13 @@ export const TokenInfo = () => {
 
         <div className="flex gap-2 mb-4">
           <Button 
-            className={`flex-1 ${isBuying ? 'bg-[#0FA0CE] hover:bg-[#0D8CB6] text-black' : 'bg-transparent border border-[#0FA0CE] text-[#0FA0CE]'}`}
+            className={`flex-1 ${isBuying ? 'bg-[#22c55e] hover:bg-[#16a34a] text-black' : 'bg-transparent border border-[#22c55e] text-[#22c55e]'}`}
             onClick={() => setIsBuying(true)}
           >
             Buy
           </Button>
           <Button 
-            className={`flex-1 ${!isBuying ? 'bg-[#ea384c] hover:bg-[#d32f41] text-white' : 'bg-transparent border border-[#ea384c] text-[#ea384c]'}`}
+            className={`flex-1 ${!isBuying ? 'bg-[#ea384c] hover:bg-[#dc2626] text-white' : 'bg-transparent border border-[#ea384c] text-[#ea384c]'}`}
             onClick={() => setIsBuying(false)}
           >
             Sell
@@ -38,11 +51,23 @@ export const TokenInfo = () => {
 
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-gray-400">Amount (SOL)</label>
+            <div className="flex justify-between items-center">
+              <label className="text-sm text-gray-400">Amount (SOL)</label>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleMaxClick}
+                className="text-xs bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
+              >
+                Max {isBuying ? `${mockBalance} SOL` : "1M PENGU"}
+              </Button>
+            </div>
             <Input 
               type="number" 
               placeholder="0.00" 
-              className="bg-[#1A1F2C] border-[#2A2F3C] text-white" 
+              className="bg-[#1A1F2C] border-[#2A2F3C] text-white mt-2" 
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
             />
           </div>
 
@@ -51,6 +76,7 @@ export const TokenInfo = () => {
               variant="outline" 
               size="sm" 
               className="flex-1 bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
+              onClick={() => setAmount("0.1")}
             >
               0.1 SOL
             </Button>
@@ -58,6 +84,7 @@ export const TokenInfo = () => {
               variant="outline" 
               size="sm" 
               className="flex-1 bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
+              onClick={() => setAmount("0.5")}
             >
               0.5 SOL
             </Button>
@@ -65,6 +92,7 @@ export const TokenInfo = () => {
               variant="outline" 
               size="sm" 
               className="flex-1 bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
+              onClick={() => setAmount("1")}
             >
               1 SOL
             </Button>
@@ -87,8 +115,8 @@ export const TokenInfo = () => {
           <Button 
             className={`w-full ${
               isBuying 
-                ? 'bg-[#0FA0CE] hover:bg-[#0D8CB6] text-black' 
-                : 'bg-[#ea384c] hover:bg-[#d32f41] text-white'
+                ? 'bg-[#22c55e] hover:bg-[#16a34a] text-black' 
+                : 'bg-[#ea384c] hover:bg-[#dc2626] text-white'
             }`}
           >
             {isBuying ? 'Place Buy Order' : 'Place Sell Order'}
