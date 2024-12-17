@@ -16,7 +16,6 @@ export const useTokenStore = create<TokenStore>()(
       tokens: [],
       addToken: async (token) => {
         try {
-          // Subscribe to token trades
           if (token.contractAddress) {
             tokenWebSocket.subscribeToTokenTrade(token.contractAddress);
           }
@@ -39,7 +38,8 @@ export const useTokenStore = create<TokenStore>()(
               ? { 
                   ...token, 
                   ...updates,
-                  marketCap: updates.marketCapUSD || token.marketCap 
+                  marketCap: updates.marketCapUSD || token.marketCap,
+                  lastPrice: updates.price || token.lastPrice
                 } 
               : token
           )

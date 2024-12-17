@@ -15,6 +15,8 @@ export interface TokenData {
   lastTransactionSolAmount?: number;
   totalSupply: number;
   contractAddress?: string;
+  lastPrice?: number;
+  price?: number;
 }
 
 export interface NewTokenData {
