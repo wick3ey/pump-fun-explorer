@@ -22,11 +22,9 @@ export const useTokenStore = create<TokenStore>()(
             return;
           }
 
-          // Strict metadata validation
-          if (!TokenMetadataValidator.validateTokenData(token)) {
-            console.error('Token validation failed:', token);
-            return;
-          }
+          // Less strict validation to allow more tokens through
+          const isValid = TokenMetadataValidator.validateTokenData(token);
+          console.log(`Token ${token.symbol} validation result:`, isValid);
 
           if (token.contractAddress) {
             tokenWebSocket.subscribeToTokenTrade(token.contractAddress);
@@ -36,29 +34,20 @@ export const useTokenStore = create<TokenStore>()(
             const existingTokenIndex = state.tokens.findIndex(t => t.symbol === token.symbol);
             
             if (existingTokenIndex !== -1) {
-              // Update existing token while preserving metadata
               const updatedTokens = [...state.tokens];
               updatedTokens[existingTokenIndex] = {
                 ...updatedTokens[existingTokenIndex],
                 ...token,
                 marketCap: token.marketCapUSD || token.marketCap || 0,
-                image: updatedTokens[existingTokenIndex].image, // Preserve existing image
               };
               return { tokens: updatedTokens };
             } else {
-              // Add new token only if it has valid metadata
-              const metadata = TokenMetadataValidator.getCachedMetadata(token.symbol);
-              if (!metadata) {
-                console.error('Missing metadata for new token:', token.symbol);
-                return state;
-              }
-              
               return {
                 tokens: [{
                   ...token,
                   marketCap: token.marketCapUSD || token.marketCap || 0,
-                  image: metadata.image,
-                  description: metadata.description,
+                  image: token.image || "/placeholder.svg",
+                  description: token.description || `${token.symbol} Token on Solana`,
                 }, ...state.tokens].slice(0, 100)
               };
             }
@@ -70,11 +59,6 @@ export const useTokenStore = create<TokenStore>()(
         }
       },
       updateToken: (symbol, updates) => {
-        if (!TokenMetadataValidator.validateTokenData({ ...updates, symbol })) {
-          console.error('Invalid token update:', updates);
-          return;
-        }
-
         set((state) => ({
           tokens: state.tokens.map((token) =>
             token.symbol === symbol 
@@ -90,14 +74,7 @@ export const useTokenStore = create<TokenStore>()(
       updateMarketCaps: async () => {
         try {
           const tokens = get().tokens;
-          const validatedTokens = tokens.filter(token => 
-            TokenMetadataValidator.validateTokenData(token)
-          );
-          
-          if (validatedTokens.length !== tokens.length) {
-            console.log('Some tokens failed validation during market cap update');
-          }
-          
+          const validatedTokens = tokens.filter(token => token.marketCap > 0);
           set({ tokens: validatedTokens });
         } catch (error) {
           console.error('Error updating market caps:', error);
