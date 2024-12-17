@@ -19,14 +19,11 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
     return num.toFixed(1);
   };
 
-  // Only show tokens with valid market cap
   const validTokens = tokens.filter(token => 
     token.marketCap && 
     token.marketCap > 0 && 
     !isNaN(token.marketCap)
   );
-
-  console.log('Valid tokens:', validTokens);
 
   return (
     <Card className="bg-[#1A1F2C] border-[#2A2F3C]">
@@ -82,8 +79,13 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
                     <span>{token.age}</span>
                   </div>
                 </td>
-                <td className="text-right p-4 text-white">{formatNumber(token.transactions)}</td>
-                <td className="text-right p-4 text-white">{formatNumber(token.holders)}</td>
+                <td className="text-right p-4">
+                  <span className="text-white">{formatNumber(token.transactionCounts?.['24h'] || 0)}</span>
+                  <div className="text-xs text-gray-400">24h</div>
+                </td>
+                <td className="text-right p-4">
+                  <span className="text-white">{formatNumber(token.holders)}</span>
+                </td>
                 <td className="text-right p-4">
                   <div className="flex items-center justify-end space-x-1">
                     <Zap className="h-4 w-4 text-orange-500" />
@@ -96,8 +98,8 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
                   </span>
                 </td>
                 <td className="text-right p-4">
-                  <span className={token.percentageChange >= 0 ? 'text-green-500' : 'text-red-500'}>
-                    {token.percentageChange >= 0 ? '+' : ''}{token.percentageChange}%
+                  <span className={Number(token.percentageChange) >= 0 ? 'text-green-500' : 'text-red-500'}>
+                    {Number(token.percentageChange) >= 0 ? '+' : ''}{token.percentageChange}%
                   </span>
                 </td>
               </tr>
