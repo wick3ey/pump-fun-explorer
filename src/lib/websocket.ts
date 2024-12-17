@@ -19,23 +19,6 @@ class TokenWebSocket {
   constructor() {
     this.connect();
     this.initializeSolPrice();
-    this.fetchExistingTokens(); // Add this line to fetch existing tokens
-  }
-
-  private async fetchExistingTokens() {
-    try {
-      const response = await fetch('https://pumpportal.fun/api/tokens');
-      const tokens = await response.json();
-      
-      // Process each token that has a market cap >= 15k
-      for (const token of tokens) {
-        if (token.marketCapUSD >= 15000) {
-          await this.processTokenData(token);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch existing tokens:', error);
-    }
   }
 
   private async initializeSolPrice() {
