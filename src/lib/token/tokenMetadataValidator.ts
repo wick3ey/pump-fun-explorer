@@ -9,6 +9,9 @@ export interface TokenMetadata {
 export class TokenMetadataValidator {
   private static metadataCache = new Map<string, TokenMetadata>();
   private static processingTokens = new Set<string>();
+  private static usedImages = new Map<string, string>(); // Track which images are used by which tokens
+  private static validationQueue = new Map<string, number>(); // Track validation attempts
+  private static MAX_VALIDATION_ATTEMPTS = 3;
 
   static isProcessing(symbol: string): boolean {
     return this.processingTokens.has(symbol);
@@ -16,6 +19,7 @@ export class TokenMetadataValidator {
 
   static startProcessing(symbol: string): void {
     this.processingTokens.add(symbol);
+    this.validationQueue.set(symbol, (this.validationQueue.get(symbol) || 0) + 1);
   }
 
   static finishProcessing(symbol: string): void {
@@ -27,33 +31,78 @@ export class TokenMetadataValidator {
   }
 
   static cacheMetadata(symbol: string, metadata: TokenMetadata): void {
+    // Validate that this image isn't already used by another token
+    const existingTokenWithImage = this.usedImages.get(metadata.image);
+    if (existingTokenWithImage && existingTokenWithImage !== symbol) {
+      console.error(`Metadata validation failed: Image ${metadata.image} is already used by token ${existingTokenWithImage}`);
+      return;
+    }
+
+    // Clear any previous image association for this token
+    const previousMetadata = this.metadataCache.get(symbol);
+    if (previousMetadata) {
+      this.usedImages.delete(previousMetadata.image);
+    }
+
     this.metadataCache.set(symbol, metadata);
+    this.usedImages.set(metadata.image, symbol);
+    console.log(`Successfully cached metadata for ${symbol}:`, metadata);
   }
 
   static validateTokenData(token: Partial<TokenData>): boolean {
     if (!token.symbol || !token.name || !token.marketCap || token.marketCap <= 0) {
-      console.log('Invalid token data:', token);
+      console.error('Invalid token data:', token);
+      return false;
+    }
+
+    // Check if we've exceeded max validation attempts
+    const attempts = this.validationQueue.get(token.symbol) || 0;
+    if (attempts > this.MAX_VALIDATION_ATTEMPTS) {
+      console.error(`Exceeded maximum validation attempts for token ${token.symbol}`);
       return false;
     }
 
     const metadata = this.getCachedMetadata(token.symbol);
     if (!metadata || !metadata.image || !metadata.description) {
-      console.log('Missing or invalid metadata for token:', token.symbol);
+      console.error('Missing or invalid metadata for token:', token.symbol);
       return false;
     }
 
-    // Verify that this metadata hasn't been used for another token
-    for (const [cachedSymbol, cachedMetadata] of this.metadataCache.entries()) {
-      if (cachedSymbol !== token.symbol && cachedMetadata.image === metadata.image) {
-        console.log('Duplicate metadata detected:', {
-          currentToken: token.symbol,
-          existingToken: cachedSymbol,
-          metadata
-        });
-        return false;
-      }
+    // Verify image URL format and ensure it's not a placeholder
+    if (!this.isValidImageUrl(metadata.image)) {
+      console.error('Invalid image URL format for token:', token.symbol);
+      return false;
+    }
+
+    // Verify that the image isn't used by another token
+    const tokenUsingImage = this.usedImages.get(metadata.image);
+    if (tokenUsingImage && tokenUsingImage !== token.symbol) {
+      console.error(`Image collision detected: ${metadata.image} is already used by ${tokenUsingImage}`);
+      return false;
     }
 
     return true;
+  }
+
+  private static isValidImageUrl(url: string): boolean {
+    try {
+      const urlObj = new URL(url);
+      return (
+        urlObj.protocol === 'https:' &&
+        !url.includes('placeholder') &&
+        (url.endsWith('.png') || url.endsWith('.jpg') || url.endsWith('.jpeg'))
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  static clearMetadataForToken(symbol: string): void {
+    const metadata = this.metadataCache.get(symbol);
+    if (metadata) {
+      this.usedImages.delete(metadata.image);
+      this.metadataCache.delete(symbol);
+    }
+    this.validationQueue.delete(symbol);
   }
 }
