@@ -90,6 +90,15 @@ export const TokenChart = () => {
                 tickLine={{ stroke: '#2A2F3C' }}
                 tickFormatter={(value) => value.toFixed(12)}
                 domain={['dataMin', 'dataMax']}
+                yAxisId="price"
+              />
+              <YAxis
+                stroke="#666"
+                orientation="left"
+                axisLine={{ stroke: '#2A2F3C' }}
+                tickLine={{ stroke: '#2A2F3C' }}
+                domain={['dataMin', 'dataMax']}
+                yAxisId="volume"
               />
               <Tooltip content={<CustomTooltip />} />
               
@@ -98,7 +107,7 @@ export const TokenChart = () => {
                 dataKey="volume"
                 fill="#3B82F6"
                 opacity={0.3}
-                yAxisId={1}
+                yAxisId="volume"
               />
 
               {/* Candlestick bodies */}
@@ -109,6 +118,7 @@ export const TokenChart = () => {
                 fillOpacity={1}
                 strokeWidth={1}
                 stackId="stack"
+                yAxisId="price"
               />
 
               {/* Candlestick wicks */}
@@ -118,6 +128,7 @@ export const TokenChart = () => {
                   { x: 100, y: 200 },
                   { x: 100, y: 400 }
                 ]}
+                yAxisId="price"
               />
 
               {/* Price area */}
@@ -127,6 +138,7 @@ export const TokenChart = () => {
                 stroke="#3B82F6"
                 fill="#3B82F6"
                 fillOpacity={0.1}
+                yAxisId="price"
               />
             </ComposedChart>
           </ResponsiveContainer>
