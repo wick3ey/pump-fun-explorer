@@ -19,12 +19,6 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
     return num.toFixed(1);
   };
 
-  const validTokens = tokens.filter(token => 
-    token.marketCap && 
-    token.marketCap > 0 && 
-    !isNaN(token.marketCap)
-  );
-
   return (
     <Card className="bg-[#1A1F2C] border-[#2A2F3C]">
       <div className="overflow-x-auto">
@@ -34,15 +28,12 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
               <th className="text-left p-4 text-gray-400">TOKEN</th>
               <th className="text-right p-4 text-gray-400">MARKETCAP</th>
               <th className="text-right p-4 text-gray-400">AGE</th>
-              <th className="text-right p-4 text-gray-400">TXNS</th>
-              <th className="text-right p-4 text-gray-400">HOLDERS</th>
               <th className="text-right p-4 text-gray-400">POWER</th>
               <th className="text-right p-4 text-gray-400">CHAIN</th>
-              <th className="text-right p-4 text-gray-400">CHANGE</th>
             </tr>
           </thead>
           <tbody>
-            {validTokens.map((token, index) => (
+            {tokens.map((token, index) => (
               <tr 
                 key={index}
                 onClick={() => onTokenClick(token.symbol)}
@@ -80,13 +71,6 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
                   </div>
                 </td>
                 <td className="text-right p-4">
-                  <span className="text-white">{formatNumber(token.transactionCounts?.['24h'] || 0)}</span>
-                  <div className="text-xs text-gray-400">24h</div>
-                </td>
-                <td className="text-right p-4">
-                  <span className="text-white">{formatNumber(token.holders)}</span>
-                </td>
-                <td className="text-right p-4">
                   <div className="flex items-center justify-end space-x-1">
                     <Zap className="h-4 w-4 text-orange-500" />
                     <span className="text-orange-500">{token.power}</span>
@@ -95,11 +79,6 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
                 <td className="text-right p-4">
                   <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-sm">
                     {token.chain}
-                  </span>
-                </td>
-                <td className="text-right p-4">
-                  <span className={Number(token.percentageChange) >= 0 ? 'text-green-500' : 'text-red-500'}>
-                    {Number(token.percentageChange) >= 0 ? '+' : ''}{token.percentageChange}%
                   </span>
                 </td>
               </tr>

@@ -1,12 +1,7 @@
 import { TokenMetadataFetcher } from "./token/tokenMetadataFetcher";
 import { TokenMetadataValidator } from "./token/tokenMetadataValidator";
 import { TokenData } from "@/types/token";
-import { 
-  calculateHolders, 
-  calculatePercentageChange, 
-  calculateAge,
-  generateTransactionCounts 
-} from "./token/tokenCalculations";
+import { calculateAge } from "./token/tokenCalculations";
 
 class TokenWebSocket {
   private ws: WebSocket | null = null;
@@ -50,18 +45,6 @@ class TokenWebSocket {
     try {
       const marketCapUSD = (parsedData.marketCapSol || 0) * (this.solPriceUSD || 0);
       
-      // Skip tokens with market cap < 15k USD
-      if (marketCapUSD < 15000) {
-        console.log(`Skipping token ${parsedData.symbol} - Market cap below 15k USD:`, marketCapUSD);
-        return;
-      }
-
-      console.log('Market Cap calculation:', {
-        marketCapSol: parsedData.marketCapSol,
-        solPriceUSD: this.solPriceUSD,
-        marketCapUSD
-      });
-
       const metadata = await TokenMetadataFetcher.fetchMetadata(
         parsedData.symbol,
         parsedData.uri
@@ -69,29 +52,19 @@ class TokenWebSocket {
 
       const timestamp = Date.now();
       const age = calculateAge(timestamp);
-      const holders = calculateHolders(parsedData.vTokensInBondingCurve);
-      const percentageChange = calculatePercentageChange(
-        parsedData.initialBuy,
-        parsedData.vSolInBondingCurve
-      );
-      const transactionCounts = generateTransactionCounts(parsedData.vSolInBondingCurve);
 
       const tokenData: TokenData = {
         ...parsedData,
         marketCapUSD,
         marketCap: marketCapUSD,
-        transactions: transactionCounts['24h'],
-        holders,
         power: parsedData.power || 0,
         chain: "SOL",
-        percentageChange,
         age,
         totalSupply: 1_000_000_000,
         image: metadata?.image || "/placeholder.svg",
         description: metadata?.description || `${parsedData.symbol} Token on Solana`,
         name: metadata?.name || parsedData.symbol,
-        timestamp,
-        transactionCounts
+        timestamp
       };
 
       if (this.onNewTokenCallback) {
@@ -110,7 +83,6 @@ class TokenWebSocket {
         console.log('Connected to PumpPortal WebSocket');
         this.reconnectAttempts = 0;
         this.subscribeToNewTokens();
-        this.subscribedTokens.forEach(token => this.subscribeToTokenTrade(token));
       };
 
       this.ws.onmessage = async (event) => {
@@ -149,17 +121,6 @@ class TokenWebSocket {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ method: "subscribeNewToken" }));
       console.log('Subscribed to new tokens');
-    }
-  }
-
-  public subscribeToTokenTrade(tokenAddress: string) {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify({
-        method: 'subscribeTokenTrade',
-        keys: [tokenAddress]
-      }));
-      this.subscribedTokens.add(tokenAddress);
-      console.log('Subscribed to token trades:', tokenAddress);
     }
   }
 

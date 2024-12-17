@@ -5,39 +5,22 @@ export interface TokenData {
   marketCapSol?: number;
   marketCapUSD?: number;
   age: string;
-  transactions: number;
-  holders: number;
   power: number;
   chain: string;
-  percentageChange: number;
   isSafeDegen?: boolean;
-  initialSolAmount?: number;
-  lastTransactionSolAmount?: number;
   totalSupply: number;
   contractAddress?: string;
-  lastPrice?: number;
-  price?: number;
   image?: string;
   description?: string;
   uri?: string;
-  timestamp: number; // Adding timestamp
-  transactionCounts?: {
-    '5m': number;
-    '1h': number;
-    '6h': number;
-    '24h': number;
-  };
+  timestamp: number;
 }
 
 export interface NewTokenData {
   symbol: string;
   name: string;
-  price: number;
   totalSupply: number;
-  transactions?: number;
-  holders?: number;
   power?: number;
-  initialSolAmount?: number;
   contractAddress?: string;
   marketCapSol?: number;
   marketCapUSD?: number;
