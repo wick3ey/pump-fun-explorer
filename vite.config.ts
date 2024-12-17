@@ -33,6 +33,8 @@ export default defineConfig(({ mode }) => ({
       https: 'https-browserify',
       os: 'os-browserify/browser',
       url: 'url',
+      buffer: 'buffer',
+      process: 'process/browser',
     },
   },
   optimizeDeps: {
@@ -46,5 +48,6 @@ export default defineConfig(({ mode }) => ({
   define: {
     'process.env': {},
     global: 'globalThis',
+    Buffer: ['buffer', 'Buffer'],
   },
 }));
