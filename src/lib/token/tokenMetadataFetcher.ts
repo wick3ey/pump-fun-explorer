@@ -24,21 +24,25 @@ export class TokenMetadataFetcher {
     }
   };
 
+  private static ipfsGateways = [
+    'https://ipfs.io/ipfs/',
+    'https://cloudflare-ipfs.com/ipfs/',
+    'https://gateway.pinata.cloud/ipfs/',
+    'https://dweb.link/ipfs/'
+  ];
+
   static async fetchMetadata(symbol: string, uri: string): Promise<TokenMetadata | null> {
     try {
-      // Check if we're already processing this token
       if (TokenMetadataValidator.isProcessing(symbol)) {
         console.log('Token already being processed:', symbol);
         return null;
       }
 
-      // Check hardcoded metadata first
       if (this.hardcodedMetadata[symbol]) {
         console.log('Using hardcoded metadata for:', symbol);
         return this.hardcodedMetadata[symbol];
       }
 
-      // Check cache
       const cachedMetadata = TokenMetadataValidator.getCachedMetadata(symbol);
       if (cachedMetadata) {
         console.log('Using cached metadata for:', symbol);
@@ -47,83 +51,62 @@ export class TokenMetadataFetcher {
 
       TokenMetadataValidator.startProcessing(symbol);
 
-      // Validate URI format
-      if (!uri || !uri.startsWith('https://')) {
-        throw new Error('Invalid URI format');
+      if (!uri) {
+        throw new Error('Missing URI');
       }
 
-      // Set up fetch with timeout and retry logic
-      const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 5000) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-
+      // Extract IPFS hash if it's an IPFS URI
+      const ipfsHash = uri.replace('ipfs://', '').replace('https://ipfs.io/ipfs/', '');
+      
+      // Try different IPFS gateways
+      for (const gateway of this.ipfsGateways) {
         try {
-          const response = await fetch(url, {
-            ...options,
-            signal: controller.signal
-          });
-          clearTimeout(timeoutId);
-          return response;
+          const response = await this.fetchWithTimeout(`${gateway}${ipfsHash}`, 5000);
+          if (response.ok) {
+            const data = await response.json();
+            
+            if (!data.image || !data.name) {
+              console.log('Missing required metadata fields for:', symbol);
+              continue;
+            }
+
+            // Convert IPFS image URL to use working gateway
+            const imageHash = data.image.replace('ipfs://', '').replace('https://ipfs.io/ipfs/', '');
+            const imageUrl = `${gateway}${imageHash}`;
+
+            // Verify image is accessible
+            try {
+              const imageResponse = await this.fetchWithTimeout(imageUrl, 3000);
+              if (!imageResponse.ok) {
+                console.log('Image not accessible, trying next gateway');
+                continue;
+              }
+            } catch (error) {
+              console.log('Image fetch failed, trying next gateway');
+              continue;
+            }
+
+            const metadata: TokenMetadata = {
+              image: imageUrl,
+              description: data.description || `${symbol} Token on Solana`,
+              name: data.name
+            };
+
+            if (TokenMetadataValidator.isImageUsed(imageUrl, symbol)) {
+              console.log('Image already used by another token:', symbol);
+              continue;
+            }
+
+            TokenMetadataValidator.cacheMetadata(symbol, metadata);
+            return metadata;
+          }
         } catch (error) {
-          clearTimeout(timeoutId);
-          throw error;
-        }
-      };
-
-      // Try fetching metadata with retries
-      let attempts = 0;
-      const maxAttempts = 3;
-      let lastError: Error | null = null;
-
-      while (attempts < maxAttempts) {
-        try {
-          const response = await fetchWithTimeout(uri, {}, 5000);
-          
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-          
-          if (!data.image || !data.name) {
-            throw new Error('Missing required metadata fields');
-          }
-
-          // Validate image URL
-          const imageUrl = data.image.startsWith('ipfs://')
-            ? `https://ipfs.io/ipfs/${data.image.slice(7)}`
-            : data.image;
-
-          // Verify image is accessible
-          const imageResponse = await fetchWithTimeout(imageUrl, { method: 'HEAD' }, 5000);
-          
-          if (!imageResponse.ok) {
-            throw new Error('Image URL is not accessible');
-          }
-
-          const metadata: TokenMetadata = {
-            image: imageUrl,
-            description: data.description || `${symbol} Token on Solana`,
-            name: data.name
-          };
-
-          // Verify this image isn't already used
-          if (TokenMetadataValidator.isImageUsed(imageUrl, symbol)) {
-            throw new Error('Image already used by another token');
-          }
-
-          TokenMetadataValidator.cacheMetadata(symbol, metadata);
-          return metadata;
-
-        } catch (error) {
-          lastError = error as Error;
-          attempts++;
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempts)); // Exponential backoff
+          console.log(`Gateway ${gateway} failed, trying next one`);
           continue;
         }
       }
 
-      throw lastError || new Error('Failed to fetch metadata after retries');
+      throw new Error('All IPFS gateways failed');
 
     } catch (error) {
       console.error('Error fetching metadata for:', symbol, error);
@@ -131,6 +114,26 @@ export class TokenMetadataFetcher {
       return null;
     } finally {
       TokenMetadataValidator.finishProcessing(symbol);
+    }
+  }
+
+  private static async fetchWithTimeout(url: string, timeout: number): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (compatible; TokenMetadataFetcher/1.0)'
+        }
+      });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
     }
   }
 }
