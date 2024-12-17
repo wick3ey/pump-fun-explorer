@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { TokenImageUpload, tokenImageSchema } from "./TokenImageUpload";
+import { Rocket } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Token name is required"),
@@ -38,56 +39,58 @@ export const TokenForm = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <TokenImageUpload form={form} />
 
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Token Name</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="e.g. Pepe Token" 
-                  {...field}
-                  className="bg-[#13141F] border-[#2A2F3C] text-white"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid gap-8 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-white">Token Name</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="e.g. Pepe Token" 
+                    {...field}
+                    className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="symbol"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Token Symbol</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="e.g. PEPE" 
-                  {...field}
-                  className="bg-[#13141F] border-[#2A2F3C] text-white"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="symbol"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-white">Token Symbol</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="e.g. PEPE" 
+                    {...field}
+                    className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel className="text-white">Description</FormLabel>
               <FormControl>
                 <Textarea 
                   placeholder="Describe your token..." 
                   {...field}
-                  className="bg-[#13141F] border-[#2A2F3C] text-white min-h-[100px]"
+                  className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500 min-h-[120px]"
                 />
               </FormControl>
               <FormMessage />
@@ -100,13 +103,13 @@ export const TokenForm = () => {
           name="supply"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Total Supply</FormLabel>
+              <FormLabel className="text-white">Total Supply</FormLabel>
               <FormControl>
                 <Input 
                   type="number" 
                   placeholder="e.g. 1000000" 
                   {...field}
-                  className="bg-[#13141F] border-[#2A2F3C] text-white"
+                  className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500"
                 />
               </FormControl>
               <FormMessage />
@@ -116,9 +119,9 @@ export const TokenForm = () => {
 
         <Button 
           type="submit" 
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+          className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-[1.02]"
         >
-          Create Token
+          <Rocket className="mr-2 h-5 w-5" /> Launch Token
         </Button>
       </form>
     </Form>

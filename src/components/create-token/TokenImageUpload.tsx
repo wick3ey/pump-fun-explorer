@@ -4,6 +4,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { UseFormReturn } from "react-hook-form";
+import { ImagePlus } from "lucide-react";
 import * as z from "zod";
 
 const MAX_FILE_SIZE = 5000000;
@@ -56,13 +57,19 @@ export const TokenImageUpload = ({ form }: TokenImageUploadProps) => {
 
   return (
     <>
-      <div className="flex justify-center mb-6">
-        <Avatar className="w-32 h-32">
-          <AvatarImage src={imagePreview || ""} alt="Token preview" />
-          <AvatarFallback className="bg-[#13141F] text-white">
-            500x500
-          </AvatarFallback>
-        </Avatar>
+      <div className="flex justify-center mb-8">
+        <div className="relative group">
+          <Avatar className="w-40 h-40 ring-4 ring-purple-500/20 transition-all duration-300 group-hover:ring-purple-500/40">
+            <AvatarImage src={imagePreview || ""} alt="Token preview" className="object-cover" />
+            <AvatarFallback className="bg-[#13141F]/80 text-white flex flex-col items-center justify-center">
+              <ImagePlus className="w-8 h-8 mb-2" />
+              <span className="text-sm">500x500</span>
+            </AvatarFallback>
+          </Avatar>
+          <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <span className="text-white text-sm">Change Image</span>
+          </div>
+        </div>
       </div>
 
       <FormField
@@ -70,7 +77,7 @@ export const TokenImageUpload = ({ form }: TokenImageUploadProps) => {
         name="image"
         render={({ field: { onChange, value, ...field } }) => (
           <FormItem>
-            <FormLabel>Token Image (500x500)</FormLabel>
+            <FormLabel className="text-white">Token Image (500x500)</FormLabel>
             <FormControl>
               <Input
                 type="file"
@@ -79,7 +86,7 @@ export const TokenImageUpload = ({ form }: TokenImageUploadProps) => {
                   onChange(e.target.files);
                   handleImageChange(e);
                 }}
-                className="bg-[#13141F] border-[#2A2F3C] text-white file:text-white file:bg-[#2A2F3C] file:border-0 file:rounded-md cursor-pointer"
+                className="bg-[#13141F]/50 border-[#2A2F3C] text-white file:text-white file:bg-[#2A2F3C] file:border-0 file:rounded-md cursor-pointer hover:bg-[#13141F]/70 transition-colors file:mr-4"
                 {...field}
               />
             </FormControl>

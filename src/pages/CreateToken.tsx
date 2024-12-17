@@ -8,7 +8,7 @@ const CreateToken = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#13141F] text-white pt-24 pb-12">
+    <div className="min-h-screen bg-gradient-to-b from-[#13141F] to-[#1A1F2C] text-white pt-24 pb-12">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <Button
@@ -19,7 +19,9 @@ const CreateToken = () => {
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
-          <h1 className="text-3xl font-bold text-center flex-1">Create Your Token</h1>
+          <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-purple-400 to-pink-400 text-transparent bg-clip-text">
+            Create Your Token
+          </h1>
           <Button
             variant="ghost"
             size="icon"
@@ -30,9 +32,9 @@ const CreateToken = () => {
           </Button>
         </div>
         
-        <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
-          <Card className="bg-[#1A1F2C] border-[#2A2F3C]">
-            <CardContent className="p-6">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <Card className="bg-[#1A1F2C]/50 border-[#2A2F3C] backdrop-blur-sm">
+            <CardContent className="p-8">
               <TokenForm />
             </CardContent>
           </Card>
