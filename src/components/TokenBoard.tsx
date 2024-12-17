@@ -16,6 +16,7 @@ export const TokenBoard = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState("1h");
   const [sortBy, setSortBy] = useState("newest");
   const { tokens, addToken, updateMarketCaps } = useTokenStore();
+  const [kingOfHill, setKingOfHill] = useState<TokenData | null>(null);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -31,6 +32,18 @@ export const TokenBoard = () => {
 
     return () => clearInterval(intervalId);
   }, [updateMarketCaps, toast]);
+
+  useEffect(() => {
+    // Find the token with highest marketcap above 40k
+    const newKing = tokens
+      .filter(token => token.marketCap >= 40000)
+      .sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0))[0];
+    
+    if (newKing && (!kingOfHill || newKing.marketCap > (kingOfHill.marketCap || 0))) {
+      setKingOfHill(newKing);
+      console.log('New King of the Hill:', newKing);
+    }
+  }, [tokens]);
 
   useEffect(() => {
     tokenWebSocket.onNewToken(async (data) => {
@@ -82,16 +95,23 @@ export const TokenBoard = () => {
 
   const sortedTokens = getSortedTokens(tokens);
 
+  const calculatePercentageIncrease = (token: TokenData) => {
+    // This is a placeholder calculation - adjust based on your actual data
+    return ((token.marketCap || 0) / 40000 * 100 - 100).toFixed(1);
+  };
+
   return (
     <div className="space-y-6">
-      <KingOfTheHill 
-        symbol="PENGU"
-        chain="SOL"
-        percentageIncrease={12.5}
-        age="14h"
-        marketCap={75000}
-        bondingCurveTarget={98000}
-      />
+      {kingOfHill && (
+        <KingOfTheHill 
+          symbol={kingOfHill.symbol}
+          chain={kingOfHill.chain}
+          percentageIncrease={Number(calculatePercentageIncrease(kingOfHill))}
+          age={kingOfHill.age}
+          marketCap={kingOfHill.marketCap || 0}
+          bondingCurveTarget={98000}
+        />
+      )}
 
       <TrendingFilter 
         selectedTimeframe={selectedTimeframe}

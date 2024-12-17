@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
-import { Zap, Timer, Lock } from "lucide-react";
+import { Zap, Timer, Lock, Copy } from "lucide-react";
 import { TokenData } from "@/types/token";
+import { useToast } from "@/components/ui/use-toast";
 
 interface TokenListProps {
   tokens: TokenData[];
@@ -8,6 +9,8 @@ interface TokenListProps {
 }
 
 export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
+  const { toast } = useToast();
+  
   const formatNumber = (num: number | null | undefined) => {
     if (num === null || num === undefined) return '0';
     
@@ -17,6 +20,15 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
       return (num / 1000).toFixed(1) + 'K';
     }
     return num.toFixed(1);
+  };
+
+  const handleCopyAddress = (e: React.MouseEvent, address: string) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(address);
+    toast({
+      title: "Address Copied",
+      description: "Contract address has been copied to clipboard",
+    });
   };
 
   return (
@@ -30,6 +42,7 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
               <th className="text-right p-4 text-gray-400">AGE</th>
               <th className="text-right p-4 text-gray-400">POWER</th>
               <th className="text-right p-4 text-gray-400">CHAIN</th>
+              <th className="text-right p-4 text-gray-400">CONTRACT</th>
             </tr>
           </thead>
           <tbody>
@@ -80,6 +93,19 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
                   <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-sm">
                     {token.chain}
                   </span>
+                </td>
+                <td className="text-right p-4">
+                  {token.contractAddress && (
+                    <button
+                      onClick={(e) => handleCopyAddress(e, token.contractAddress!)}
+                      className="flex items-center justify-end space-x-1 text-gray-400 hover:text-white transition-colors w-full"
+                    >
+                      <span className="truncate max-w-[100px]">
+                        {token.contractAddress.slice(0, 6)}...{token.contractAddress.slice(-4)}
+                      </span>
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
