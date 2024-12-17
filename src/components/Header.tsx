@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { BarChart3, Wallet, Menu } from "lucide-react";
 import { DegenModeToggle } from "./DegenModeToggle";
 import { useState } from "react";
@@ -9,6 +9,11 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 export const Header = () => {
   const [isDegenMode, setIsDegenMode] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const location = useLocation();
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#13141F] border-b border-gray-800 shadow-lg">
@@ -20,13 +25,19 @@ export const Header = () => {
             </Link>
             <div className="hidden md:flex items-center space-x-4">
               <Link to="/">
-                <Button variant="ghost" className="text-gray-400 hover:text-white">
+                <Button 
+                  variant="ghost" 
+                  className={`text-gray-400 hover:text-white ${isActive('/') ? 'bg-[#2A2F3C] text-white' : ''}`}
+                >
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Market Overview
                 </Button>
               </Link>
               <Link to="/memescope">
-                <Button variant="ghost" className="text-gray-400 hover:text-white">
+                <Button 
+                  variant="ghost" 
+                  className={`text-gray-400 hover:text-white ${isActive('/memescope') ? 'bg-[#2A2F3C] text-white' : ''}`}
+                >
                   Memescope
                 </Button>
               </Link>
@@ -34,21 +45,23 @@ export const Header = () => {
           </div>
           
           <div className="hidden md:flex items-center space-x-4">
-            <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
             <Link to="/create">
-              <Button className="bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white">
+              <Button 
+                className={`bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white ${isActive('/create') ? 'bg-[#2A2F3C]' : ''}`}
+              >
                 Create Token
               </Button>
             </Link>
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Wallet className="h-4 w-4 mr-2" />
+              Connect Wallet
+            </Button>
+            <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
             <Button 
               onClick={() => setShowLoginDialog(true)}
               className="bg-[#9b87f5] hover:bg-[#8b77e5] text-white"
             >
               Log in
-            </Button>
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-              <Wallet className="h-4 w-4 mr-2" />
-              Connect Wallet
             </Button>
           </div>
 
@@ -71,33 +84,47 @@ export const Header = () => {
                 <div className="flex flex-col h-full p-6">
                   <div className="space-y-6">
                     <Link to="/" className="block">
-                      <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white text-lg py-4">
+                      <Button 
+                        variant="ghost" 
+                        className={`w-full justify-start text-gray-400 hover:text-white text-lg py-4 ${
+                          isActive('/') ? 'bg-[#2A2F3C] text-white' : ''
+                        }`}
+                      >
                         <BarChart3 className="h-5 w-5 mr-3" />
                         Market Overview
                       </Button>
                     </Link>
                     <Link to="/memescope" className="block">
-                      <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white text-lg py-4">
+                      <Button 
+                        variant="ghost" 
+                        className={`w-full justify-start text-gray-400 hover:text-white text-lg py-4 ${
+                          isActive('/memescope') ? 'bg-[#2A2F3C] text-white' : ''
+                        }`}
+                      >
                         Memescope
                       </Button>
                     </Link>
                     <Link to="/create" className="block">
-                      <Button className="w-full bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white text-lg py-4">
+                      <Button 
+                        className={`w-full bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white text-lg py-4 ${
+                          isActive('/create') ? 'bg-[#2A2F3C]' : ''
+                        }`}
+                      >
                         Create Token
                       </Button>
                     </Link>
                   </div>
                   <div className="mt-auto space-y-6">
+                    <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white text-lg py-4">
+                      <Wallet className="h-5 w-5 mr-3" />
+                      Connect Wallet
+                    </Button>
                     <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
                     <Button 
                       onClick={() => setShowLoginDialog(true)}
                       className="w-full bg-[#9b87f5] hover:bg-[#8b77e5] text-white text-lg py-4"
                     >
                       Log in
-                    </Button>
-                    <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white text-lg py-4">
-                      <Wallet className="h-5 w-5 mr-3" />
-                      Connect Wallet
                     </Button>
                   </div>
                 </div>
