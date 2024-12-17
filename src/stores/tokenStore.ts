@@ -4,6 +4,8 @@ import { TokenData } from '@/types/token';
 import { tokenWebSocket } from '@/lib/websocket';
 import { TokenMetadataValidator } from '@/lib/token/tokenMetadataValidator';
 
+const MINIMUM_MARKET_CAP = 15000; // 15k USD minimum market cap
+
 interface TokenStore {
   tokens: TokenData[];
   addToken: (token: TokenData) => Promise<void>;
@@ -17,8 +19,9 @@ export const useTokenStore = create<TokenStore>()(
       tokens: [],
       addToken: async (token) => {
         try {
-          if (!token.marketCap || token.marketCap <= 0) {
-            console.log('Skipping token with invalid market cap:', token);
+          // Only process tokens with market cap >= 15k USD
+          if (!token.marketCap || token.marketCap < MINIMUM_MARKET_CAP) {
+            console.log(`Skipping token ${token.symbol} - Market cap below 15k USD:`, token.marketCap);
             return;
           }
 
@@ -76,13 +79,15 @@ export const useTokenStore = create<TokenStore>()(
                   marketCap: updates.marketCapUSD || updates.marketCap || token.marketCap
                 } 
               : token
-          )
+          ).filter(token => token.marketCap >= MINIMUM_MARKET_CAP) // Filter out tokens that fall below 15k
         }));
       },
       updateMarketCaps: async () => {
         try {
           const tokens = get().tokens;
-          const validatedTokens = tokens.filter(token => token.marketCap > 0);
+          const validatedTokens = tokens.filter(token => 
+            token.marketCap >= MINIMUM_MARKET_CAP // Only keep tokens with market cap >= 15k
+          );
           set({ tokens: validatedTokens });
         } catch (error) {
           console.error('Error updating market caps:', error);
