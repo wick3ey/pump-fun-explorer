@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { BarChart3, Flame, Wallet } from "lucide-react";
+import { BarChart3, Wallet } from "lucide-react";
 import { DegenModeToggle } from "./DegenModeToggle";
 import { useState } from "react";
+import { LoginDialog } from "./LoginDialog";
 
 export const Header = () => {
   const [isDegenMode, setIsDegenMode] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#13141F] border-b border-gray-800">
@@ -34,6 +36,12 @@ export const Header = () => {
                 Create Token
               </Button>
             </Link>
+            <Button 
+              onClick={() => setShowLoginDialog(true)}
+              className="bg-[#9b87f5] hover:bg-[#8b77e5] text-white"
+            >
+              Log in
+            </Button>
             <Button className="bg-purple-600 hover:bg-purple-700 text-white">
               <Wallet className="h-4 w-4 mr-2" />
               Connect Wallet
@@ -41,6 +49,7 @@ export const Header = () => {
           </div>
         </div>
       </div>
+      <LoginDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} />
     </header>
   );
 };
