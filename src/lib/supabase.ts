@@ -7,7 +7,20 @@ if (!supabaseUrl || !supabaseKey) {
   console.warn('Missing Supabase credentials. Please check your environment variables.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+});
+
+// Verify connection
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Supabase auth event:', event);
+  if (event === 'SIGNED_IN') {
+    console.log('User signed in:', session?.user?.id);
+  }
+});
 
 // Auth helper functions
 export const signInWithGoogle = async () => {
