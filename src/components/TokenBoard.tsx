@@ -20,18 +20,17 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
   const { toast } = useToast();
   const [selectedTimeframe, setSelectedTimeframe] = useState("1h");
   const [sortBy, setSortBy] = useState("newest");
-  const { tokens, addToken, updateMarketCaps, searchTokens, filterTokensByMarketCap } = useTokenStore();
+  const { tokens, addToken, updateMarketCaps, searchTokens } = useTokenStore();
   const [kingOfHill, setKingOfHill] = useState<TokenData | null>(null);
 
-  // Uppdatera tokens var 60:e sekund för att hålla age uppdaterad
+  // Update token ages every minute
   useEffect(() => {
-    const intervalId = setInterval(() => {
+    const updateTokenAges = () => {
       const updatedTokens = tokens.map(token => ({
         ...token,
         age: calculateAge(token.timestamp)
       }));
       
-      // Uppdatera market caps och ages
       updateMarketCaps().catch((error) => {
         console.error('Error updating market caps:', error);
         toast({
@@ -40,15 +39,17 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
           variant: "destructive",
         });
       });
-    }, 60000);
+    };
 
+    const intervalId = setInterval(updateTokenAges, 60000);
     return () => clearInterval(intervalId);
   }, [updateMarketCaps, toast, tokens]);
 
+  // Update King of the Hill
   useEffect(() => {
-    // Find the token with highest marketcap above 40k
+    const KING_THRESHOLD = 40000;
     const newKing = tokens
-      .filter(token => token.marketCap >= 40000)
+      .filter(token => (token.marketCap || 0) >= KING_THRESHOLD)
       .sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0))[0];
     
     if (newKing && (!kingOfHill || newKing.marketCap > (kingOfHill.marketCap || 0))) {
@@ -57,6 +58,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
     }
   }, [tokens]);
 
+  // WebSocket token updates
   useEffect(() => {
     tokenWebSocket.onNewToken(async (data) => {
       try {
@@ -64,7 +66,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
         await addToken({
           ...data,
           timestamp: Date.now(),
-          age: '1m' // Sätt initial ålder till 1 minut
+          age: '1m' // Initial age
         });
       } catch (error) {
         console.error('Error processing new token:', error);
@@ -90,7 +92,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
   };
 
   const getSortedTokens = (tokens: TokenData[]) => {
-    let filteredTokens = searchQuery ? searchTokens(searchQuery) : tokens;
+    const filteredTokens = searchQuery ? searchTokens(searchQuery) : tokens;
 
     return filteredTokens.sort((a, b) => {
       switch (sortBy) {
@@ -108,10 +110,9 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
     });
   };
 
-  const sortedTokens = getSortedTokens(tokens);
-
   const calculatePercentageIncrease = (token: TokenData) => {
-    return ((token.marketCap || 0) / 40000 * 100 - 100).toFixed(1);
+    const GRADUATION_THRESHOLD = 40000;
+    return ((token.marketCap || 0) / GRADUATION_THRESHOLD * 100 - 100).toFixed(1);
   };
 
   return (
@@ -136,7 +137,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
       />
 
       <TokenList 
-        tokens={sortedTokens}
+        tokens={getSortedTokens(tokens)}
         onTokenClick={(symbol) => navigate(`/token/${symbol}`)}
       />
     </div>
