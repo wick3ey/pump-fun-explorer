@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TokenChart } from "@/components/TokenChart";
 import { TokenInfo } from "@/components/TokenInfo";
 import { TransactionHistory } from "@/components/TransactionHistory";
-import { TrendingTokensBanner } from "@/components/TrendingTokensBanner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -23,8 +22,6 @@ const TokenProfile = () => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-
-        <TrendingTokensBanner />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
