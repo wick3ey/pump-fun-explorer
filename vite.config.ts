@@ -26,9 +26,25 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      stream: 'stream-browserify',
+      crypto: 'crypto-browserify',
+      assert: 'assert',
+      http: 'stream-http',
+      https: 'https-browserify',
+      os: 'os-browserify/browser',
+      url: 'url',
     },
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
+    esbuildOptions: {
+      define: {
+        global: 'globalThis'
+      },
+    },
+  },
+  define: {
+    'process.env': {},
+    global: 'globalThis',
   },
 }));
