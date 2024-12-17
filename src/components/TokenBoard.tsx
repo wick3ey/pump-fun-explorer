@@ -81,13 +81,15 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
   };
 
   const getFilteredTokens = (tokens: TokenData[]) => {
+    if (!searchQuery) return tokens;
+    
     const searchLower = searchQuery.toLowerCase();
     return tokens.filter(token => {
-      return (
-        token.symbol.toLowerCase().includes(searchLower) ||
-        token.name.toLowerCase().includes(searchLower) ||
-        (token.contractAddress && token.contractAddress.toLowerCase().includes(searchLower))
-      );
+      const symbolMatch = token.symbol?.toLowerCase()?.includes(searchLower) || false;
+      const nameMatch = token.name?.toLowerCase()?.includes(searchLower) || false;
+      const addressMatch = token.contractAddress?.toLowerCase()?.includes(searchLower) || false;
+      
+      return symbolMatch || nameMatch || addressMatch;
     });
   };
 
