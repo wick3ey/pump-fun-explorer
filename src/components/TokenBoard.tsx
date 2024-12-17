@@ -7,7 +7,7 @@ import { TrendingFilter } from "./TrendingFilter";
 import { useState, useEffect } from "react";
 import { tokenWebSocket } from "@/lib/websocket";
 import { TokenList } from "./token/TokenList";
-import { useTokenStore, calculateMarketCap } from "@/stores/tokenStore";
+import { useTokenStore } from "@/stores/tokenStore";
 
 export const TokenBoard = () => {
   const navigate = useNavigate();
@@ -19,13 +19,14 @@ export const TokenBoard = () => {
       const newToken = {
         symbol: data.symbol,
         name: data.name,
-        marketCap: calculateMarketCap(data.price),
+        initialSolAmount: data.initialSolAmount || 1, // Default to 1 SOL
         age: "new",
         transactions: data.transactions || 0,
         holders: data.holders || 0,
         power: data.power || 0,
         chain: "SOL",
         percentageChange: 0,
+        marketCap: 0, // This will be calculated in the store
       };
 
       addToken(newToken);

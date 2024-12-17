@@ -9,6 +9,11 @@ export interface TokenData {
   chain: string;
   percentageChange: number;
   isSafeDegen?: boolean;
+  initialSolAmount?: number;
+  initialTransaction?: {
+    solAmount: number;
+    timestamp: number;
+  };
 }
 
 export interface NewTokenData {
@@ -19,4 +24,5 @@ export interface NewTokenData {
   transactions?: number;
   holders?: number;
   power?: number;
+  initialSolAmount?: number;
 }
