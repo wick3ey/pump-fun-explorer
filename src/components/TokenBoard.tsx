@@ -8,43 +8,62 @@ import { useState, useEffect } from "react";
 import { tokenWebSocket } from "@/lib/websocket";
 import { TokenList } from "./token/TokenList";
 import { useTokenStore } from "@/stores/tokenStore";
+import { useToast } from "@/components/ui/use-toast";
 
 export const TokenBoard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [selectedTimeframe, setSelectedTimeframe] = useState("1h");
   const { tokens, addToken, updateMarketCaps } = useTokenStore();
 
   useEffect(() => {
-    // Update market caps every 60 seconds
     const intervalId = setInterval(() => {
-      updateMarketCaps();
+      updateMarketCaps().catch((error) => {
+        console.error('Error updating market caps:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update market caps",
+          variant: "destructive",
+        });
+      });
     }, 60000);
 
     return () => clearInterval(intervalId);
-  }, [updateMarketCaps]);
+  }, [updateMarketCaps, toast]);
 
   useEffect(() => {
     tokenWebSocket.onNewToken(async (data) => {
-      const newToken = {
-        symbol: data.symbol,
-        name: data.name,
-        initialSolAmount: data.initialSolAmount || 1,
-        age: "new",
-        transactions: data.transactions || 0,
-        holders: data.holders || 0,
-        power: data.power || 0,
-        chain: "SOL",
-        percentageChange: 0,
-        marketCap: 0, // This will be calculated in the store
-      };
+      try {
+        const newToken = {
+          symbol: data.symbol,
+          name: data.name,
+          initialSolAmount: data.initialSolAmount || 1,
+          lastTransactionSolAmount: data.initialSolAmount || 1,
+          age: "new",
+          transactions: data.transactions || 0,
+          holders: data.holders || 0,
+          power: data.power || 0,
+          chain: "SOL",
+          percentageChange: 0,
+          marketCap: 0,
+          totalSupply: 1_000_000_000,
+        };
 
-      await addToken(newToken);
+        await addToken(newToken);
+      } catch (error) {
+        console.error('Error processing new token:', error);
+        toast({
+          title: "Error",
+          description: "Failed to add new token",
+          variant: "destructive",
+        });
+      }
     });
 
     return () => {
       tokenWebSocket.disconnect();
     };
-  }, [addToken]);
+  }, [addToken, toast]);
 
   const handleTimeframeChange = (timeframe: string) => {
     setSelectedTimeframe(timeframe);

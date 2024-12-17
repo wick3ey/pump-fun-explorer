@@ -10,10 +10,8 @@ export interface TokenData {
   percentageChange: number;
   isSafeDegen?: boolean;
   initialSolAmount?: number;
-  initialTransaction?: {
-    solAmount: number;
-    timestamp: number;
-  };
+  lastTransactionSolAmount?: number;
+  totalSupply: number;
 }
 
 export interface NewTokenData {
