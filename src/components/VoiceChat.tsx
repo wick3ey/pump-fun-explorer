@@ -5,7 +5,7 @@ import { Mic, MicOff, Users } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { LoginDialog } from "./LoginDialog";
 import { useAuth } from "@/contexts/AuthContext";
-import AgoraRTC, { IAgoraRTCRemoteUser } from "agora-rtc-sdk-ng";
+import AgoraRTC, { IAgoraRTCRemoteUser, IMicrophoneAudioTrack } from "agora-rtc-sdk-ng";
 
 interface VoiceChatProps {
   tokenSymbol: string;
@@ -22,7 +22,7 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [client, setClient] = useState<ReturnType<typeof AgoraRTC.createClient> | null>(null);
-  const [audioTrack, setAudioTrack] = useState<ReturnType<typeof AgoraRTC.createMicrophoneAudioTrack> | null>(null);
+  const [audioTrack, setAudioTrack] = useState<IMicrophoneAudioTrack | null>(null);
   
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -64,7 +64,7 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
       setAudioTrack(track);
 
       // Join the channel
-      const uid = await client.join(appId, "main", null);
+      const uid = await client.join(appId, tokenSymbol, null);
       
       // Publish audio track
       await client.publish(track);
