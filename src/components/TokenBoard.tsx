@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Zap, Timer, ExternalLink, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -34,22 +33,8 @@ export const TokenBoard = () => {
   useEffect(() => {
     tokenWebSocket.onNewToken(async (data) => {
       try {
-        const newToken = {
-          symbol: data.symbol,
-          name: data.name,
-          initialSolAmount: data.initialSolAmount || 1,
-          lastTransactionSolAmount: data.initialSolAmount || 1,
-          age: "new",
-          transactions: data.transactions || 0,
-          holders: data.holders || 0,
-          power: data.power || 0,
-          chain: "SOL",
-          percentageChange: 0,
-          marketCap: 0,
-          totalSupply: 1_000_000_000,
-        };
-
-        await addToken(newToken);
+        console.log('Received new token data:', data);
+        await addToken(data);
       } catch (error) {
         console.error('Error processing new token:', error);
         toast({
@@ -68,6 +53,8 @@ export const TokenBoard = () => {
   const handleTimeframeChange = (timeframe: string) => {
     setSelectedTimeframe(timeframe);
   };
+
+  console.log('Current tokens in TokenBoard:', tokens);
 
   return (
     <div className="space-y-6">

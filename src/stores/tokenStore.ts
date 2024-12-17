@@ -20,12 +20,31 @@ export const useTokenStore = create<TokenStore>()(
             tokenWebSocket.subscribeToTokenTrade(token.contractAddress);
           }
 
-          set((state) => ({
-            tokens: [{
-              ...token,
-              marketCap: token.marketCapUSD || 0,
-            }, ...state.tokens].slice(0, 10)
-          }));
+          set((state) => {
+            // Check if token already exists
+            const existingTokenIndex = state.tokens.findIndex(t => t.symbol === token.symbol);
+            
+            if (existingTokenIndex !== -1) {
+              // Update existing token
+              const updatedTokens = [...state.tokens];
+              updatedTokens[existingTokenIndex] = {
+                ...updatedTokens[existingTokenIndex],
+                ...token,
+                marketCap: token.marketCapUSD || token.marketCap || 0,
+              };
+              return { tokens: updatedTokens };
+            } else {
+              // Add new token
+              return {
+                tokens: [{
+                  ...token,
+                  marketCap: token.marketCapUSD || token.marketCap || 0,
+                }, ...state.tokens].slice(0, 100) // Keep only the last 100 tokens
+              };
+            }
+          });
+          
+          console.log('Token added/updated:', token);
         } catch (error) {
           console.error('Error adding token:', error);
         }
@@ -37,7 +56,7 @@ export const useTokenStore = create<TokenStore>()(
               ? { 
                   ...token, 
                   ...updates,
-                  marketCap: updates.marketCapUSD || token.marketCap
+                  marketCap: updates.marketCapUSD || updates.marketCap || token.marketCap
                 } 
               : token
           )
@@ -46,6 +65,7 @@ export const useTokenStore = create<TokenStore>()(
       updateMarketCaps: async () => {
         try {
           const tokens = get().tokens;
+          console.log('Updating market caps for tokens:', tokens);
           set({ tokens });
         } catch (error) {
           console.error('Error updating market caps:', error);

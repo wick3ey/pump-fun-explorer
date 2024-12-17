@@ -52,6 +52,7 @@ class TokenWebSocket {
       this.ws.onmessage = (event) => {
         try {
           const parsedData = JSON.parse(event.data);
+          console.log('Received WebSocket data:', parsedData);
           
           if (parsedData.marketCapSol !== undefined && this.solPriceUSD) {
             const marketCapUSD = parsedData.marketCapSol * this.solPriceUSD;
@@ -62,11 +63,20 @@ class TokenWebSocket {
             });
             
             if (this.onNewTokenCallback) {
-              this.onNewTokenCallback({
+              const tokenData = {
                 ...parsedData,
                 marketCapUSD,
-                marketCap: marketCapUSD
-              });
+                marketCap: marketCapUSD,
+                transactions: parsedData.transactions || 0,
+                holders: parsedData.holders || 0,
+                power: parsedData.power || 0,
+                chain: "SOL",
+                percentageChange: 0,
+                age: "new",
+                totalSupply: 1_000_000_000,
+              };
+              console.log('Sending token data to callback:', tokenData);
+              this.onNewTokenCallback(tokenData);
             }
           }
         } catch (error) {
@@ -101,6 +111,7 @@ class TokenWebSocket {
       this.ws.send(JSON.stringify({
         method: "subscribeNewToken"
       }));
+      console.log('Subscribed to new tokens');
     }
   }
 
