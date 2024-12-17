@@ -7,6 +7,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { TokenHeader } from "@/components/TokenHeader";
 import { useQuery } from "@tanstack/react-query";
 import { ChatTransactionToggle } from "@/components/ChatTransactionToggle";
+import { VoiceChat } from "@/components/VoiceChat";
 
 const TokenProfile = () => {
   const navigate = useNavigate();
@@ -58,8 +59,13 @@ const TokenProfile = () => {
           </div>
         </div>
 
-        <div className="mt-6">
-          <ChatTransactionToggle />
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <ChatTransactionToggle />
+          </div>
+          <div>
+            <VoiceChat tokenSymbol={symbol || ''} />
+          </div>
         </div>
       </div>
     </div>
