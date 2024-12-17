@@ -1,54 +1,33 @@
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { NetworkStatus } from "./NetworkStatus";
-import { DegenModeToggle } from "./DegenModeToggle";
-import { useState } from "react";
+import { Link } from "react-router-dom";
+import { BarChart3 } from "lucide-react";
 
 export const Header = () => {
-  const navigate = useNavigate();
-  const [isDegenMode, setIsDegenMode] = useState(true);
-
   return (
-    <>
-      <NetworkStatus status="online" />
-      <header className="w-full bg-[#1A1F2C]/90 backdrop-blur-sm border-b border-[#2A2F3C] top-0 z-50 mt-8">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent hover:opacity-80"
-              onClick={() => navigate('/')}
-            >
-              pump.fun
-            </Button>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[#13141F] border-b border-gray-800">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-4">
+            <Link to="/" className="text-xl font-bold text-white">
+              SafeDegen
+            </Link>
+            <Link to="/">
+              <Button variant="ghost" className="text-gray-400 hover:text-white">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Market Overview
+              </Button>
+            </Link>
+            <Link to="/memescope">
+              <Button variant="ghost" className="text-gray-400 hover:text-white">
+                Memescope
+              </Button>
+            </Link>
           </div>
-          <nav className="flex items-center space-x-4">
-            <DegenModeToggle 
-              isDegenMode={isDegenMode} 
-              onToggle={setIsDegenMode} 
-            />
-            <Button 
-              variant="ghost" 
-              className="text-white hover:text-purple-400 transition-colors"
-              onClick={() => navigate('/memescope')}
-            >
-              Memescope
-            </Button>
-            <Button 
-              variant="ghost" 
-              className="text-white hover:text-purple-400 transition-colors"
-              onClick={() => navigate('/create')}
-            >
-              Create Token
-            </Button>
-            <Button 
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-            >
-              Connect Wallet
-            </Button>
-          </nav>
+          <Link to="/create">
+            <Button>Create Token</Button>
+          </Link>
         </div>
-      </header>
-    </>
+      </div>
+    </header>
   );
 };

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Mic, MicOff, Users } from "lucide-react";
+import { Mic, MicOff, Users, Rocket, Flame, Flag } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useConversation } from '@11labs/react';
 
@@ -9,8 +9,21 @@ interface VoiceChatProps {
   tokenSymbol: string;
 }
 
+interface EmojiVote {
+  rocket: number;
+  fire: number;
+  poop: number;
+  flag: number;
+}
+
 export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   const [isMuted, setIsMuted] = useState(true);
+  const [votes, setVotes] = useState<EmojiVote>({
+    rocket: 642,
+    fire: 31,
+    poop: 5,
+    flag: 5
+  });
   const [participants, setParticipants] = useState([
     { id: 1, name: "Anon#1234", speaking: false },
     { id: 2, name: "Degen#5678", speaking: true }
@@ -18,13 +31,24 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   const { toast } = useToast();
   const conversation = useConversation();
 
+  const handleVote = (type: keyof EmojiVote) => {
+    setVotes(prev => ({
+      ...prev,
+      [type]: prev[type] + 1
+    }));
+    toast({
+      title: "Vote recorded",
+      description: `You voted with ${type} emoji!`,
+    });
+  };
+
   const handleJoinVoice = async () => {
     try {
       await conversation.startSession({
-        agentId: "default_agent_id", // Replace with your agent ID
+        agentId: "default_agent_id",
         overrides: {
           tts: {
-            voiceId: "21m00Tcm4TlvDq8ikWAM" // Default voice
+            voiceId: "21m00Tcm4TlvDq8ikWAM"
           }
         }
       });
@@ -58,6 +82,41 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
             <Users className="h-4 w-4 text-gray-400" />
             <span className="text-gray-400">{participants.length}</span>
           </div>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2">
+          <Button
+            variant="outline"
+            className="bg-[#2A2F3C] hover:bg-[#3A3F4C] flex flex-col items-center p-2"
+            onClick={() => handleVote('rocket')}
+          >
+            <Rocket className="h-6 w-6 text-blue-400 mb-1" />
+            <span className="text-white">{votes.rocket}</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="bg-[#2A2F3C] hover:bg-[#3A3F4C] flex flex-col items-center p-2"
+            onClick={() => handleVote('fire')}
+          >
+            <Flame className="h-6 w-6 text-orange-400 mb-1" />
+            <span className="text-white">{votes.fire}</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="bg-[#2A2F3C] hover:bg-[#3A3F4C] flex flex-col items-center p-2"
+            onClick={() => handleVote('poop')}
+          >
+            <span className="text-4xl mb-1">💩</span>
+            <span className="text-white">{votes.poop}</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="bg-[#2A2F3C] hover:bg-[#3A3F4C] flex flex-col items-center p-2"
+            onClick={() => handleVote('flag')}
+          >
+            <Flag className="h-6 w-6 text-red-400 mb-1" />
+            <span className="text-white">{votes.flag}</span>
+          </Button>
         </div>
 
         <div className="space-y-2">
