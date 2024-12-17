@@ -19,7 +19,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
   const { toast } = useToast();
   const [selectedTimeframe, setSelectedTimeframe] = useState("1h");
   const [sortBy, setSortBy] = useState("newest");
-  const { tokens, addToken, updateMarketCaps } = useTokenStore();
+  const { tokens, addToken, updateMarketCaps, searchTokens, filterTokensByMarketCap } = useTokenStore();
   const [kingOfHill, setKingOfHill] = useState<TokenData | null>(null);
 
   useEffect(() => {
@@ -80,21 +80,10 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
     setSortBy(sort);
   };
 
-  const getFilteredTokens = (tokens: TokenData[]) => {
-    if (!searchQuery) return tokens;
-    
-    const searchLower = searchQuery.toLowerCase();
-    return tokens.filter(token => {
-      const symbolMatch = token.symbol?.toLowerCase()?.includes(searchLower) || false;
-      const nameMatch = token.name?.toLowerCase()?.includes(searchLower) || false;
-      const addressMatch = token.contractAddress?.toLowerCase()?.includes(searchLower) || false;
-      
-      return symbolMatch || nameMatch || addressMatch;
-    });
-  };
-
   const getSortedTokens = (tokens: TokenData[]) => {
-    return [...tokens].sort((a, b) => {
+    let filteredTokens = searchQuery ? searchTokens(searchQuery) : tokens;
+
+    return filteredTokens.sort((a, b) => {
       switch (sortBy) {
         case "newest":
           return (b.timestamp || 0) - (a.timestamp || 0);
@@ -110,8 +99,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
     });
   };
 
-  const filteredTokens = getFilteredTokens(tokens);
-  const sortedTokens = getSortedTokens(filteredTokens);
+  const sortedTokens = getSortedTokens(tokens);
 
   const calculatePercentageIncrease = (token: TokenData) => {
     return ((token.marketCap || 0) / 40000 * 100 - 100).toFixed(1);

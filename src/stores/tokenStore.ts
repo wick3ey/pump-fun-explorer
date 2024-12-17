@@ -8,12 +8,15 @@ interface TokenStore {
   addToken: (token: TokenData) => Promise<void>;
   updateToken: (symbol: string, updates: Partial<TokenData>) => void;
   updateMarketCaps: () => Promise<void>;
+  searchTokens: (query: string) => TokenData[];
+  filterTokensByMarketCap: (order: 'asc' | 'desc') => TokenData[];
 }
 
 export const useTokenStore = create<TokenStore>()(
   persist(
     (set, get) => ({
       tokens: [],
+      
       addToken: async (token) => {
         try {
           const isValid = TokenMetadataValidator.validateTokenData(token);
@@ -50,6 +53,7 @@ export const useTokenStore = create<TokenStore>()(
           console.error('Error adding token:', error);
         }
       },
+
       updateToken: (symbol, updates) => {
         set((state) => ({
           tokens: state.tokens.map((token) =>
@@ -63,6 +67,7 @@ export const useTokenStore = create<TokenStore>()(
           )
         }));
       },
+
       updateMarketCaps: async () => {
         try {
           const tokens = get().tokens;
@@ -70,6 +75,28 @@ export const useTokenStore = create<TokenStore>()(
         } catch (error) {
           console.error('Error updating market caps:', error);
         }
+      },
+
+      searchTokens: (query: string) => {
+        const tokens = get().tokens;
+        if (!query) return tokens;
+
+        const searchLower = query.toLowerCase();
+        return tokens.filter(token => {
+          const symbolMatch = token.symbol?.toLowerCase()?.includes(searchLower) || false;
+          const nameMatch = token.name?.toLowerCase()?.includes(searchLower) || false;
+          const addressMatch = token.contractAddress?.toLowerCase()?.includes(searchLower) || false;
+          return symbolMatch || nameMatch || addressMatch;
+        });
+      },
+
+      filterTokensByMarketCap: (order: 'asc' | 'desc') => {
+        const tokens = get().tokens;
+        return [...tokens].sort((a, b) => {
+          const marketCapA = a.marketCap || 0;
+          const marketCapB = b.marketCap || 0;
+          return order === 'asc' ? marketCapA - marketCapB : marketCapB - marketCapA;
+        });
       },
     }),
     {
