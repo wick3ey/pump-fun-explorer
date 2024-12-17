@@ -38,7 +38,7 @@ export const TokenBoard = () => {
         console.log('Received new token data:', data);
         await addToken({
           ...data,
-          timestamp: Date.now(), // Add timestamp when receiving new tokens
+          timestamp: Date.now(),
         });
       } catch (error) {
         console.error('Error processing new token:', error);
@@ -74,10 +74,6 @@ export const TokenBoard = () => {
           return (b.marketCap || 0) - (a.marketCap || 0);
         case "marketcap_low":
           return (a.marketCap || 0) - (b.marketCap || 0);
-        case "trending":
-          const aCount = a.transactionCounts?.[selectedTimeframe as keyof typeof a.transactionCounts] || 0;
-          const bCount = b.transactionCounts?.[selectedTimeframe as keyof typeof b.transactionCounts] || 0;
-          return bCount - aCount;
         default:
           return 0;
       }

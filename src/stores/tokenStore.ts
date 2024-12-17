@@ -1,10 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { TokenData } from '@/types/token';
-import { tokenWebSocket } from '@/lib/websocket';
 import { TokenMetadataValidator } from '@/lib/token/tokenMetadataValidator';
-
-const MINIMUM_MARKET_CAP = 15000; // 15k USD minimum market cap
 
 interface TokenStore {
   tokens: TokenData[];
@@ -19,18 +16,8 @@ export const useTokenStore = create<TokenStore>()(
       tokens: [],
       addToken: async (token) => {
         try {
-          // Only process tokens with market cap >= 15k USD
-          if (!token.marketCap || token.marketCap < MINIMUM_MARKET_CAP) {
-            console.log(`Skipping token ${token.symbol} - Market cap below 15k USD:`, token.marketCap);
-            return;
-          }
-
           const isValid = TokenMetadataValidator.validateTokenData(token);
           console.log(`Token ${token.symbol} validation result:`, isValid);
-
-          if (token.contractAddress) {
-            tokenWebSocket.subscribeToTokenTrade(token.contractAddress);
-          }
 
           set((state) => {
             const existingTokenIndex = state.tokens.findIndex(t => t.symbol === token.symbol);
@@ -53,12 +40,6 @@ export const useTokenStore = create<TokenStore>()(
                   image: token.image || "/placeholder.svg",
                   description: token.description || `${token.symbol} Token on Solana`,
                   timestamp,
-                  transactionCounts: {
-                    '5m': 0,
-                    '1h': 0,
-                    '6h': 0,
-                    '24h': 0,
-                  }
                 }, ...state.tokens].slice(0, 100)
               };
             }
@@ -79,16 +60,13 @@ export const useTokenStore = create<TokenStore>()(
                   marketCap: updates.marketCapUSD || updates.marketCap || token.marketCap
                 } 
               : token
-          ).filter(token => token.marketCap >= MINIMUM_MARKET_CAP) // Filter out tokens that fall below 15k
+          )
         }));
       },
       updateMarketCaps: async () => {
         try {
           const tokens = get().tokens;
-          const validatedTokens = tokens.filter(token => 
-            token.marketCap >= MINIMUM_MARKET_CAP // Only keep tokens with market cap >= 15k
-          );
-          set({ tokens: validatedTokens });
+          set({ tokens: [...tokens] });
         } catch (error) {
           console.error('Error updating market caps:', error);
         }
