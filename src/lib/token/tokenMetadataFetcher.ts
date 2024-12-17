@@ -111,11 +111,8 @@ export class TokenMetadataFetcher {
   }
 
   private static getDefaultMetadata(symbol: string): TokenMetadata {
-    // Try to generate a relevant placeholder image URL based on the symbol
-    const placeholderImage = `https://via.placeholder.com/150/1A1F2C/FFFFFF?text=${symbol}`;
-    
     const defaultMetadata: TokenMetadata = {
-      image: placeholderImage,
+      image: `/placeholder.svg`,
       description: `${symbol} Token on Solana`,
       name: symbol
     };

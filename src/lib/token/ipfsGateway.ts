@@ -1,11 +1,9 @@
 export class IPFSGateway {
   private static readonly BACKUP_GATEWAYS = [
-    'https://cloudflare-ipfs.com/ipfs/',
     'https://ipfs.io/ipfs/',
-    'https://dweb.link/ipfs/',
     'https://gateway.ipfs.io/ipfs/',
-    'https://ipfs.fleek.co/ipfs/',
-    'https://gateway.pinata.cloud/ipfs/'
+    'https://cf-ipfs.com/ipfs/',
+    'https://nftstorage.link/ipfs/'
   ];
 
   static async fetchFromGateways(cid: string, attempt: number): Promise<Response> {
@@ -51,6 +49,7 @@ export class IPFSGateway {
     try {
       const fetchPromise = fetch(url, {
         signal: controller.signal,
+        mode: 'cors',
         headers: {
           'Accept': 'application/json',
           'Cache-Control': 'no-cache'
