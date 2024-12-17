@@ -5,7 +5,6 @@ class TokenWebSocket {
   private onNewTokenCallback: ((data: any) => void) | null = null;
   private subscribedTokens: Set<string> = new Set();
   private solPriceUSD: number | null = null;
-  private totalSupply: number = 1_000_000_000; // 1 billion tokens
 
   constructor() {
     this.connect();
@@ -52,27 +51,23 @@ class TokenWebSocket {
 
       this.ws.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data);
-          if (data.price && this.solPriceUSD && this.onNewTokenCallback) {
-            // Calculate market cap based on latest trade price * total supply
-            const priceInSOL = parseFloat(data.price);
-            const marketCapSol = priceInSOL * this.totalSupply;
-            const marketCapUSD = marketCapSol * this.solPriceUSD;
-            
+          const parsedData = JSON.parse(event.data);
+          
+          if (parsedData.marketCapSol !== undefined && this.solPriceUSD) {
+            const marketCapUSD = parsedData.marketCapSol * this.solPriceUSD;
             console.log('Market Cap calculation:', {
-              priceInSOL,
-              totalSupply: this.totalSupply,
-              marketCapSol,
+              marketCapSol: parsedData.marketCapSol,
               solPriceUSD: this.solPriceUSD,
               marketCapUSD
             });
             
-            this.onNewTokenCallback({
-              ...data,
-              marketCapSol,
-              marketCapUSD,
-              price: priceInSOL
-            });
+            if (this.onNewTokenCallback) {
+              this.onNewTokenCallback({
+                ...parsedData,
+                marketCapUSD,
+                marketCap: marketCapUSD // For compatibility with existing code
+              });
+            }
           }
         } catch (error) {
           console.error('Error processing WebSocket message:', error);

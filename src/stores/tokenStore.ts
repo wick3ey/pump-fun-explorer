@@ -24,7 +24,6 @@ export const useTokenStore = create<TokenStore>()(
             tokens: [{
               ...token,
               marketCap: token.marketCapUSD || 0,
-              totalSupply: token.totalSupply || 1_000_000_000,
             }, ...state.tokens].slice(0, 10)
           }));
         } catch (error) {
@@ -38,8 +37,7 @@ export const useTokenStore = create<TokenStore>()(
               ? { 
                   ...token, 
                   ...updates,
-                  marketCap: updates.marketCapUSD || token.marketCap,
-                  lastPrice: updates.price || token.lastPrice
+                  marketCap: updates.marketCapUSD || token.marketCap
                 } 
               : token
           )
