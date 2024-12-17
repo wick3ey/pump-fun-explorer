@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { TokenImageUpload, tokenImageSchema } from "./TokenImageUpload";
-import { Rocket, Link, Twitter, MessageCircle } from "lucide-react";
+import { Rocket } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { SocialLinksSection } from "./SocialLinksSection";
+import { SafeDegenToggle } from "./SafeDegenToggle";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const formSchema = z.object({
@@ -20,6 +21,7 @@ const formSchema = z.object({
   telegram: z.string().optional(),
   website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   twitter: z.string().optional(),
+  isSafeDegen: z.boolean().default(true),
 }).merge(tokenImageSchema);
 
 export const TokenForm = () => {
@@ -37,6 +39,7 @@ export const TokenForm = () => {
       telegram: "",
       website: "",
       twitter: "",
+      isSafeDegen: true,
     },
   });
 
@@ -62,6 +65,8 @@ export const TokenForm = () => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <TokenImageUpload form={form} />
+
+          <SafeDegenToggle form={form} />
 
           <div className="grid gap-8 md:grid-cols-2">
             <FormField
