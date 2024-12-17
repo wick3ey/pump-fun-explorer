@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import CreateToken from "./pages/CreateToken";
 import TokenProfile from "./pages/TokenProfile";
+import Memescope from "./pages/Memescope";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/create" element={<CreateToken />} />
           <Route path="/token/:symbol" element={<TokenProfile />} />
+          <Route path="/memescope" element={<Memescope />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

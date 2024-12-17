@@ -30,6 +30,13 @@ export const Header = () => {
             <Button 
               variant="ghost" 
               className="text-white hover:text-purple-400 transition-colors"
+              onClick={() => navigate('/memescope')}
+            >
+              Memescope
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="text-white hover:text-purple-400 transition-colors"
               onClick={() => navigate('/create')}
             >
               Create Token
