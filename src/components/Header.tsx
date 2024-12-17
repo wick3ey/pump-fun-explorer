@@ -41,27 +41,27 @@ export const Header = () => {
                   Memescope
                 </Button>
               </Link>
+              <Link to="/create">
+                <Button 
+                  className={`bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white ${isActive('/create') ? 'bg-[#2A2F3C]' : ''}`}
+                >
+                  Create Token
+                </Button>
+              </Link>
             </div>
           </div>
           
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/create">
-              <Button 
-                className={`bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white ${isActive('/create') ? 'bg-[#2A2F3C]' : ''}`}
-              >
-                Create Token
-              </Button>
-            </Link>
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-              <Wallet className="h-4 w-4 mr-2" />
-              Connect Wallet
-            </Button>
-            <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
             <Button 
               onClick={() => setShowLoginDialog(true)}
               className="bg-[#9b87f5] hover:bg-[#8b77e5] text-white"
             >
               Log in
+            </Button>
+            <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Wallet className="h-4 w-4 mr-2" />
+              Connect Wallet
             </Button>
           </div>
 
@@ -115,16 +115,16 @@ export const Header = () => {
                     </Link>
                   </div>
                   <div className="mt-auto space-y-6">
-                    <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white text-lg py-4">
-                      <Wallet className="h-5 w-5 mr-3" />
-                      Connect Wallet
-                    </Button>
-                    <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
                     <Button 
                       onClick={() => setShowLoginDialog(true)}
                       className="w-full bg-[#9b87f5] hover:bg-[#8b77e5] text-white text-lg py-4"
                     >
                       Log in
+                    </Button>
+                    <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
+                    <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white text-lg py-4">
+                      <Wallet className="h-5 w-5 mr-3" />
+                      Connect Wallet
                     </Button>
                   </div>
                 </div>
