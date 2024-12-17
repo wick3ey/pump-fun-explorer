@@ -9,6 +9,7 @@ import { TokenList } from "./token/TokenList";
 import { useTokenStore } from "@/stores/tokenStore";
 import { useToast } from "@/components/ui/use-toast";
 import { TokenData } from "@/types/token";
+import { calculateAge } from "@/lib/token/tokenCalculations";
 
 interface TokenBoardProps {
   searchQuery?: string;
@@ -22,8 +23,15 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
   const { tokens, addToken, updateMarketCaps, searchTokens, filterTokensByMarketCap } = useTokenStore();
   const [kingOfHill, setKingOfHill] = useState<TokenData | null>(null);
 
+  // Uppdatera tokens var 60:e sekund för att hålla age uppdaterad
   useEffect(() => {
     const intervalId = setInterval(() => {
+      const updatedTokens = tokens.map(token => ({
+        ...token,
+        age: calculateAge(token.timestamp)
+      }));
+      
+      // Uppdatera market caps och ages
       updateMarketCaps().catch((error) => {
         console.error('Error updating market caps:', error);
         toast({
@@ -35,7 +43,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
     }, 60000);
 
     return () => clearInterval(intervalId);
-  }, [updateMarketCaps, toast]);
+  }, [updateMarketCaps, toast, tokens]);
 
   useEffect(() => {
     // Find the token with highest marketcap above 40k
@@ -56,6 +64,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
         await addToken({
           ...data,
           timestamp: Date.now(),
+          age: '1m' // Sätt initial ålder till 1 minut
         });
       } catch (error) {
         console.error('Error processing new token:', error);

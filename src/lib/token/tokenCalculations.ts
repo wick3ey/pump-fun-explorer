@@ -15,14 +15,16 @@ export const calculatePercentageChange = (initialBuy: number, vSolInBondingCurve
 
 export const calculateAge = (timestamp: number): string => {
   const now = Date.now();
-  const diffInMinutes = Math.floor((now - timestamp) / (1000 * 60));
+  const diffInMinutes = Math.max(1, Math.floor((now - timestamp) / (1000 * 60)));
   
   if (diffInMinutes < 60) {
     return `${diffInMinutes}m`;
-  } else if (diffInMinutes < 1440) {
-    return `${Math.floor(diffInMinutes / 60)}h`;
+  } else if (diffInMinutes < 1440) { // Less than 24 hours
+    const hours = Math.floor(diffInMinutes / 60);
+    return `${hours}h`;
   } else {
-    return `${Math.floor(diffInMinutes / 1440)}d`;
+    const days = Math.floor(diffInMinutes / 1440);
+    return `${days}d`;
   }
 };
 
