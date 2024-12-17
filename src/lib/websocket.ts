@@ -5,6 +5,7 @@ class TokenWebSocket {
   private onNewTokenCallback: ((data: any) => void) | null = null;
   private subscribedTokens: Set<string> = new Set();
   private solPriceUSD: number | null = null;
+  private metadataCache: Map<string, any> = new Map();
 
   constructor() {
     this.connect();
@@ -37,18 +38,48 @@ class TokenWebSocket {
     }
   }
 
-  private async fetchTokenMetadata(uri: string) {
+  private async fetchTokenMetadata(uri: string, symbol: string) {
+    // Check cache first
+    if (this.metadataCache.has(uri)) {
+      console.log('Using cached metadata for:', symbol);
+      return this.metadataCache.get(uri);
+    }
+
     try {
-      const response = await fetch(uri);
+      console.log('Fetching metadata for:', symbol, 'URI:', uri);
+      
+      // Add timeout to fetch
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(uri, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const metadata = await response.json();
-      return {
+      console.log('Successfully fetched metadata for:', symbol, metadata);
+      
+      const processedMetadata = {
         image: metadata.image || '',
-        description: metadata.description || '',
-        name: metadata.name || ''
+        description: metadata.description || `${symbol} Token on Solana`,
+        name: metadata.name || symbol
       };
+      
+      // Cache the result
+      this.metadataCache.set(uri, processedMetadata);
+      
+      return processedMetadata;
     } catch (error) {
-      console.error('Error fetching token metadata:', error);
-      return null;
+      console.error('Error fetching metadata for:', symbol, error);
+      // Return default metadata on error
+      return {
+        image: '/placeholder.svg',
+        description: `${symbol} Token on Solana`,
+        name: symbol
+      };
     }
   }
 
@@ -78,8 +109,7 @@ class TokenWebSocket {
 
             let metadata = null;
             if (parsedData.uri) {
-              metadata = await this.fetchTokenMetadata(parsedData.uri);
-              console.log('Fetched metadata:', metadata);
+              metadata = await this.fetchTokenMetadata(parsedData.uri, parsedData.symbol);
             }
             
             if (this.onNewTokenCallback) {
@@ -94,7 +124,7 @@ class TokenWebSocket {
                 percentageChange: 0,
                 age: "new",
                 totalSupply: 1_000_000_000,
-                image: metadata?.image || '',
+                image: metadata?.image || '/placeholder.svg',
                 description: metadata?.description || `${parsedData.symbol} Token on Solana`,
                 name: metadata?.name || parsedData.symbol,
               };
