@@ -13,12 +13,11 @@ import TokenProfile from "./pages/TokenProfile";
 import Memescope from "./pages/Memescope";
 import { Suspense } from "react";
 
-// Initialize the query client with default options
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
     },
   },
