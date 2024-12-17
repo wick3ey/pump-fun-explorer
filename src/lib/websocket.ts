@@ -64,7 +64,8 @@ class TokenWebSocket {
         image: metadata?.image || "/placeholder.svg",
         description: metadata?.description || `${parsedData.symbol} Token on Solana`,
         name: metadata?.name || parsedData.symbol,
-        timestamp
+        timestamp,
+        contractAddress: parsedData.mint // Add the mint address as the contract address
       };
 
       if (this.onNewTokenCallback) {

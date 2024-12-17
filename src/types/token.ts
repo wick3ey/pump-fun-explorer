@@ -9,7 +9,7 @@ export interface TokenData {
   chain: string;
   isSafeDegen?: boolean;
   totalSupply: number;
-  contractAddress?: string;
+  contractAddress: string;
   image?: string;
   description?: string;
   uri?: string;
