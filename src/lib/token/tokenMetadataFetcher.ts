@@ -36,8 +36,11 @@ export class TokenMetadataFetcher {
       // Use hardcoded metadata if available
       if (this.hardcodedMetadata[symbol]) {
         console.log('Using hardcoded metadata for:', symbol);
-        TokenMetadataValidator.cacheMetadata(symbol, this.hardcodedMetadata[symbol]);
-        return this.hardcodedMetadata[symbol];
+        const metadata = this.hardcodedMetadata[symbol];
+        if (TokenMetadataValidator.verifyMetadata(symbol, metadata)) {
+          TokenMetadataValidator.cacheMetadata(symbol, metadata);
+          return metadata;
+        }
       }
 
       // Check cache first
@@ -80,11 +83,17 @@ export class TokenMetadataFetcher {
               name: data.name
             };
 
-            TokenMetadataValidator.cacheMetadata(symbol, metadata);
-            return metadata;
+            // Verify metadata before caching
+            if (TokenMetadataValidator.verifyMetadata(symbol, metadata)) {
+              TokenMetadataValidator.cacheMetadata(symbol, metadata);
+              return metadata;
+            } else {
+              console.warn(`Invalid metadata received for ${symbol}, trying next gateway`);
+              continue;
+            }
           }
         } catch (error) {
-          console.log(`Gateway ${gateway} failed, trying next one`);
+          console.log(`Gateway ${gateway} failed for ${symbol}, trying next one`);
           continue;
         }
       }

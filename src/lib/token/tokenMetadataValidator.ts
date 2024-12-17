@@ -1,3 +1,5 @@
+import { TokenData } from "@/types/token";
+
 export interface TokenMetadata {
   image: string;
   description: string;
@@ -10,6 +12,7 @@ export class TokenMetadataValidator {
   private static usedImages = new Map<string, string>();
   private static validationQueue = new Map<string, number>();
   private static MAX_VALIDATION_ATTEMPTS = 3;
+  private static verifiedMetadata = new Map<string, boolean>();
 
   static isProcessing(symbol: string): boolean {
     return this.processingTokens.has(symbol);
@@ -33,11 +36,44 @@ export class TokenMetadataValidator {
     return existingSymbol !== undefined && existingSymbol !== currentSymbol;
   }
 
+  static verifyMetadata(symbol: string, metadata: TokenMetadata): boolean {
+    // Verify that the metadata matches the token symbol
+    if (!metadata.name.includes(symbol) && !symbol.includes(metadata.name)) {
+      console.warn(`Metadata name mismatch for ${symbol}:`, metadata.name);
+      return false;
+    }
+
+    // Check if image is already used by another token
+    if (this.isImageUsed(metadata.image, symbol)) {
+      console.warn(`Image already used by another token: ${metadata.image}`);
+      return false;
+    }
+
+    // Verify image URL is valid
+    if (!metadata.image.startsWith('http') && !metadata.image.startsWith('/')) {
+      console.warn(`Invalid image URL for ${symbol}:`, metadata.image);
+      return false;
+    }
+
+    return true;
+  }
+
   static cacheMetadata(symbol: string, metadata: TokenMetadata): void {
-    // Allow reuse of images for now to prevent blocking token updates
-    this.metadataCache.set(symbol, metadata);
-    this.usedImages.set(metadata.image, symbol);
-    console.log(`Successfully cached metadata for ${symbol}:`, metadata);
+    if (this.verifyMetadata(symbol, metadata)) {
+      this.metadataCache.set(symbol, metadata);
+      this.usedImages.set(metadata.image, symbol);
+      this.verifiedMetadata.set(symbol, true);
+      console.log(`Successfully cached verified metadata for ${symbol}:`, metadata);
+    } else {
+      // Use default metadata if verification fails
+      const defaultMetadata: TokenMetadata = {
+        image: "/placeholder.svg",
+        description: `${symbol} Token on Solana`,
+        name: symbol
+      };
+      this.metadataCache.set(symbol, defaultMetadata);
+      console.warn(`Using default metadata for ${symbol} due to verification failure`);
+    }
   }
 
   static validateTokenData(token: Partial<TokenData>): boolean {
@@ -53,16 +89,18 @@ export class TokenMetadataValidator {
       return false;
     }
 
-    // If we have metadata cached, consider it valid
-    const metadata = this.getCachedMetadata(token.symbol);
-    if (metadata) {
-      return true;
-    }
+    // Verify metadata if present
+    if (token.image && token.name) {
+      const isVerified = this.verifyMetadata(token.symbol, {
+        image: token.image,
+        name: token.name,
+        description: token.description || `${token.symbol} Token on Solana`
+      });
 
-    // For new tokens without cached metadata, require basic validation
-    if (!token.name || !token.marketCap || token.marketCap <= 0) {
-      console.error('Invalid token data:', token);
-      return false;
+      if (!isVerified) {
+        console.warn(`Metadata verification failed for ${token.symbol}`);
+        return false;
+      }
     }
 
     return true;
@@ -76,5 +114,6 @@ export class TokenMetadataValidator {
     }
     this.validationQueue.delete(symbol);
     this.processingTokens.delete(symbol);
+    this.verifiedMetadata.delete(symbol);
   }
 }
