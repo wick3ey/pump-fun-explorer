@@ -56,8 +56,8 @@ export const Header = () => {
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6 text-gray-400" />
+                <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
+                  <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] bg-[#13141F] border-l border-gray-800 p-0">
