@@ -1,6 +1,12 @@
 import { TokenMetadataFetcher } from "./token/tokenMetadataFetcher";
 import { TokenMetadataValidator } from "./token/tokenMetadataValidator";
 import { TokenData } from "@/types/token";
+import { 
+  calculateHolders, 
+  calculatePercentageChange, 
+  calculateAge,
+  generateTransactionCounts 
+} from "./token/tokenCalculations";
 
 class TokenWebSocket {
   private ws: WebSocket | null = null;
@@ -40,52 +46,11 @@ class TokenWebSocket {
     }
   }
 
-  private calculateAge(timestamp: number): string {
-    const now = Date.now();
-    const diffInMinutes = Math.floor((now - timestamp) / (1000 * 60));
-    
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes}m`;
-    } else if (diffInMinutes < 1440) {
-      return `${Math.floor(diffInMinutes / 60)}h`;
-    } else {
-      return `${Math.floor(diffInMinutes / 1440)}d`;
-    }
-  }
-
-  private calculateHolders(vTokensInBondingCurve: number): number {
-    // Calculate holders based on tokens in bonding curve
-    // Assuming 1M tokens per holder as a baseline
-    return Math.floor(vTokensInBondingCurve / 1_000_000);
-  }
-
-  private calculatePercentageChange(initialBuy: number, vSolInBondingCurve: number): string {
-    if (!initialBuy || !vSolInBondingCurve) return "0.00";
-    
-    const change = ((vSolInBondingCurve / initialBuy) - 1) * 100;
-    return change.toFixed(2);
-  }
-
-  private generateTransactionCounts(age: string): { [key: string]: number } {
-    // Generate more realistic transaction counts based on token age
-    const ageInMinutes = parseInt(age);
-    const baseCount = Math.floor(Math.random() * 50) + 10; // Base count between 10-60
-
-    return {
-      '5m': Math.min(baseCount, Math.floor(Math.random() * 50)),
-      '1h': Math.min(baseCount * 4, Math.floor(Math.random() * 200)),
-      '6h': Math.min(baseCount * 10, Math.floor(Math.random() * 500)),
-      '24h': Math.min(baseCount * 20, Math.floor(Math.random() * 1000))
-    };
-  }
-
   private async processTokenData(parsedData: any) {
     try {
-      if (!parsedData.marketCapSol || !this.solPriceUSD) {
-        return;
-      }
-
-      const marketCapUSD = parsedData.marketCapSol * this.solPriceUSD;
+      // Always process the token, even if marketCapSol is missing
+      const marketCapUSD = (parsedData.marketCapSol || 0) * (this.solPriceUSD || 0);
+      
       console.log('Market Cap calculation:', {
         marketCapSol: parsedData.marketCapSol,
         solPriceUSD: this.solPriceUSD,
@@ -98,18 +63,13 @@ class TokenWebSocket {
       );
 
       const timestamp = Date.now();
-      const age = this.calculateAge(timestamp);
-
-      // Calculate holders based on vTokensInBondingCurve
-      const holders = this.calculateHolders(parsedData.vTokensInBondingCurve || 0);
-
-      // Calculate percentage change
-      const percentageChange = this.calculatePercentageChange(
+      const age = calculateAge(timestamp);
+      const holders = calculateHolders(parsedData.vTokensInBondingCurve);
+      const percentageChange = calculatePercentageChange(
         parsedData.initialBuy,
         parsedData.vSolInBondingCurve
       );
-
-      const transactionCounts = this.generateTransactionCounts(age);
+      const transactionCounts = generateTransactionCounts(parsedData.vSolInBondingCurve);
 
       const tokenData: TokenData = {
         ...parsedData,
