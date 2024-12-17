@@ -20,17 +20,21 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <div className="min-h-screen bg-[#13141F]">
-          <Header />
-          <TrendingTokensBanner />
-          <PowerBanner />
-          <main className="pt-4">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/create" element={<CreateToken />} />
-              <Route path="/token/:symbol" element={<TokenProfile />} />
-              <Route path="/memescope" element={<Memescope />} />
-            </Routes>
-          </main>
+          <div className="flex flex-col">
+            <Header />
+            <div className="mt-16"> {/* Add margin-top to account for fixed header height */}
+              <TrendingTokensBanner />
+              <PowerBanner />
+            </div>
+            <main className="pt-4">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/create" element={<CreateToken />} />
+                <Route path="/token/:symbol" element={<TokenProfile />} />
+                <Route path="/memescope" element={<Memescope />} />
+              </Routes>
+            </main>
+          </div>
         </div>
       </BrowserRouter>
     </TooltipProvider>
