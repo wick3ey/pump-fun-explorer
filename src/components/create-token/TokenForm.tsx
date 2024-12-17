@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { TokenImageUpload, tokenImageSchema } from "./TokenImageUpload";
-import { Rocket, Link, BrandTwitterX, MessageCircle } from "lucide-react";
+import { Rocket, Link, Twitter, MessageCircle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 
@@ -180,7 +180,7 @@ export const TokenForm = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-white flex items-center gap-2">
-                    <BrandTwitterX className="h-4 w-4" />
+                    <Twitter className="h-4 w-4" />
                     Twitter or X Link (optional)
                   </FormLabel>
                   <FormControl>
