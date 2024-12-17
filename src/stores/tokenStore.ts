@@ -19,19 +19,7 @@ export const useTokenStore = create<TokenStore>()(
       
       addToken: async (token) => {
         try {
-          let metadata;
-          try {
-            metadata = await fetchTokenMetadata(token.contractAddress);
-          } catch (error) {
-            console.error('Error fetching metadata:', error);
-            metadata = {
-              name: token.name,
-              symbol: token.symbol,
-              description: `${token.symbol} Token on Solana`,
-              image: undefined
-            };
-          }
-          
+          const metadata = await fetchTokenMetadata(token.contractAddress);
           const timestamp = token.timestamp || Date.now();
           
           const enrichedToken = {
@@ -39,7 +27,7 @@ export const useTokenStore = create<TokenStore>()(
             name: metadata.name || token.name,
             symbol: metadata.symbol || token.symbol,
             image: metadata.image,
-            description: metadata.description || `${token.symbol} Token on Solana`,
+            description: metadata.description,
             marketCap: token.marketCapUSD || token.marketCap || 0,
             timestamp,
           };
@@ -63,7 +51,6 @@ export const useTokenStore = create<TokenStore>()(
             tokens: [{
               ...token,
               marketCap: token.marketCapUSD || token.marketCap || 0,
-              description: `${token.symbol} Token on Solana`,
               timestamp: token.timestamp || Date.now(),
             }, ...state.tokens].slice(0, 100)
           }));
