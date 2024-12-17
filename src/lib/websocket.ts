@@ -65,7 +65,7 @@ class TokenWebSocket {
               this.onNewTokenCallback({
                 ...parsedData,
                 marketCapUSD,
-                marketCap: marketCapUSD // For compatibility with existing code
+                marketCap: marketCapUSD
               });
             }
           }

@@ -16,11 +16,17 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
     } else if (num >= 1000) {
       return (num / 1000).toFixed(1) + 'K';
     }
-    return num.toString();
+    return num.toFixed(1);
   };
 
-  // Filter out tokens with no market cap or zero market cap
-  const calculatedTokens = tokens.filter(token => token.marketCap && token.marketCap > 0);
+  // Only show tokens with valid market cap
+  const validTokens = tokens.filter(token => 
+    token.marketCap && 
+    token.marketCap > 0 && 
+    !isNaN(token.marketCap)
+  );
+
+  console.log('Valid tokens:', validTokens);
 
   return (
     <Card className="bg-[#1A1F2C] border-[#2A2F3C]">
@@ -39,7 +45,7 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
             </tr>
           </thead>
           <tbody>
-            {calculatedTokens.map((token, index) => (
+            {validTokens.map((token, index) => (
               <tr 
                 key={index}
                 onClick={() => onTokenClick(token.symbol)}
