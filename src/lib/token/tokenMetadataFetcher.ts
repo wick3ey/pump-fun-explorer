@@ -19,20 +19,21 @@ export class TokenMetadataFetcher {
     }
   };
 
-  private static readonly MAX_RETRIES = 3;
-  private static readonly RETRY_DELAY = 2000;
-  private static readonly FETCH_TIMEOUT = 10000; // Increased timeout
+  private static readonly MAX_RETRIES = 5;
+  private static readonly RETRY_DELAY = 1000;
+  private static readonly FETCH_TIMEOUT = 15000; // Increased timeout to 15 seconds
   private static readonly BACKUP_GATEWAYS = [
     'https://ipfs.io/ipfs/',
     'https://cloudflare-ipfs.com/ipfs/',
-    'https://gateway.pinata.cloud/ipfs/'
+    'https://gateway.pinata.cloud/ipfs/',
+    'https://dweb.link/ipfs/',
+    'https://ipfs.eth.aragon.network/ipfs/',
+    'https://gateway.ipfs.io/ipfs/'
   ];
 
-  private static async fetchWithTimeout(url: string, timeout: number, attempt: number): Promise<Response> {
+  private static async fetchWithTimeout(url: string, timeout: number): Promise<Response> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, timeout);
+    const id = setTimeout(() => controller.abort(), timeout);
 
     try {
       const response = await fetch(url, {
@@ -49,22 +50,29 @@ export class TokenMetadataFetcher {
 
       return response;
     } finally {
-      clearTimeout(timeoutId);
+      clearTimeout(id);
     }
   }
 
   private static async tryFetchFromGateways(cid: string, attempt: number): Promise<Response> {
     const errors: Error[] = [];
+    const shuffledGateways = [...this.BACKUP_GATEWAYS].sort(() => Math.random() - 0.5);
 
-    for (const gateway of this.BACKUP_GATEWAYS) {
+    for (const gateway of shuffledGateways) {
       try {
         const url = `${gateway}${cid}`;
         console.log(`Attempting fetch from gateway ${gateway}, attempt ${attempt}`);
-        const response = await this.fetchWithTimeout(url, this.FETCH_TIMEOUT, attempt);
+        
+        const response = await this.fetchWithTimeout(
+          url, 
+          this.FETCH_TIMEOUT + (attempt * 1000) // Increase timeout with each attempt
+        );
+        
         return response;
       } catch (error) {
         errors.push(error as Error);
         console.warn(`Failed to fetch from ${gateway}:`, error);
+        await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY * attempt));
         continue;
       }
     }
@@ -96,7 +104,7 @@ export class TokenMetadataFetcher {
       }
 
       // Extract CID if it's an IPFS URI
-      const cid = uri.replace('https://ipfs.io/ipfs/', '');
+      const cid = uri.replace(/^https?:\/\/[^/]+\/ipfs\//, '');
       
       let lastError: Error | null = null;
       for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
@@ -104,10 +112,11 @@ export class TokenMetadataFetcher {
           const response = await this.tryFetchFromGateways(cid, attempt);
           const data = await response.json();
           
+          // Validate and sanitize the metadata
           const metadata: TokenMetadata = {
-            image: data.image || "/placeholder.svg",
-            description: data.description || `${symbol} Token on Solana`,
-            name: data.name || symbol
+            image: this.sanitizeImageUrl(data.image) || "/placeholder.svg",
+            description: data.description?.slice(0, 500) || `${symbol} Token on Solana`,
+            name: data.name?.slice(0, 100) || symbol
           };
 
           if (TokenMetadataValidator.verifyMetadata(symbol, metadata)) {
@@ -133,6 +142,22 @@ export class TokenMetadataFetcher {
       console.error('Error in fetchMetadata:', error);
       return this.getDefaultMetadata(symbol);
     }
+  }
+
+  private static sanitizeImageUrl(url?: string): string {
+    if (!url) return "/placeholder.svg";
+    
+    // Convert IPFS URLs to use a reliable gateway
+    if (url.startsWith('ipfs://')) {
+      return `https://cloudflare-ipfs.com/ipfs/${url.replace('ipfs://', '')}`;
+    }
+    
+    // Ensure URL is using HTTPS
+    if (url.startsWith('http://')) {
+      return url.replace('http://', 'https://');
+    }
+    
+    return url;
   }
 
   private static getDefaultMetadata(symbol: string): TokenMetadata {
