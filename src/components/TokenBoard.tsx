@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Crown, Zap, Timer, ExternalLink } from "lucide-react";
+import { Zap, Timer, ExternalLink } from "lucide-react";
 import { TrendingTokensBanner } from "./TrendingTokensBanner";
 import { useNavigate } from "react-router-dom";
+import { KingOfTheHill } from "./KingOfTheHill";
 
 interface TokenData {
   symbol: string;
@@ -20,7 +21,7 @@ interface TokenData {
 export const TokenBoard = () => {
   const navigate = useNavigate();
 
-  // Mock data - i en riktig app skulle detta komma från din API
+  // Mock data - in a real app this would come from your API
   const tokens: TokenData[] = [
     {
       symbol: "PENGU",
@@ -99,42 +100,14 @@ export const TokenBoard = () => {
 
   return (
     <div className="space-y-6">
-      {/* King of the Hill Banner */}
-      <div className="bg-gradient-to-r from-yellow-500/20 to-yellow-500/10 p-4 rounded-lg border border-yellow-500/30">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Crown className="h-6 w-6 text-yellow-500" />
-            <div>
-              <h3 className="text-lg font-bold text-yellow-500">King of the Hill</h3>
-              <p className="text-sm text-gray-400">Current Leader: PENGU/SOL</p>
-            </div>
-          </div>
-          <Button 
-            variant="outline" 
-            className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/20"
-          >
-            View Details
-          </Button>
-        </div>
-      </div>
-
-      {/* Advertisement Banner */}
-      <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/10 p-4 rounded-lg border border-purple-500/30">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div>
-              <h3 className="text-lg font-bold text-purple-400">Featured Project</h3>
-              <p className="text-sm text-gray-400">Discover the next big thing in crypto</p>
-            </div>
-          </div>
-          <Button 
-            variant="outline" 
-            className="border-purple-500/50 text-purple-400 hover:bg-purple-500/20"
-          >
-            Learn More
-          </Button>
-        </div>
-      </div>
+      <KingOfTheHill 
+        symbol="PENGU"
+        chain="SOL"
+        percentageIncrease={12.5}
+        age="14h"
+        marketCap={75000}
+        bondingCurveTarget={98000}
+      />
 
       <TrendingTokensBanner />
 
