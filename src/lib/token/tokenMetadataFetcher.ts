@@ -52,45 +52,78 @@ export class TokenMetadataFetcher {
         throw new Error('Invalid URI format');
       }
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      // Set up fetch with timeout and retry logic
+      const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 5000) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      const response = await fetch(uri, {
-        signal: controller.signal,
-        headers: { 'Accept': 'application/json' }
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      // Validate required fields
-      if (!data.image || !data.name) {
-        throw new Error('Missing required metadata fields');
-      }
-
-      const metadata: TokenMetadata = {
-        image: data.image,
-        description: data.description || `${symbol} Token on Solana`,
-        name: data.name
+        try {
+          const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          return response;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          throw error;
+        }
       };
 
-      // Verify image URL is accessible
-      const imageResponse = await fetch(metadata.image, {
-        method: 'HEAD',
-        signal: controller.signal
-      });
+      // Try fetching metadata with retries
+      let attempts = 0;
+      const maxAttempts = 3;
+      let lastError: Error | null = null;
 
-      if (!imageResponse.ok) {
-        throw new Error('Image URL is not accessible');
+      while (attempts < maxAttempts) {
+        try {
+          const response = await fetchWithTimeout(uri, {}, 5000);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          
+          if (!data.image || !data.name) {
+            throw new Error('Missing required metadata fields');
+          }
+
+          // Validate image URL
+          const imageUrl = data.image.startsWith('ipfs://')
+            ? `https://ipfs.io/ipfs/${data.image.slice(7)}`
+            : data.image;
+
+          // Verify image is accessible
+          const imageResponse = await fetchWithTimeout(imageUrl, { method: 'HEAD' }, 5000);
+          
+          if (!imageResponse.ok) {
+            throw new Error('Image URL is not accessible');
+          }
+
+          const metadata: TokenMetadata = {
+            image: imageUrl,
+            description: data.description || `${symbol} Token on Solana`,
+            name: data.name
+          };
+
+          // Verify this image isn't already used
+          if (TokenMetadataValidator.isImageUsed(imageUrl, symbol)) {
+            throw new Error('Image already used by another token');
+          }
+
+          TokenMetadataValidator.cacheMetadata(symbol, metadata);
+          return metadata;
+
+        } catch (error) {
+          lastError = error as Error;
+          attempts++;
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempts)); // Exponential backoff
+          continue;
+        }
       }
 
-      TokenMetadataValidator.cacheMetadata(symbol, metadata);
-      return metadata;
+      throw lastError || new Error('Failed to fetch metadata after retries');
 
     } catch (error) {
       console.error('Error fetching metadata for:', symbol, error);

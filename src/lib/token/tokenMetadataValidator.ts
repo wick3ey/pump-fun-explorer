@@ -30,11 +30,15 @@ export class TokenMetadataValidator {
     return this.metadataCache.get(symbol) || null;
   }
 
+  static isImageUsed(imageUrl: string, currentSymbol: string): boolean {
+    const existingSymbol = this.usedImages.get(imageUrl);
+    return existingSymbol !== undefined && existingSymbol !== currentSymbol;
+  }
+
   static cacheMetadata(symbol: string, metadata: TokenMetadata): void {
-    // Validate that this image isn't already used by another token
-    const existingTokenWithImage = this.usedImages.get(metadata.image);
-    if (existingTokenWithImage && existingTokenWithImage !== symbol) {
-      console.error(`Metadata validation failed: Image ${metadata.image} is already used by token ${existingTokenWithImage}`);
+    // Double-check image isn't already used
+    if (this.isImageUsed(metadata.image, symbol)) {
+      console.error(`Metadata validation failed: Image ${metadata.image} is already used by token ${this.usedImages.get(metadata.image)}`);
       return;
     }
 
@@ -74,10 +78,9 @@ export class TokenMetadataValidator {
       return false;
     }
 
-    // Verify that the image isn't used by another token
-    const tokenUsingImage = this.usedImages.get(metadata.image);
-    if (tokenUsingImage && tokenUsingImage !== token.symbol) {
-      console.error(`Image collision detected: ${metadata.image} is already used by ${tokenUsingImage}`);
+    // Final verification that image isn't used by another token
+    if (this.isImageUsed(metadata.image, token.symbol)) {
+      console.error(`Image collision detected: ${metadata.image} is already used by ${this.usedImages.get(metadata.image)}`);
       return false;
     }
 
@@ -90,7 +93,12 @@ export class TokenMetadataValidator {
       return (
         urlObj.protocol === 'https:' &&
         !url.includes('placeholder') &&
-        (url.endsWith('.png') || url.endsWith('.jpg') || url.endsWith('.jpeg'))
+        (
+          url.endsWith('.png') || 
+          url.endsWith('.jpg') || 
+          url.endsWith('.jpeg') || 
+          url.includes('coinmarketcap.com')
+        )
       );
     } catch {
       return false;
@@ -104,5 +112,6 @@ export class TokenMetadataValidator {
       this.metadataCache.delete(symbol);
     }
     this.validationQueue.delete(symbol);
+    this.processingTokens.delete(symbol);
   }
 }
