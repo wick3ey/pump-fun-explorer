@@ -18,10 +18,11 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
       const getSymbolPair = (tokenSymbol: string) => {
         const symbolMap: { [key: string]: string } = {
           'WIF': 'BINANCE:WIFUSDT',
-          'BONK': 'RAYDIUM:BONKUSDT',
-          'MYRO': 'RAYDIUM:MYROUSDT',
-          'POPCAT': 'RAYDIUM:POPCATUSDT',
-          'SLERF': 'RAYDIUM:SLERFUSDT',
+          'BONK': 'BINANCE:BONKUSDT',
+          'MYRO': 'MEXC:MYROUSDT',
+          'POPCAT': 'BYBIT:POPCATUSDT',
+          'SLERF': 'OKX:SLERFUSDT',
+          'BOME': 'BINANCE:BOMEUSDT',
           // Add more mappings as needed
         };
         return symbolMap[tokenSymbol] || `RAYDIUM:${tokenSymbol}USDT`;
