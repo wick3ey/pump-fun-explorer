@@ -7,7 +7,7 @@ import { TrendingFilter } from "./TrendingFilter";
 import { useState, useEffect } from "react";
 import { tokenWebSocket } from "@/lib/websocket";
 import { TokenList } from "./token/TokenList";
-import { useTokenStore } from "@/stores/tokenStore";
+import { useTokenStore, calculateMarketCap } from "@/stores/tokenStore";
 
 export const TokenBoard = () => {
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ export const TokenBoard = () => {
     return () => {
       tokenWebSocket.disconnect();
     };
-  }, []);
+  }, [addToken]);
 
   const handleTimeframeChange = (timeframe: string) => {
     setSelectedTimeframe(timeframe);
