@@ -6,7 +6,11 @@ import { Progress } from "@/components/ui/progress";
 import { Crown, Twitter, Globe, MessageCircle } from "lucide-react";
 import { useState } from "react";
 
-export const TokenInfo = () => {
+interface TokenInfoProps {
+  symbol: string;
+}
+
+export const TokenInfo = ({ symbol }: TokenInfoProps) => {
   const [slippage, setSlippage] = useState(1);
   const [isBuying, setIsBuying] = useState(true);
   const [amount, setAmount] = useState("");
@@ -19,7 +23,7 @@ export const TokenInfo = () => {
       setAmount(mockBalance.toString());
     } else {
       // Mock token balance - in a real app, this would come from your wallet
-      setAmount("1000000"); // PENGU amount
+      setAmount("1000000"); // Token amount
     }
   };
 
@@ -29,8 +33,8 @@ export const TokenInfo = () => {
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
           <div>
-            <h2 className="text-xl font-bold text-white">PENGU</h2>
-            <p className="text-gray-400">Spreading good vibes across the meta 🐧</p>
+            <h2 className="text-xl font-bold text-white">{symbol}</h2>
+            <p className="text-gray-400">Trading on Solana 🚀</p>
           </div>
         </div>
 
@@ -59,7 +63,7 @@ export const TokenInfo = () => {
                 onClick={handleMaxClick}
                 className="text-xs bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
               >
-                Max {isBuying ? `${mockBalance} SOL` : "1M PENGU"}
+                Max {isBuying ? `${mockBalance} SOL` : `1M ${symbol}`}
               </Button>
             </div>
             <Input 
@@ -153,7 +157,7 @@ export const TokenInfo = () => {
 
         <div className="pt-4 border-t border-[#2A2F3C]">
           <p className="text-sm text-gray-400">Contract Address:</p>
-          <p className="text-sm font-mono text-white">PENGU...vqs6</p>
+          <p className="text-sm font-mono text-white">{symbol}...vqs6</p>
         </div>
       </CardContent>
     </Card>

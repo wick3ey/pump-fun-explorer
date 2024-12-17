@@ -57,7 +57,7 @@ const TokenProfile = () => {
             <TokenChart symbol={symbol || ''} />
           </div>
           <div>
-            <TokenInfo />
+            <TokenInfo symbol={symbol || ''} />
           </div>
         </div>
 

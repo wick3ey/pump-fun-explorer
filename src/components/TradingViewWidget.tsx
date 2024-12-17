@@ -13,9 +13,23 @@ function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
       script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
       script.type = "text/javascript";
       script.async = true;
+
+      // Map specific tokens to their correct exchange and pair
+      const getSymbolPair = (tokenSymbol: string) => {
+        const symbolMap: { [key: string]: string } = {
+          'WIF': 'BINANCE:WIFUSDT',
+          'BONK': 'RAYDIUM:BONKUSDT',
+          'MYRO': 'RAYDIUM:MYROUSDT',
+          'POPCAT': 'RAYDIUM:POPCATUSDT',
+          'SLERF': 'RAYDIUM:SLERFUSDT',
+          // Add more mappings as needed
+        };
+        return symbolMap[tokenSymbol] || `RAYDIUM:${tokenSymbol}USDT`;
+      };
+
       script.innerHTML = JSON.stringify({
         autosize: true,
-        symbol: `RAYDIUM:${symbol}USDT`,
+        symbol: getSymbolPair(symbol),
         interval: "D",
         timezone: "Etc/UTC",
         theme: "dark",
