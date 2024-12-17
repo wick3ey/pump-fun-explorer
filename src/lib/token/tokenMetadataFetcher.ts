@@ -29,6 +29,8 @@ export class TokenMetadataFetcher {
     'https://gateway.ipfs.io/ipfs/'
   ];
 
+  private static imageCache = new Map<string, string>();
+
   private static async fetchWithTimeout(url: string, timeout: number): Promise<Response> {
     const controller = new AbortController();
     const timeoutPromise = new Promise<Response>((_, reject) => {
@@ -64,7 +66,7 @@ export class TokenMetadataFetcher {
     const errors: Error[] = [];
     const shuffledGateways = [...this.BACKUP_GATEWAYS]
       .sort(() => Math.random() - 0.5)
-      .slice(0, 2); // Only try 2 random gateways per attempt to avoid too many concurrent requests
+      .slice(0, 2);
 
     const fetchPromises = shuffledGateways.map(async (gateway) => {
       try {
@@ -78,7 +80,6 @@ export class TokenMetadataFetcher {
       }
     });
 
-    // Try gateways concurrently but wait for first successful response
     const responses = await Promise.all(fetchPromises);
     const successfulResponse = responses.find(response => response !== null);
 
@@ -89,6 +90,25 @@ export class TokenMetadataFetcher {
     throw new Error(`All gateways failed: ${errors.map(e => e.message).join(', ')}`);
   }
 
+  private static async validateAndCacheImage(imageUrl: string, symbol: string): Promise<string> {
+    try {
+      const cachedImage = this.imageCache.get(symbol);
+      if (cachedImage) {
+        return cachedImage;
+      }
+
+      const response = await fetch(imageUrl, { method: 'HEAD' });
+      if (response.ok && response.headers.get('content-type')?.startsWith('image/')) {
+        this.imageCache.set(symbol, imageUrl);
+        return imageUrl;
+      }
+      throw new Error('Invalid image URL');
+    } catch (error) {
+      console.warn(`Failed to validate image for ${symbol}:`, error);
+      return "/placeholder.svg";
+    }
+  }
+
   static async fetchMetadata(symbol: string, uri?: string): Promise<TokenMetadata> {
     try {
       if (!symbol) {
@@ -96,23 +116,20 @@ export class TokenMetadataFetcher {
         return this.getDefaultMetadata(symbol);
       }
 
-      // Layer 1: Check hardcoded metadata
       if (this.hardcodedMetadata[symbol]) {
         return this.hardcodedMetadata[symbol];
       }
 
-      // Layer 2: Check cache
       const cachedMetadata = TokenMetadataValidator.getCachedMetadata(symbol);
       if (cachedMetadata) {
-        return cachedMetadata;
+        const validatedImage = await this.validateAndCacheImage(cachedMetadata.image, symbol);
+        return { ...cachedMetadata, image: validatedImage };
       }
 
-      // If no URI provided, return default metadata
       if (!uri) {
         return this.getDefaultMetadata(symbol);
       }
 
-      // Extract CID if it's an IPFS URI
       const cid = uri.replace(/^https?:\/\/[^/]+\/ipfs\//, '').replace('ipfs://', '');
       
       let lastError: Error | null = null;
@@ -121,9 +138,13 @@ export class TokenMetadataFetcher {
           const response = await this.tryFetchFromGateways(cid, attempt);
           const data = await response.json();
           
-          // Validate and sanitize the metadata
+          const validatedImage = await this.validateAndCacheImage(
+            this.sanitizeImageUrl(data.image),
+            symbol
+          );
+
           const metadata: TokenMetadata = {
-            image: this.sanitizeImageUrl(data.image) || "/placeholder.svg",
+            image: validatedImage,
             description: data.description?.slice(0, 500) || `${symbol} Token on Solana`,
             name: data.name?.slice(0, 100) || symbol
           };
@@ -157,12 +178,10 @@ export class TokenMetadataFetcher {
   private static sanitizeImageUrl(url?: string): string {
     if (!url) return "/placeholder.svg";
     
-    // Convert IPFS URLs to use a reliable gateway
     if (url.startsWith('ipfs://')) {
       return `https://cloudflare-ipfs.com/ipfs/${url.replace('ipfs://', '')}`;
     }
     
-    // Ensure URL is using HTTPS
     if (url.startsWith('http://')) {
       return url.replace('http://', 'https://');
     }
