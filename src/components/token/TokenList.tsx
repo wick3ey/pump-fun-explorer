@@ -19,6 +19,9 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
     return num.toString();
   };
 
+  // Filter out tokens with no market cap or zero market cap
+  const calculatedTokens = tokens.filter(token => token.marketCap && token.marketCap > 0);
+
   return (
     <Card className="bg-[#1A1F2C] border-[#2A2F3C]">
       <div className="overflow-x-auto">
@@ -36,7 +39,7 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
             </tr>
           </thead>
           <tbody>
-            {tokens.map((token, index) => (
+            {calculatedTokens.map((token, index) => (
               <tr 
                 key={index}
                 onClick={() => onTokenClick(token.symbol)}
