@@ -19,21 +19,33 @@ export const useTokenStore = create<TokenStore>()(
       
       addToken: async (token) => {
         try {
-          const metadata = await fetchTokenMetadata(token.contractAddress);
+          let metadata;
+          try {
+            metadata = await fetchTokenMetadata(token.contractAddress);
+          } catch (error) {
+            console.error('Error fetching metadata:', error);
+            metadata = {
+              name: token.name,
+              symbol: token.symbol,
+              description: `${token.symbol} Token on Solana`,
+              image: undefined
+            };
+          }
+          
+          const timestamp = token.timestamp || Date.now();
+          
+          const enrichedToken = {
+            ...token,
+            name: metadata.name || token.name,
+            symbol: metadata.symbol || token.symbol,
+            image: metadata.image,
+            description: metadata.description || `${token.symbol} Token on Solana`,
+            marketCap: token.marketCapUSD || token.marketCap || 0,
+            timestamp,
+          };
           
           set((state) => {
             const existingTokenIndex = state.tokens.findIndex(t => t.symbol === token.symbol);
-            const timestamp = token.timestamp || Date.now();
-            
-            const enrichedToken = {
-              ...token,
-              name: metadata.name || token.name,
-              symbol: metadata.symbol || token.symbol,
-              image: metadata.image || '/placeholder.svg',
-              description: metadata.description || `${token.symbol} Token on Solana`,
-              marketCap: token.marketCapUSD || token.marketCap || 0,
-              timestamp,
-            };
             
             if (existingTokenIndex !== -1) {
               const updatedTokens = [...state.tokens];
@@ -51,7 +63,6 @@ export const useTokenStore = create<TokenStore>()(
             tokens: [{
               ...token,
               marketCap: token.marketCapUSD || token.marketCap || 0,
-              image: '/placeholder.svg',
               description: `${token.symbol} Token on Solana`,
               timestamp: token.timestamp || Date.now(),
             }, ...state.tokens].slice(0, 100)
