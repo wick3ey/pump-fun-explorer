@@ -62,9 +62,13 @@ export class TokenMetadataFetcher {
       // Try to fetch from direct URI first
       try {
         const response = await fetch(uri, {
-          mode: 'no-cors',
-          headers: { 'Accept': '*/*' }
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
         });
+        
         if (response.ok) {
           const data = await response.json();
           const metadata = this.processMetadataResponse(data, symbol);
@@ -80,7 +84,6 @@ export class TokenMetadataFetcher {
         return this.getDefaultMetadata(symbol);
       }
 
-      let lastError: Error | null = null;
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
           console.log(`Attempt ${attempt} to fetch metadata for ${symbol}`);
@@ -89,20 +92,17 @@ export class TokenMetadataFetcher {
           
           const metadata = this.processMetadataResponse(data, symbol);
           if (metadata) return metadata;
-
         } catch (error) {
-          lastError = error as Error;
           console.warn(`Attempt ${attempt} failed for ${symbol}:`, error);
-          
-          if (attempt < 3) {
-            await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+          if (attempt === 3) {
+            console.error(`All fetch attempts failed for ${symbol}:`, error);
+          } else {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           }
         }
       }
 
-      console.error(`All fetch attempts failed for ${symbol}:`, lastError);
       return this.getDefaultMetadata(symbol);
-
     } catch (error) {
       console.error('Error in fetchMetadata:', error);
       return this.getDefaultMetadata(symbol);
@@ -111,6 +111,8 @@ export class TokenMetadataFetcher {
 
   private static extractCID(uri: string): string | null {
     try {
+      if (!uri) return null;
+      
       const ipfsMatch = uri.match(/ipfs\/([a-zA-Z0-9]+)/);
       if (ipfsMatch) return ipfsMatch[1];
       
