@@ -1,5 +1,3 @@
-import { TokenMetadataFetcher } from "./token/tokenMetadataFetcher";
-import { TokenMetadataValidator } from "./token/tokenMetadataValidator";
 import { TokenData } from "@/types/token";
 import { calculateAge } from "./token/tokenCalculations";
 
@@ -8,7 +6,6 @@ class TokenWebSocket {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private onNewTokenCallback: ((data: TokenData) => void) | null = null;
-  private subscribedTokens: Set<string> = new Set();
   private solPriceUSD: number | null = null;
 
   constructor() {
@@ -44,28 +41,21 @@ class TokenWebSocket {
   private async processTokenData(parsedData: any) {
     try {
       const marketCapUSD = (parsedData.marketCapSol || 0) * (this.solPriceUSD || 0);
-      
-      const metadata = await TokenMetadataFetcher.fetchMetadata(
-        parsedData.symbol,
-        parsedData.uri
-      );
-
       const timestamp = Date.now();
-      const age = calculateAge(timestamp);
-
+      
       const tokenData: TokenData = {
         ...parsedData,
         marketCapUSD,
         marketCap: marketCapUSD,
         power: parsedData.power || 0,
         chain: "SOL",
-        age,
+        age: calculateAge(timestamp),
         totalSupply: 1_000_000_000,
-        image: metadata?.image || "/placeholder.svg",
-        description: metadata?.description || `${parsedData.symbol} Token on Solana`,
-        name: metadata?.name || parsedData.symbol,
+        name: parsedData.symbol,
         timestamp,
-        contractAddress: parsedData.mint // Add the mint address as the contract address
+        contractAddress: parsedData.mint,
+        image: "/placeholder.svg",
+        description: `${parsedData.symbol} Token on Solana`
       };
 
       if (this.onNewTokenCallback) {

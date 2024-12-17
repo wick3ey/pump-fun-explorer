@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { TokenData } from '@/types/token';
-import { TokenMetadataValidator } from '@/lib/token/tokenMetadataValidator';
 
 interface TokenStore {
   tokens: TokenData[];
@@ -19,9 +18,6 @@ export const useTokenStore = create<TokenStore>()(
       
       addToken: async (token) => {
         try {
-          const isValid = TokenMetadataValidator.validateTokenData(token);
-          console.log(`Token ${token.symbol} validation result:`, isValid);
-
           set((state) => {
             const existingTokenIndex = state.tokens.findIndex(t => t.symbol === token.symbol);
             const timestamp = token.timestamp || Date.now();
@@ -40,15 +36,13 @@ export const useTokenStore = create<TokenStore>()(
                 tokens: [{
                   ...token,
                   marketCap: token.marketCapUSD || token.marketCap || 0,
-                  image: token.image || "/placeholder.svg",
-                  description: token.description || `${token.symbol} Token on Solana`,
+                  image: "/placeholder.svg",
+                  description: `${token.symbol} Token on Solana`,
                   timestamp,
                 }, ...state.tokens].slice(0, 100)
               };
             }
           });
-          
-          console.log('Token added/updated successfully:', token);
         } catch (error) {
           console.error('Error adding token:', error);
         }
