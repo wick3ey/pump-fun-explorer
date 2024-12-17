@@ -20,7 +20,10 @@ export class TokenMetadataFetcher {
   };
 
   private static readonly MAX_RETRIES = 5;
-  private static readonly RETRY_DELAY = 2000; // 2 seconds
+  private static readonly RETRY_DELAY = 2000; // 2 seconds between retries
+  private static readonly FETCH_DELAY = 1000; // 1 second between different tokens
+  private static processingQueue: string[] = [];
+  private static isProcessing = false;
 
   static async fetchMetadata(symbol: string, uri: string): Promise<TokenMetadata | null> {
     try {
@@ -29,6 +32,19 @@ export class TokenMetadataFetcher {
         console.log('Token already being processed:', symbol);
         return null;
       }
+
+      // Add to processing queue if not already in it
+      if (!this.processingQueue.includes(symbol)) {
+        this.processingQueue.push(symbol);
+      }
+
+      // Wait if another token is being processed
+      while (this.isProcessing && this.processingQueue[0] !== symbol) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      this.isProcessing = true;
+      TokenMetadataValidator.startProcessing(symbol);
 
       // Layer 2: Use hardcoded metadata if available
       if (this.hardcodedMetadata[symbol]) {
@@ -47,8 +63,6 @@ export class TokenMetadataFetcher {
         return cachedMetadata;
       }
 
-      TokenMetadataValidator.startProcessing(symbol);
-
       let retryCount = 0;
       while (retryCount < this.MAX_RETRIES) {
         try {
@@ -62,7 +76,6 @@ export class TokenMetadataFetcher {
 
           const data = await response.json();
           
-          // Validate that we have required fields
           if (!data.image || !data.name) {
             throw new Error('Invalid metadata format - missing required fields');
           }
@@ -105,7 +118,13 @@ export class TokenMetadataFetcher {
       console.error('Error in fetchMetadata:', error);
       return null;
     } finally {
+      // Remove from queue and release processing lock
+      this.processingQueue = this.processingQueue.filter(s => s !== symbol);
+      this.isProcessing = false;
       TokenMetadataValidator.finishProcessing(symbol);
+      
+      // Add delay before processing next token
+      await new Promise(resolve => setTimeout(resolve, this.FETCH_DELAY));
     }
   }
 }
