@@ -56,40 +56,47 @@ export const Header = () => {
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
-                  <Menu className="h-6 w-6" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-gray-400 hover:text-white p-2"
+                >
+                  <Menu className="h-8 w-8" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] bg-[#13141F] border-l border-gray-800 p-0">
+              <SheetContent 
+                side="right" 
+                className="w-full sm:w-[300px] bg-[#13141F] border-l border-gray-800 p-0"
+              >
                 <div className="flex flex-col h-full p-6">
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <Link to="/" className="block">
-                      <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white">
-                        <BarChart3 className="h-4 w-4 mr-2" />
+                      <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white text-lg py-4">
+                        <BarChart3 className="h-5 w-5 mr-3" />
                         Market Overview
                       </Button>
                     </Link>
                     <Link to="/memescope" className="block">
-                      <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white">
+                      <Button variant="ghost" className="w-full justify-start text-gray-400 hover:text-white text-lg py-4">
                         Memescope
                       </Button>
                     </Link>
                     <Link to="/create" className="block">
-                      <Button className="w-full bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white">
+                      <Button className="w-full bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white text-lg py-4">
                         Create Token
                       </Button>
                     </Link>
                   </div>
-                  <div className="mt-auto space-y-4">
+                  <div className="mt-auto space-y-6">
                     <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
                     <Button 
                       onClick={() => setShowLoginDialog(true)}
-                      className="w-full bg-[#9b87f5] hover:bg-[#8b77e5] text-white"
+                      className="w-full bg-[#9b87f5] hover:bg-[#8b77e5] text-white text-lg py-4"
                     >
                       Log in
                     </Button>
-                    <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                      <Wallet className="h-4 w-4 mr-2" />
+                    <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white text-lg py-4">
+                      <Wallet className="h-5 w-5 mr-3" />
                       Connect Wallet
                     </Button>
                   </div>

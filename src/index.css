@@ -71,7 +71,23 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground pt-16;
+  }
+}
+
+/* Ensure content is pushed down below fixed header */
+main {
+  padding-top: 4rem;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  button {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  input, select, textarea {
+    @apply text-base;
   }
 }
 
