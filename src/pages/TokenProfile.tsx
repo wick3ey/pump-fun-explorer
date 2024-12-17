@@ -1,12 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { TokenChart } from "@/components/TokenChart";
 import { TokenInfo } from "@/components/TokenInfo";
-import { TransactionHistory } from "@/components/TransactionHistory";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { TokenHeader } from "@/components/TokenHeader";
 import { useQuery } from "@tanstack/react-query";
+import { ChatTransactionToggle } from "@/components/ChatTransactionToggle";
 
 const TokenProfile = () => {
   const navigate = useNavigate();
@@ -15,8 +15,6 @@ const TokenProfile = () => {
   const { data: token } = useQuery({
     queryKey: ['token', symbol],
     queryFn: async () => {
-      // This is where you'd normally fetch from your API
-      // For now, we'll return DOGE-specific data only for DOGE
       if (symbol === 'DOGE') {
         return {
           name: "Dogecoin",
@@ -27,7 +25,6 @@ const TokenProfile = () => {
         };
       }
       
-      // Default data for other tokens
       return {
         name: symbol,
         symbol: symbol,
@@ -62,7 +59,7 @@ const TokenProfile = () => {
         </div>
 
         <div className="mt-6">
-          <TransactionHistory />
+          <ChatTransactionToggle />
         </div>
       </div>
     </div>
