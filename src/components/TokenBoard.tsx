@@ -5,6 +5,7 @@ import { ArrowUp, ArrowDown, Crown, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const TokenBoard = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,6 +54,11 @@ export const TokenBoard = () => {
     });
 
   const kingOfTheHill = tokens.find(token => token.marketCap >= 50000);
+  const navigate = useNavigate();
+
+  const handleTokenClick = (symbol: string) => {
+    navigate(`/token/${symbol}`);
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -123,6 +129,7 @@ export const TokenBoard = () => {
                 <TableRow 
                   key={token.symbol} 
                   className="hover:bg-[#2A2F3C]/50 border-[#2A2F3C] cursor-pointer transition-colors"
+                  onClick={() => handleTokenClick(token.symbol)}
                 >
                   <TableCell className="font-medium">
                     <div className="flex items-center space-x-2">

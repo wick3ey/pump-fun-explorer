@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import CreateToken from "./pages/CreateToken";
+import TokenProfile from "./pages/TokenProfile";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +18,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/create" element={<CreateToken />} />
+          <Route path="/token/:symbol" element={<TokenProfile />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
