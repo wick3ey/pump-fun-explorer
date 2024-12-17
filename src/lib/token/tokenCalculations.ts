@@ -18,21 +18,20 @@ export const calculateAge = (timestamp: number): string => {
   const ONE_HOUR = ONE_MINUTE * 60;
   const ONE_DAY = ONE_HOUR * 24;
   
-  // Ensure minimum of 1 minute difference
-  const diffInMs = Math.max(ONE_MINUTE, now - timestamp);
+  const diffInMs = Math.max(0, now - timestamp);
   const diffInMinutes = Math.floor(diffInMs / ONE_MINUTE);
+  const diffInHours = Math.floor(diffInMs / ONE_HOUR);
+  const diffInDays = Math.floor(diffInMs / ONE_DAY);
   
-  if (diffInMinutes < 60) {
-    return `${Math.max(1, diffInMinutes)}m`;
-  } 
+  if (diffInDays > 0) {
+    return `${diffInDays}d`;
+  }
   
-  if (diffInMinutes < 1440) {
-    const hours = Math.floor(diffInMinutes / 60);
-    return `${hours}h`;
-  } 
+  if (diffInHours > 0) {
+    return `${diffInHours}h`;
+  }
   
-  const days = Math.floor(diffInMinutes / 1440);
-  return `${days}d`;
+  return `${Math.max(1, diffInMinutes)}m`;
 };
 
 export const generateTransactionCounts = (

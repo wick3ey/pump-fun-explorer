@@ -23,35 +23,26 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
   const { tokens, addToken, updateMarketCaps, searchTokens } = useTokenStore();
   const [kingOfHill, setKingOfHill] = useState<TokenData | null>(null);
   const intervalRef = useRef<NodeJS.Timeout>();
-  const prevTokensRef = useRef(tokens);
+  const [localTokens, setLocalTokens] = useState<TokenData[]>(tokens);
 
+  // Update local tokens with current ages
   const updateTokenAges = useCallback(() => {
-    const updatedTokens = tokens.map(token => ({
+    setLocalTokens(tokens.map(token => ({
       ...token,
       age: calculateAge(token.timestamp)
-    }));
-    
-    // Only update if market caps have actually changed
-    if (JSON.stringify(updatedTokens) !== JSON.stringify(prevTokensRef.current)) {
-      prevTokensRef.current = updatedTokens;
-      updateMarketCaps().catch(console.error);
-    }
-  }, [tokens, updateMarketCaps]);
+    })));
+  }, [tokens]);
 
-  // Update token ages every minute
+  // Initial setup and interval for age updates
   useEffect(() => {
-    // Clear existing interval
+    updateTokenAges();
+    
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-
-    // Initial update
-    updateTokenAges();
     
-    // Set new interval
-    intervalRef.current = setInterval(updateTokenAges, 60000);
+    intervalRef.current = setInterval(updateTokenAges, 10000); // Update every 10 seconds
     
-    // Cleanup
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -62,14 +53,14 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
   // Update King of the Hill
   useEffect(() => {
     const KING_THRESHOLD = 40000;
-    const newKing = tokens
+    const newKing = localTokens
       .filter(token => (token.marketCap || 0) >= KING_THRESHOLD)
       .sort((a, b) => (b.marketCap || 0) - (a.marketCap || 0))[0];
     
     if (newKing && (!kingOfHill || newKing.marketCap !== kingOfHill.marketCap)) {
       setKingOfHill(newKing);
     }
-  }, [tokens]);
+  }, [localTokens]);
 
   // WebSocket token updates
   useEffect(() => {
@@ -147,7 +138,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
       />
 
       <TokenList 
-        tokens={getSortedTokens(tokens)}
+        tokens={getSortedTokens(localTokens)}
         onTokenClick={(symbol) => navigate(`/token/${symbol}`)}
       />
     </div>
