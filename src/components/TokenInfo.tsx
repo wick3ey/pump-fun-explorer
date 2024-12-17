@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
-import { Crown, Twitter, Globe, MessageCircle } from "lucide-react";
+import { Crown, Twitter, Globe, MessageCircle, Copy } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface TokenInfoProps {
   symbol: string;
@@ -14,6 +15,7 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
   const [slippage, setSlippage] = useState(1);
   const [isBuying, setIsBuying] = useState(true);
   const [amount, setAmount] = useState("");
+  const { toast } = useToast();
 
   const mockBalance = 10.5;
 
@@ -23,6 +25,16 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
     } else {
       setAmount("1000000");
     }
+  };
+
+  const handleCopyAddress = () => {
+    // Mock contract address for demonstration
+    const contractAddress = `${symbol}...vqs6`;
+    navigator.clipboard.writeText(contractAddress);
+    toast({
+      title: "Address Copied",
+      description: "Contract address has been copied to clipboard",
+    });
   };
 
   return (
@@ -154,7 +166,17 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
         </div>
 
         <div className="pt-4 border-t border-[#2A2F3C]">
-          <p className="text-sm text-gray-400">Contract Address:</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-400">Contract Address:</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopyAddress}
+              className="text-gray-400 hover:text-white"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
           <p className="text-sm font-mono text-white break-all">{symbol}...vqs6</p>
         </div>
       </CardContent>
