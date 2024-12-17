@@ -7,14 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { TokenImageUpload, tokenImageSchema } from "./TokenImageUpload";
-import { Rocket, Link, Twitter, MessageCircle } from "lucide-react";
+import { Rocket } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
+import { SocialLinksSection } from "./SocialLinksSection";
 
 const formSchema = z.object({
   name: z.string().min(1, "Token name is required"),
   symbol: z.string().min(1, "Token symbol is required").max(10, "Symbol must be 10 characters or less"),
-  price: z.string().min(1, "Initial price is required"),
   description: z.string().min(1, "Description is required"),
   telegram: z.string().optional(),
   website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
@@ -30,7 +30,6 @@ export const TokenForm = () => {
     defaultValues: {
       name: "",
       symbol: "",
-      price: "",
       description: "",
       telegram: "",
       website: "",
@@ -91,26 +90,6 @@ export const TokenForm = () => {
 
         <FormField
           control={form.control}
-          name="price"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-white">Initial Price ($)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  step="0.000001"
-                  placeholder="e.g. 0.000001" 
-                  {...field}
-                  className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
@@ -132,79 +111,17 @@ export const TokenForm = () => {
             {showMoreOptions ? "Hide more options ↑" : "Show more options ↓"}
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-6 mt-6">
-            <FormField
-              control={form.control}
-              name="telegram"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4" />
-                    Telegram Link (optional)
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://t.me/yourgroup" 
-                      {...field}
-                      className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="website"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white flex items-center gap-2">
-                    <Link className="h-4 w-4" />
-                    Website Link (optional)
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://yourwebsite.com" 
-                      {...field}
-                      className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="twitter"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white flex items-center gap-2">
-                    <Twitter className="h-4 w-4" />
-                    Twitter or X Link (optional)
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://x.com/yourusername" 
-                      {...field}
-                      className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <SocialLinksSection form={form} />
           </CollapsibleContent>
         </Collapsible>
 
         <div className="space-y-4">
           <p className="text-sm text-gray-400 italic">tip: coin data cannot be changed after creation</p>
-          <p className="text-sm text-purple-400">when your coin completes its bonding curve you receive 0.5 SOL</p>
           <Button 
             type="submit" 
             className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-[1.02]"
           >
-            <Rocket className="mr-2 h-5 w-5" /> Create Coin
+            <Rocket className="mr-2 h-5 w-5" /> Launch Coin! 🚀
           </Button>
         </div>
       </form>
