@@ -3,9 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Mic, MicOff, Users } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useConversation } from '@11labs/react';
 import { LoginDialog } from "./LoginDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { createClient, createMicrophoneAudioTrack, IAgoraRTCRemoteUser } from "agora-rtc-react";
+
+const appId = ""; // You'll need to add your Agora App ID
+const channelName = "main"; // This could be dynamic based on the token room
 
 interface VoiceChatProps {
   tokenSymbol: string;
@@ -14,34 +17,26 @@ interface VoiceChatProps {
 export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   const [isMuted, setIsMuted] = useState(true);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const [participants, setParticipants] = useState([
-    { id: 1, name: "Anon#1234", speaking: false },
-    { id: 2, name: "Degen#5678", speaking: true }
-  ]);
+  const [participants, setParticipants] = useState<{ id: number; name: string; speaking: boolean; }[]>([]);
+  const [agoraClient, setAgoraClient] = useState<ReturnType<typeof createClient> | null>(null);
+  const [audioTrack, setAudioTrack] = useState<ReturnType<typeof createMicrophoneAudioTrack> | null>(null);
   
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
-  const conversation = useConversation({
-    onConnect: () => {
-      toast({
-        title: "Connected to voice chat",
-        description: "You can now speak with other participants",
-      });
-    },
-    onDisconnect: () => {
-      toast({
-        title: "Disconnected from voice chat",
-        description: "Voice chat connection ended",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Voice chat error",
-        description: error.message,
-        variant: "destructive"
-      });
+
+  useEffect(() => {
+    if (!appId) {
+      console.error("Agora App ID is required");
+      return;
     }
-  });
+
+    const client = createClient({ mode: "rtc", codec: "vp8" });
+    setAgoraClient(client);
+
+    return () => {
+      client.leave();
+    };
+  }, []);
 
   const handleJoinVoice = async () => {
     if (!isAuthenticated) {
@@ -49,16 +44,47 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
       return;
     }
 
-    try {
-      await conversation.startSession({
-        agentId: "default_agent_id",
-        overrides: {
-          tts: {
-            voiceId: "21m00Tcm4TlvDq8ikWAM" // Using a default voice
-          }
-        }
+    if (!agoraClient) {
+      toast({
+        title: "Error",
+        description: "Voice chat client not initialized",
+        variant: "destructive"
       });
+      return;
+    }
+
+    try {
+      // Initialize microphone track
+      const track = await createMicrophoneAudioTrack();
+      setAudioTrack(track);
+
+      // Join the channel
+      const uid = await agoraClient.join(appId, channelName, null, null);
       
+      // Publish audio track
+      await agoraClient.publish(track);
+
+      // Update participants list
+      setParticipants(prev => [...prev, { id: uid, name: `User#${uid}`, speaking: false }]);
+
+      // Set up user joined listener
+      agoraClient.on("user-joined", (user: IAgoraRTCRemoteUser) => {
+        setParticipants(prev => [...prev, { id: user.uid, name: `User#${user.uid}`, speaking: false }]);
+        toast({
+          title: "User joined",
+          description: `User#${user.uid} joined the voice chat`,
+        });
+      });
+
+      // Set up user left listener
+      agoraClient.on("user-left", (user: IAgoraRTCRemoteUser) => {
+        setParticipants(prev => prev.filter(p => p.id !== user.uid));
+        toast({
+          title: "User left",
+          description: `User#${user.uid} left the voice chat`,
+        });
+      });
+
       toast({
         title: "Joined voice chat",
         description: "You've joined the voice chat room",
@@ -66,31 +92,43 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
     } catch (error) {
       toast({
         title: "Error joining voice chat",
-        description: "Failed to join voice chat. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to join voice chat",
         variant: "destructive"
       });
     }
   };
 
-  const handleMuteToggle = () => {
+  const handleMuteToggle = async () => {
     if (!isAuthenticated) {
       setShowLoginDialog(true);
       return;
     }
     
-    setIsMuted(!isMuted);
-    toast({
-      title: isMuted ? "Unmuted" : "Muted",
-      description: `You've ${isMuted ? 'unmuted' : 'muted'} your microphone`,
-    });
+    if (audioTrack) {
+      if (isMuted) {
+        await audioTrack.setEnabled(true);
+      } else {
+        await audioTrack.setEnabled(false);
+      }
+      setIsMuted(!isMuted);
+      toast({
+        title: isMuted ? "Unmuted" : "Muted",
+        description: `You've ${isMuted ? 'unmuted' : 'muted'} your microphone`,
+      });
+    }
   };
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      conversation.endSession();
+      if (audioTrack) {
+        audioTrack.close();
+      }
+      if (agoraClient) {
+        agoraClient.leave();
+      }
     };
-  }, []);
+  }, [audioTrack, agoraClient]);
 
   return (
     <>
