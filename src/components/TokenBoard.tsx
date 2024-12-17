@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Zap, Timer, ExternalLink } from "lucide-react";
+import { Zap, Timer, ExternalLink, Lock } from "lucide-react";
 import { TrendingTokensBanner } from "./TrendingTokensBanner";
 import { useNavigate } from "react-router-dom";
 import { KingOfTheHill } from "./KingOfTheHill";
@@ -17,6 +17,7 @@ interface TokenData {
   power: number;
   chain: string;
   percentageChange: number;
+  isSafeDegen?: boolean;
 }
 
 export const TokenBoard = () => {
@@ -33,7 +34,8 @@ export const TokenBoard = () => {
       holders: 89,
       power: 468,
       chain: "SOL",
-      percentageChange: 12.5
+      percentageChange: 12.5,
+      isSafeDegen: true
     },
     {
       symbol: "PEPE",
@@ -143,9 +145,14 @@ export const TokenBoard = () => {
                   <td className="p-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
-                      <div>
-                        <div className="font-medium text-white">{token.symbol}</div>
-                        <div className="text-sm text-gray-400">{token.name}</div>
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <div className="font-medium text-white">{token.symbol}</div>
+                          <div className="text-sm text-gray-400">{token.name}</div>
+                        </div>
+                        {token.isSafeDegen && (
+                          <Lock className="h-4 w-4 text-green-500" />
+                        )}
                       </div>
                     </div>
                   </td>
