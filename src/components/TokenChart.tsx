@@ -16,13 +16,17 @@ export const TokenChart = () => {
 
   // Mock candlestick data - replace with real data
   const data = [
-    { time: "00:00", open: 4000, close: 3000, high: 4100, low: 2900, volume: 2400 },
-    { time: "03:00", open: 3000, close: 2000, high: 3200, low: 1900, volume: 2100 },
-    { time: "06:00", open: 2000, close: 2780, high: 2800, low: 1950, volume: 2800 },
-    { time: "09:00", open: 2780, close: 1890, high: 2800, low: 1800, volume: 2100 },
-    { time: "12:00", open: 1890, close: 2390, high: 2500, low: 1850, volume: 2300 },
-    { time: "15:00", open: 2390, close: 3490, high: 3600, low: 2300, volume: 3100 },
-  ];
+    { time: "00:00", open: 4000, close: 3000, high: 4100, low: 2900, volume: 2400, isPositive: false },
+    { time: "03:00", open: 3000, close: 2000, high: 3200, low: 1900, volume: 2100, isPositive: false },
+    { time: "06:00", open: 2000, close: 2780, high: 2800, low: 1950, volume: 2800, isPositive: true },
+    { time: "09:00", open: 2780, close: 1890, high: 2800, low: 1800, volume: 2100, isPositive: false },
+    { time: "12:00", open: 1890, close: 2390, high: 2500, low: 1850, volume: 2300, isPositive: true },
+    { time: "15:00", open: 2390, close: 3490, high: 3600, low: 2300, volume: 3100, isPositive: true },
+  ].map(item => ({
+    ...item,
+    isPositive: item.close > item.open,
+    difference: Math.abs(item.open - item.close)
+  }));
 
   return (
     <Card className="bg-[#1A1F2C] border-[#2A2F3C]">
@@ -62,9 +66,9 @@ export const TokenChart = () => {
                 opacity={0.3}
               />
               <Bar
-                dataKey={d => d.open > d.close ? d.open - d.close : d.close - d.open}
-                fill={d => d.open > d.close ? '#ef4444' : '#22c55e'}
-                stroke={d => d.open > d.close ? '#dc2626' : '#16a34a'}
+                dataKey="difference"
+                fill="#22c55e"
+                stroke="#16a34a"
               />
             </BarChart>
           </ResponsiveContainer>
