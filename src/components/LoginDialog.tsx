@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Mail } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { signInWithGoogle, signInWithEmail, signUpWithEmail } from "@/lib/supabase";
 
 interface LoginDialogProps {
   open: boolean;
@@ -19,48 +18,22 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
   const { toast } = useToast();
 
   const handleGoogleSignIn = async () => {
-    try {
-      const { error } = await signInWithGoogle();
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Successfully signed in",
-        description: "Welcome to pump.fun!",
-      });
-      
-      onOpenChange(false);
-    } catch (error: any) {
-      toast({
-        title: "Error signing in",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
+    // Placeholder for future authentication implementation
+    toast({
+      title: "Authentication not implemented",
+      description: "Please implement your preferred authentication method",
+    });
   };
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      if (isSignUp) {
-        const { error } = await signUpWithEmail(email, password);
-        if (error) throw error;
-        setShowPayment(true);
-      } else {
-        const { error } = await signInWithEmail(email, password);
-        if (error) throw error;
-        onOpenChange(false);
-      }
-      
+    // Placeholder for future authentication implementation
+    if (isSignUp) {
+      setShowPayment(true);
+    } else {
       toast({
-        title: isSignUp ? "Account created" : "Successfully signed in",
-        description: isSignUp ? "Please complete your subscription" : "Welcome back!",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
+        title: "Authentication not implemented",
+        description: "Please implement your preferred authentication method",
       });
     }
   };
