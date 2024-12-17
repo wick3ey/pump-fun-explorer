@@ -10,7 +10,6 @@ import { useState } from "react";
 interface TokenData {
   symbol: string;
   name: string;
-  price: number;
   marketCap: number;
   age: string;
   transactions: number;
@@ -28,7 +27,6 @@ export const TokenBoard = () => {
     {
       symbol: "PENGU",
       name: "Pudgy Penguins",
-      price: 0.000000435,
       marketCap: 5000,
       age: "1h",
       transactions: 156,
@@ -40,7 +38,6 @@ export const TokenBoard = () => {
     {
       symbol: "PEPE",
       name: "Pepe",
-      price: 0.000000123,
       marketCap: 3000,
       age: "2h",
       transactions: 200,
@@ -52,7 +49,6 @@ export const TokenBoard = () => {
     {
       symbol: "FLOSS",
       name: "Floss",
-      price: 0.000000456,
       marketCap: 4000,
       age: "16h",
       transactions: 100,
@@ -64,7 +60,6 @@ export const TokenBoard = () => {
     {
       symbol: "DOGE",
       name: "Dogecoin",
-      price: 0.000001234,
       marketCap: 4500,
       age: "4h",
       transactions: 300,
@@ -76,7 +71,6 @@ export const TokenBoard = () => {
     {
       symbol: "SHIB",
       name: "Shiba Inu",
-      price: 0.000000789,
       marketCap: 3500,
       age: "8h",
       transactions: 250,
@@ -107,11 +101,6 @@ export const TokenBoard = () => {
 
   return (
     <div className="space-y-6">
-      <TrendingFilter 
-        selectedTimeframe={selectedTimeframe}
-        onTimeframeChange={handleTimeframeChange}
-      />
-
       <KingOfTheHill 
         symbol="PENGU"
         chain="SOL"
@@ -124,13 +113,18 @@ export const TokenBoard = () => {
 
       <TrendingTokensBanner />
 
+      <TrendingFilter 
+        selectedTimeframe={selectedTimeframe}
+        onTimeframeChange={handleTimeframeChange}
+      />
+
       <Card className="bg-[#1A1F2C] border-[#2A2F3C]">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-[#2A2F3C]">
                 <th className="text-left p-4 text-gray-400">TOKEN</th>
-                <th className="text-right p-4 text-gray-400">PRICE</th>
+                <th className="text-right p-4 text-gray-400">MARKETCAP</th>
                 <th className="text-right p-4 text-gray-400">AGE</th>
                 <th className="text-right p-4 text-gray-400">TXNS</th>
                 <th className="text-right p-4 text-gray-400">HOLDERS</th>
@@ -156,7 +150,7 @@ export const TokenBoard = () => {
                     </div>
                   </td>
                   <td className="text-right p-4 text-white">
-                    ${token.price.toFixed(12)}
+                    ${formatNumber(token.marketCap)}
                   </td>
                   <td className="text-right p-4">
                     <div className="flex items-center justify-end space-x-1 text-gray-400">
