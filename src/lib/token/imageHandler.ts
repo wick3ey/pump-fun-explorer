@@ -16,7 +16,7 @@ export class ImageHandler {
       // If URL is empty or invalid, return placeholder
       if (!imageUrl || !this.isValidUrl(imageUrl)) {
         console.log(`Invalid URL for ${symbol}, using placeholder`);
-        return `https://via.placeholder.com/150/1A1F2C/FFFFFF?text=${symbol}`;
+        return `/placeholder.svg`;
       }
 
       // Try to validate the image
@@ -28,10 +28,10 @@ export class ImageHandler {
       }
 
       console.log(`Image validation failed for ${symbol}, using placeholder`);
-      return `https://via.placeholder.com/150/1A1F2C/FFFFFF?text=${symbol}`;
+      return `/placeholder.svg`;
     } catch (error) {
       console.warn(`Failed to validate/cache image for ${symbol}:`, error);
-      return `https://via.placeholder.com/150/1A1F2C/FFFFFF?text=${symbol}`;
+      return `/placeholder.svg`;
     }
   }
 
@@ -49,9 +49,13 @@ export class ImageHandler {
       const cached = this.validationCache.get(url);
       if (cached !== undefined) return cached;
 
-      const response = await fetch(url, { method: 'HEAD' });
-      const isValid = response.ok && response.headers.get('content-type')?.startsWith('image/');
+      const response = await fetch(url, { 
+        method: 'HEAD',
+        mode: 'no-cors',
+        headers: { 'Accept': '*/*' }
+      });
       
+      const isValid = response.ok;
       this.validationCache.set(url, isValid);
       return isValid;
     } catch {
@@ -60,10 +64,10 @@ export class ImageHandler {
   }
 
   static sanitizeImageUrl(url?: string): string {
-    if (!url) return `https://via.placeholder.com/150/1A1F2C/FFFFFF?text=TOKEN`;
+    if (!url) return `/placeholder.svg`;
     
     if (url.startsWith('ipfs://')) {
-      return `https://cloudflare-ipfs.com/ipfs/${url.replace('ipfs://', '')}`;
+      return `https://w3s.link/ipfs/${url.replace('ipfs://', '')}`;
     }
     
     if (url.startsWith('http://')) {
@@ -76,6 +80,7 @@ export class ImageHandler {
   static clearCache(symbol?: string) {
     if (symbol) {
       this.imageCache.delete(symbol);
+      this.validationCache.clear();
     } else {
       this.imageCache.clear();
       this.validationCache.clear();

@@ -1,8 +1,8 @@
 export class IPFSGateway {
   private static readonly BACKUP_GATEWAYS = [
+    'https://w3s.link/ipfs/',
     'https://ipfs.io/ipfs/',
-    'https://gateway.ipfs.io/ipfs/',
-    'https://cf-ipfs.com/ipfs/',
+    'https://cloudflare-ipfs.com/ipfs/',
     'https://nftstorage.link/ipfs/'
   ];
 
@@ -49,10 +49,9 @@ export class IPFSGateway {
     try {
       const fetchPromise = fetch(url, {
         signal: controller.signal,
-        mode: 'cors',
+        mode: 'no-cors',
         headers: {
-          'Accept': 'application/json',
-          'Cache-Control': 'no-cache'
+          'Accept': '*/*'
         }
       });
 

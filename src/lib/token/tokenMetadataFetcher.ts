@@ -59,9 +59,26 @@ export class TokenMetadataFetcher {
         return this.getDefaultMetadata(symbol);
       }
 
-      // Extract CID from URI
-      const cid = uri.replace(/^https?:\/\/[^/]+\/ipfs\//, '').replace('ipfs://', '');
-      console.log(`Extracted CID for ${symbol}: ${cid}`);
+      // Try to fetch from direct URI first
+      try {
+        const response = await fetch(uri, {
+          mode: 'no-cors',
+          headers: { 'Accept': '*/*' }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const metadata = this.processMetadataResponse(data, symbol);
+          if (metadata) return metadata;
+        }
+      } catch (error) {
+        console.warn(`Failed to fetch from direct URI: ${error}`);
+      }
+
+      // Extract CID and try IPFS gateways
+      const cid = this.extractCID(uri);
+      if (!cid) {
+        return this.getDefaultMetadata(symbol);
+      }
 
       let lastError: Error | null = null;
       for (let attempt = 1; attempt <= 3; attempt++) {
@@ -70,27 +87,9 @@ export class TokenMetadataFetcher {
           const response = await IPFSGateway.fetchFromGateways(cid, attempt);
           const data = await response.json();
           
-          // Validate and sanitize image URL
-          const sanitizedImageUrl = ImageHandler.sanitizeImageUrl(data.image);
-          console.log(`Sanitized image URL for ${symbol}: ${sanitizedImageUrl}`);
-          
-          const validatedImage = await ImageHandler.validateAndCacheImage(sanitizedImageUrl, symbol);
-          console.log(`Validated image URL for ${symbol}: ${validatedImage}`);
+          const metadata = this.processMetadataResponse(data, symbol);
+          if (metadata) return metadata;
 
-          const metadata: TokenMetadata = {
-            image: validatedImage,
-            description: data.description?.slice(0, 500) || `${symbol} Token on Solana`,
-            name: data.name?.slice(0, 100) || symbol
-          };
-
-          if (TokenMetadataValidator.verifyMetadata(symbol, metadata)) {
-            console.log(`Successfully verified metadata for ${symbol}`);
-            TokenMetadataValidator.cacheMetadata(symbol, metadata);
-            return metadata;
-          }
-
-          console.warn(`Invalid metadata for ${symbol}, using default`);
-          return this.getDefaultMetadata(symbol);
         } catch (error) {
           lastError = error as Error;
           console.warn(`Attempt ${attempt} failed for ${symbol}:`, error);
@@ -107,6 +106,42 @@ export class TokenMetadataFetcher {
     } catch (error) {
       console.error('Error in fetchMetadata:', error);
       return this.getDefaultMetadata(symbol);
+    }
+  }
+
+  private static extractCID(uri: string): string | null {
+    try {
+      const ipfsMatch = uri.match(/ipfs\/([a-zA-Z0-9]+)/);
+      if (ipfsMatch) return ipfsMatch[1];
+      
+      const ipfsUriMatch = uri.match(/^ipfs:\/\/([a-zA-Z0-9]+)/);
+      if (ipfsUriMatch) return ipfsUriMatch[1];
+      
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private static processMetadataResponse(data: any, symbol: string): TokenMetadata | null {
+    try {
+      if (!data) return null;
+
+      const sanitizedImageUrl = ImageHandler.sanitizeImageUrl(data.image);
+      const metadata: TokenMetadata = {
+        image: sanitizedImageUrl,
+        description: data.description?.slice(0, 500) || `${symbol} Token on Solana`,
+        name: data.name?.slice(0, 100) || symbol
+      };
+
+      if (TokenMetadataValidator.verifyMetadata(symbol, metadata)) {
+        TokenMetadataValidator.cacheMetadata(symbol, metadata);
+        return metadata;
+      }
+
+      return null;
+    } catch {
+      return null;
     }
   }
 
