@@ -19,6 +19,9 @@ export class TokenMetadataFetcher {
     }
   };
 
+  private static readonly MAX_RETRIES = 5;
+  private static readonly RETRY_DELAY = 2000; // 2 seconds
+
   static async fetchMetadata(symbol: string, uri: string): Promise<TokenMetadata | null> {
     try {
       // Layer 1: Check if token is already being processed
@@ -46,84 +49,63 @@ export class TokenMetadataFetcher {
 
       TokenMetadataValidator.startProcessing(symbol);
 
-      try {
-        // Layer 3: Attempt to fetch metadata from URI
-        const response = await fetch(uri);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch metadata from ${uri}`);
+      let retryCount = 0;
+      while (retryCount < this.MAX_RETRIES) {
+        try {
+          // Layer 3: Attempt to fetch metadata from URI
+          console.log(`Attempt ${retryCount + 1} to fetch metadata for ${symbol}`);
+          const response = await fetch(uri);
+          
+          if (!response.ok) {
+            throw new Error(`Failed to fetch metadata from ${uri}`);
+          }
+
+          const data = await response.json();
+          
+          // Validate that we have required fields
+          if (!data.image || !data.name) {
+            throw new Error('Invalid metadata format - missing required fields');
+          }
+
+          const metadata: TokenMetadata = {
+            image: data.image,
+            description: data.description || `${symbol} Token on Solana`,
+            name: data.name
+          };
+
+          // Layer 3: Verify the metadata is unique and valid
+          if (TokenMetadataValidator.isImageUsed(metadata.image, symbol)) {
+            console.log(`Image ${metadata.image} already in use, retrying...`);
+            throw new Error('Image already in use');
+          }
+
+          // Layer 3: Verify and cache the metadata
+          if (TokenMetadataValidator.verifyMetadata(symbol, metadata)) {
+            TokenMetadataValidator.cacheMetadata(symbol, metadata);
+            console.log(`Successfully fetched and verified metadata for ${symbol}`);
+            return metadata;
+          }
+
+          throw new Error('Metadata verification failed');
+        } catch (error) {
+          console.error(`Attempt ${retryCount + 1} failed:`, error);
+          retryCount++;
+          
+          if (retryCount < this.MAX_RETRIES) {
+            console.log(`Waiting ${this.RETRY_DELAY}ms before next attempt...`);
+            await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY));
+          }
         }
-
-        const data = await response.json();
-        const metadata: TokenMetadata = {
-          image: data.image || await this.generateUniqueImage(symbol),
-          description: data.description || `${symbol} Token on Solana`,
-          name: data.name || symbol
-        };
-
-        // Layer 3: Verify the image is unique and valid
-        if (TokenMetadataValidator.isImageUsed(metadata.image, symbol)) {
-          metadata.image = await this.generateUniqueImage(symbol);
-        }
-
-        // Layer 3: Verify and cache the metadata
-        if (TokenMetadataValidator.verifyMetadata(symbol, metadata)) {
-          TokenMetadataValidator.cacheMetadata(symbol, metadata);
-          return metadata;
-        }
-
-        return metadata;
-      } catch (error) {
-        console.error('Error fetching metadata from URI:', error);
-        // Layer 3: Fallback to generating unique metadata
-        const fallbackMetadata: TokenMetadata = {
-          image: await this.generateUniqueImage(symbol),
-          description: `${symbol} Token on Solana`,
-          name: symbol
-        };
-
-        if (TokenMetadataValidator.verifyMetadata(symbol, fallbackMetadata)) {
-          TokenMetadataValidator.cacheMetadata(symbol, fallbackMetadata);
-          return fallbackMetadata;
-        }
-
-        return fallbackMetadata;
       }
+
+      console.error(`Failed to fetch metadata for ${symbol} after ${this.MAX_RETRIES} attempts`);
+      throw new Error(`Failed to fetch metadata after ${this.MAX_RETRIES} attempts`);
+
     } catch (error) {
       console.error('Error in fetchMetadata:', error);
       return null;
     } finally {
       TokenMetadataValidator.finishProcessing(symbol);
     }
-  }
-
-  private static async generateUniqueImage(symbol: string): Promise<string> {
-    const defaultImages = [
-      "https://images.unsplash.com/photo-1639762681485-074b7f938ba0",
-      "https://images.unsplash.com/photo-1639762681057-408e52192e55",
-      "https://images.unsplash.com/photo-1639762681286-39def2c7930c",
-      "https://images.unsplash.com/photo-1639762681253-225ca2f2c666",
-      "https://images.unsplash.com/photo-1639762681634-fb4c3f69c3aa",
-      "https://images.unsplash.com/photo-1639762681767-06f7c4d8c73e"
-    ];
-
-    const hash = await this.generateHash(symbol);
-    let imageIndex = Math.abs(hash.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % defaultImages.length;
-    let selectedImage = defaultImages[imageIndex];
-
-    // Keep trying different indices until we find an unused image
-    while (TokenMetadataValidator.isImageUsed(selectedImage, symbol)) {
-      imageIndex = (imageIndex + 1) % defaultImages.length;
-      selectedImage = defaultImages[imageIndex];
-    }
-
-    return selectedImage;
-  }
-
-  private static async generateHash(input: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(input);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 }
