@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { TrendingTokensBanner } from "./components/TrendingTokensBanner";
+import { PowerBanner } from "./components/PowerBanner";
 import { Header } from "./components/Header";
 import Index from "./pages/Index";
 import CreateToken from "./pages/CreateToken";
@@ -21,6 +22,7 @@ const App = () => (
         <div className="min-h-screen bg-[#13141F]">
           <Header />
           <TrendingTokensBanner />
+          <PowerBanner />
           <main className="pt-4">
             <Routes>
               <Route path="/" element={<Index />} />
