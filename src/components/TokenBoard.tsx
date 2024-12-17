@@ -4,7 +4,9 @@ import { Zap, Timer, ExternalLink, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { KingOfTheHill } from "./KingOfTheHill";
 import { TrendingFilter } from "./TrendingFilter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { tokenWebSocket } from "@/lib/websocket";
+import { useToast } from "@/components/ui/use-toast";
 
 interface TokenData {
   symbol: string;
@@ -22,120 +24,152 @@ interface TokenData {
 export const TokenBoard = () => {
   const navigate = useNavigate();
   const [selectedTimeframe, setSelectedTimeframe] = useState("1h");
+  const [tokens, setTokens] = useState<TokenData[]>([]);
+  const { toast } = useToast();
 
-  const tokens: TokenData[] = [
-    {
-      symbol: "WIF",
-      name: "Friend.tech",
-      marketCap: 675000000,
-      age: "3m",
-      transactions: 1562,
-      holders: 890,
-      power: 468,
-      chain: "SOL",
-      percentageChange: 12.5,
-      isSafeDegen: true
-    },
-    {
-      symbol: "BONK",
-      name: "Bonk",
-      marketCap: 543000000,
-      age: "1y",
-      transactions: 2341,
-      holders: 1502,
-      power: 389,
-      chain: "SOL",
-      percentageChange: -2.3
-    },
-    {
-      symbol: "MYRO",
-      name: "Myro",
-      marketCap: 234000000,
-      age: "2m",
-      transactions: 892,
-      holders: 456,
-      power: 345,
-      chain: "SOL",
-      percentageChange: 5.6
-    },
-    {
-      symbol: "POPCAT",
-      name: "Pop Cat",
-      marketCap: 123000000,
-      age: "1m",
-      transactions: 567,
-      holders: 234,
-      power: 289,
-      chain: "SOL",
-      percentageChange: -1.2
-    },
-    {
-      symbol: "SLERF",
-      name: "Slerf",
-      marketCap: 98000000,
-      age: "2w",
-      transactions: 456,
-      holders: 189,
-      power: 234,
-      chain: "SOL",
-      percentageChange: 8.9
-    },
-    {
-      symbol: "BOME",
-      name: "Book of Meme",
-      marketCap: 87000000,
-      age: "1m",
-      transactions: 345,
-      holders: 167,
-      power: 198,
-      chain: "SOL",
-      percentageChange: 3.4
-    },
-    {
-      symbol: "MNGO",
-      name: "Mango",
-      marketCap: 76000000,
-      age: "2y",
-      transactions: 289,
-      holders: 145,
-      power: 167,
-      chain: "SOL",
-      percentageChange: -0.8
-    },
-    {
-      symbol: "SAMO",
-      name: "Samoyedcoin",
-      marketCap: 65000000,
-      age: "2y",
-      transactions: 234,
-      holders: 123,
-      power: 145,
-      chain: "SOL",
-      percentageChange: 1.2
-    },
-    {
-      symbol: "PEPE",
-      name: "Pepe on Solana",
-      marketCap: 54000000,
-      age: "6m",
-      transactions: 189,
-      holders: 98,
-      power: 123,
-      chain: "SOL",
-      percentageChange: -4.5
-    },
-    {
-      symbol: "DOGE",
-      name: "Dogecoin on Solana",
-      marketCap: 43000000,
-      age: "1y",
-      transactions: 145,
-      holders: 76,
-      power: 98,
-      chain: "SOL",
-      percentageChange: 2.1
-    }
-  ];
+  useEffect(() => {
+    // Initial tokens data
+    setTokens([
+      {
+        symbol: "WIF",
+        name: "Friend.tech",
+        marketCap: 675000000,
+        age: "3m",
+        transactions: 1562,
+        holders: 890,
+        power: 468,
+        chain: "SOL",
+        percentageChange: 12.5,
+        isSafeDegen: true
+      },
+      {
+        symbol: "BONK",
+        name: "Bonk",
+        marketCap: 543000000,
+        age: "1y",
+        transactions: 2341,
+        holders: 1502,
+        power: 389,
+        chain: "SOL",
+        percentageChange: -2.3
+      },
+      {
+        symbol: "MYRO",
+        name: "Myro",
+        marketCap: 234000000,
+        age: "2m",
+        transactions: 892,
+        holders: 456,
+        power: 345,
+        chain: "SOL",
+        percentageChange: 5.6
+      },
+      {
+        symbol: "POPCAT",
+        name: "Pop Cat",
+        marketCap: 123000000,
+        age: "1m",
+        transactions: 567,
+        holders: 234,
+        power: 289,
+        chain: "SOL",
+        percentageChange: -1.2
+      },
+      {
+        symbol: "SLERF",
+        name: "Slerf",
+        marketCap: 98000000,
+        age: "2w",
+        transactions: 456,
+        holders: 189,
+        power: 234,
+        chain: "SOL",
+        percentageChange: 8.9
+      },
+      {
+        symbol: "BOME",
+        name: "Book of Meme",
+        marketCap: 87000000,
+        age: "1m",
+        transactions: 345,
+        holders: 167,
+        power: 198,
+        chain: "SOL",
+        percentageChange: 3.4
+      },
+      {
+        symbol: "MNGO",
+        name: "Mango",
+        marketCap: 76000000,
+        age: "2y",
+        transactions: 289,
+        holders: 145,
+        power: 167,
+        chain: "SOL",
+        percentageChange: -0.8
+      },
+      {
+        symbol: "SAMO",
+        name: "Samoyedcoin",
+        marketCap: 65000000,
+        age: "2y",
+        transactions: 234,
+        holders: 123,
+        power: 145,
+        chain: "SOL",
+        percentageChange: 1.2
+      },
+      {
+        symbol: "PEPE",
+        name: "Pepe on Solana",
+        marketCap: 54000000,
+        age: "6m",
+        transactions: 189,
+        holders: 98,
+        power: 123,
+        chain: "SOL",
+        percentageChange: -4.5
+      },
+      {
+        symbol: "DOGE",
+        name: "Dogecoin on Solana",
+        marketCap: 43000000,
+        age: "1y",
+        transactions: 145,
+        holders: 76,
+        power: 98,
+        chain: "SOL",
+        percentageChange: 2.1
+      }
+    ]);
+
+    // Subscribe to new tokens
+    tokenWebSocket.onNewToken((data) => {
+      // Assuming the data comes in a format that needs to be transformed
+      const newToken: TokenData = {
+        symbol: data.symbol,
+        name: data.name,
+        marketCap: data.marketCap || 0,
+        age: "new",
+        transactions: data.transactions || 0,
+        holders: data.holders || 0,
+        power: data.power || 0,
+        chain: "SOL",
+        percentageChange: 0,
+      };
+
+      setTokens(prev => [newToken, ...prev].slice(0, 10));
+      
+      toast({
+        title: "Ny Token Upptäckt!",
+        description: `${newToken.name} (${newToken.symbol}) har lagts till i listan`,
+      });
+    });
+
+    return () => {
+      tokenWebSocket.disconnect();
+    };
+  }, []);
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
