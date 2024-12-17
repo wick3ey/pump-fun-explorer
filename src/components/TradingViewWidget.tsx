@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, memo } from 'react';
 
-function TradingViewWidget() {
+interface TradingViewWidgetProps {
+  symbol: string;
+}
+
+function TradingViewWidget({ symbol }: TradingViewWidgetProps) {
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -11,7 +15,7 @@ function TradingViewWidget() {
       script.async = true;
       script.innerHTML = JSON.stringify({
         autosize: true,
-        symbol: "BINANCE:DOGEUSDT",
+        symbol: `RAYDIUM:${symbol}USDT`,
         interval: "D",
         timezone: "Etc/UTC",
         theme: "dark",
@@ -27,7 +31,7 @@ function TradingViewWidget() {
       });
       container.current.appendChild(script);
     }
-  }, []);
+  }, [symbol]);
 
   return (
     <div className="tradingview-widget-container" ref={container} style={{ height: "100%", width: "100%" }}>

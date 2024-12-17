@@ -3,7 +3,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react";
 import TradingViewWidget from "./TradingViewWidget";
 
-export const TokenChart = () => {
+interface TokenChartProps {
+  symbol: string;
+}
+
+export const TokenChart = ({ symbol }: TokenChartProps) => {
   const [timeframe, setTimeframe] = useState("1D");
 
   return (
@@ -11,7 +15,7 @@ export const TokenChart = () => {
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-white">DOGE/USDT</h2>
+            <h2 className="text-xl font-bold text-white">{symbol}/USDT</h2>
             <div className="text-[#22c55e] text-sm">+9.45%</div>
           </div>
           <Select value={timeframe} onValueChange={setTimeframe}>
@@ -30,7 +34,7 @@ export const TokenChart = () => {
         </div>
 
         <div className="h-[400px]">
-          <TradingViewWidget />
+          <TradingViewWidget symbol={symbol} />
         </div>
       </CardContent>
     </Card>
