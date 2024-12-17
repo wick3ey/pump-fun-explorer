@@ -38,8 +38,50 @@ class TokenWebSocket {
     }
   }
 
+  // Get token-specific metadata
+  private getTokenMetadata(symbol: string) {
+    const metadata: { [key: string]: { pfp: string, description: string } } = {
+      'WIF': {
+        pfp: "https://s2.coinmarketcap.com/static/img/coins/64x64/24735.png",
+        description: "Friend.tech for Solana 🐕"
+      },
+      'BONK': {
+        pfp: "https://s2.coinmarketcap.com/static/img/coins/64x64/23095.png",
+        description: "The First Solana Dog Coin 🐕"
+      },
+      'MYRO': {
+        pfp: "https://s2.coinmarketcap.com/static/img/coins/64x64/28736.png",
+        description: "The Solana Memecoin for the People 🐕"
+      },
+      'POPCAT': {
+        pfp: "https://s2.coinmarketcap.com/static/img/coins/64x64/28741.png",
+        description: "The First Cat Coin on Solana 🐱"
+      },
+      'SLERF': {
+        pfp: "https://s2.coinmarketcap.com/static/img/coins/64x64/28768.png",
+        description: "The Memecoin That Slerf'd 🌊"
+      },
+      'BOME': {
+        pfp: "https://s2.coinmarketcap.com/static/img/coins/64x64/28803.png",
+        description: "BOME on Solana 💣"
+      }
+    };
+    return metadata[symbol] || null;
+  }
+
   private async fetchTokenMetadata(uri: string, symbol: string) {
-    // Check cache first
+    // Check hardcoded metadata first
+    const hardcodedMetadata = this.getTokenMetadata(symbol);
+    if (hardcodedMetadata) {
+      console.log('Using hardcoded metadata for:', symbol);
+      return {
+        image: hardcodedMetadata.pfp,
+        description: hardcodedMetadata.description,
+        name: symbol
+      };
+    }
+
+    // Check cache next
     if (this.metadataCache.has(uri)) {
       console.log('Using cached metadata for:', symbol);
       return this.metadataCache.get(uri);
@@ -48,11 +90,16 @@ class TokenWebSocket {
     try {
       console.log('Fetching metadata for:', symbol, 'URI:', uri);
       
-      // Add timeout to fetch
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased timeout to 10s
       
-      const response = await fetch(uri, { signal: controller.signal });
+      const response = await fetch(uri, { 
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
       clearTimeout(timeoutId);
       
       if (!response.ok) {
@@ -63,18 +110,15 @@ class TokenWebSocket {
       console.log('Successfully fetched metadata for:', symbol, metadata);
       
       const processedMetadata = {
-        image: metadata.image || '',
+        image: metadata.image || '/placeholder.svg',
         description: metadata.description || `${symbol} Token on Solana`,
         name: metadata.name || symbol
       };
       
-      // Cache the result
       this.metadataCache.set(uri, processedMetadata);
-      
       return processedMetadata;
     } catch (error) {
       console.error('Error fetching metadata for:', symbol, error);
-      // Return default metadata on error
       return {
         image: '/placeholder.svg',
         description: `${symbol} Token on Solana`,
@@ -110,6 +154,15 @@ class TokenWebSocket {
             let metadata = null;
             if (parsedData.uri) {
               metadata = await this.fetchTokenMetadata(parsedData.uri, parsedData.symbol);
+            } else {
+              const hardcodedMetadata = this.getTokenMetadata(parsedData.symbol);
+              if (hardcodedMetadata) {
+                metadata = {
+                  image: hardcodedMetadata.pfp,
+                  description: hardcodedMetadata.description,
+                  name: parsedData.symbol
+                };
+              }
             }
             
             if (this.onNewTokenCallback) {
