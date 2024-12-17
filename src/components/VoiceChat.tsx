@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Mic, MicOff, Users } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useConversation } from '@11labs/react';
+import { LoginDialog } from "./LoginDialog";
 
 interface VoiceChatProps {
   tokenSymbol: string;
