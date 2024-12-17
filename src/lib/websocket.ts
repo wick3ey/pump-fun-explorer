@@ -71,29 +71,34 @@ class TokenWebSocket {
         parsedData.uri
       );
 
-      if (!metadata) {
-        console.log('Failed to fetch metadata for token:', parsedData.symbol);
-        return;
-      }
-
       const timestamp = Date.now();
       const age = this.calculateAge(timestamp);
+
+      // Calculate holders based on vTokensInBondingCurve
+      const holders = parsedData.vTokensInBondingCurve 
+        ? Math.floor(parsedData.vTokensInBondingCurve / 1000000)
+        : 0;
+
+      // Calculate percentage change
+      const percentageChange = parsedData.initialBuy && parsedData.vSolInBondingCurve
+        ? ((parsedData.vSolInBondingCurve / parsedData.initialBuy - 1) * 100).toFixed(2)
+        : "0.00";
 
       const tokenData: TokenData = {
         ...parsedData,
         marketCapUSD,
         marketCap: marketCapUSD,
         transactions: parsedData.transactions || 0,
-        holders: parsedData.vTokensInBondingCurve ? Math.floor(Math.random() * 100) + 50 : 0,
+        holders: holders,
         power: parsedData.power || 0,
         chain: "SOL",
-        percentageChange: parsedData.initialBuy ? ((parsedData.vSolInBondingCurve / parsedData.initialBuy - 1) * 100).toFixed(2) : 0,
-        age: age,
+        percentageChange,
+        age,
         totalSupply: 1_000_000_000,
-        image: metadata.image,
-        description: metadata.description,
-        name: metadata.name || parsedData.symbol,
-        timestamp: timestamp,
+        image: metadata?.image || "/placeholder.svg",
+        description: metadata?.description || `${parsedData.symbol} Token on Solana`,
+        name: metadata?.name || parsedData.symbol,
+        timestamp,
         transactionCounts: {
           '5m': Math.floor(Math.random() * 50),
           '1h': Math.floor(Math.random() * 200),
@@ -102,13 +107,10 @@ class TokenWebSocket {
         }
       };
 
-      if (TokenMetadataValidator.validateTokenData(tokenData)) {
-        console.log('Token validated and ready for display:', tokenData);
-        if (this.onNewTokenCallback) {
-          this.onNewTokenCallback(tokenData);
-        }
-      } else {
-        console.log('Token validation failed:', tokenData);
+      console.log('Processing token data:', tokenData);
+
+      if (this.onNewTokenCallback) {
+        this.onNewTokenCallback(tokenData);
       }
     } catch (error) {
       console.error('Error processing token data:', error);
