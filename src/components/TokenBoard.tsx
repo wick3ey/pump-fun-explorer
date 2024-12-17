@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Zap, Timer, ExternalLink, Lock } from "lucide-react";
-import { TrendingTokensBanner } from "./TrendingTokensBanner";
 import { useNavigate } from "react-router-dom";
 import { KingOfTheHill } from "./KingOfTheHill";
 import { TrendingFilter } from "./TrendingFilter";
@@ -112,8 +111,6 @@ export const TokenBoard = () => {
         bondingCurveTarget={98000}
         imageUrl="/placeholder.svg"
       />
-
-      <TrendingTokensBanner />
 
       <TrendingFilter 
         selectedTimeframe={selectedTimeframe}
