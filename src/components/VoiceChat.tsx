@@ -5,24 +5,29 @@ import { Mic, MicOff, Users } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { LoginDialog } from "./LoginDialog";
 import { useAuth } from "@/contexts/AuthContext";
-import { createClient, createMicrophoneAudioTrack, IAgoraRTCRemoteUser } from "agora-rtc-react";
-
-const appId = ""; // You'll need to add your Agora App ID
-const channelName = "main"; // This could be dynamic based on the token room
+import AgoraRTC, { IAgoraRTCRemoteUser } from "agora-rtc-sdk-ng";
 
 interface VoiceChatProps {
   tokenSymbol: string;
 }
 
+type Participant = {
+  id: string | number;
+  name: string;
+  speaking: boolean;
+}
+
 export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   const [isMuted, setIsMuted] = useState(true);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const [participants, setParticipants] = useState<{ id: number; name: string; speaking: boolean; }[]>([]);
-  const [agoraClient, setAgoraClient] = useState<ReturnType<typeof createClient> | null>(null);
-  const [audioTrack, setAudioTrack] = useState<ReturnType<typeof createMicrophoneAudioTrack> | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [client, setClient] = useState<ReturnType<typeof AgoraRTC.createClient> | null>(null);
+  const [audioTrack, setAudioTrack] = useState<ReturnType<typeof AgoraRTC.createMicrophoneAudioTrack> | null>(null);
   
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
+
+  const appId = ""; // You'll need to add your Agora App ID
 
   useEffect(() => {
     if (!appId) {
@@ -30,13 +35,13 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
       return;
     }
 
-    const client = createClient({ mode: "rtc", codec: "vp8" });
-    setAgoraClient(client);
+    const agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+    setClient(agoraClient);
 
     return () => {
-      client.leave();
+      agoraClient.leave();
     };
-  }, []);
+  }, [appId]);
 
   const handleJoinVoice = async () => {
     if (!isAuthenticated) {
@@ -44,7 +49,7 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
       return;
     }
 
-    if (!agoraClient) {
+    if (!client) {
       toast({
         title: "Error",
         description: "Voice chat client not initialized",
@@ -55,20 +60,20 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
 
     try {
       // Initialize microphone track
-      const track = await createMicrophoneAudioTrack();
+      const track = await AgoraRTC.createMicrophoneAudioTrack();
       setAudioTrack(track);
 
       // Join the channel
-      const uid = await agoraClient.join(appId, channelName, null, null);
+      const uid = await client.join(appId, "main", null);
       
       // Publish audio track
-      await agoraClient.publish(track);
+      await client.publish(track);
 
       // Update participants list
       setParticipants(prev => [...prev, { id: uid, name: `User#${uid}`, speaking: false }]);
 
       // Set up user joined listener
-      agoraClient.on("user-joined", (user: IAgoraRTCRemoteUser) => {
+      client.on("user-joined", (user: IAgoraRTCRemoteUser) => {
         setParticipants(prev => [...prev, { id: user.uid, name: `User#${user.uid}`, speaking: false }]);
         toast({
           title: "User joined",
@@ -77,7 +82,7 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
       });
 
       // Set up user left listener
-      agoraClient.on("user-left", (user: IAgoraRTCRemoteUser) => {
+      client.on("user-left", (user: IAgoraRTCRemoteUser) => {
         setParticipants(prev => prev.filter(p => p.id !== user.uid));
         toast({
           title: "User left",
@@ -124,11 +129,11 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
       if (audioTrack) {
         audioTrack.close();
       }
-      if (agoraClient) {
-        agoraClient.leave();
+      if (client) {
+        client.leave();
       }
     };
-  }, [audioTrack, agoraClient]);
+  }, [audioTrack, client]);
 
   return (
     <>
