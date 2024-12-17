@@ -3,6 +3,7 @@ export interface TokenData {
   name: string;
   marketCap: number;
   marketCapSol?: number;
+  marketCapUSD?: number;
   age: string;
   transactions: number;
   holders: number;
@@ -27,4 +28,5 @@ export interface NewTokenData {
   initialSolAmount?: number;
   contractAddress?: string;
   marketCapSol?: number;
+  marketCapUSD?: number;
 }

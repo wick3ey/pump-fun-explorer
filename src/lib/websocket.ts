@@ -4,9 +4,38 @@ class TokenWebSocket {
   private maxReconnectAttempts = 5;
   private onNewTokenCallback: ((data: any) => void) | null = null;
   private subscribedTokens: Set<string> = new Set();
+  private solPriceUSD: number | null = null;
 
   constructor() {
     this.connect();
+    this.initializeSolPrice();
+  }
+
+  private async initializeSolPrice() {
+    try {
+      const response = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd'
+      );
+      const data = await response.json();
+      this.solPriceUSD = data.solana.usd;
+      console.log('Initial SOL price:', this.solPriceUSD);
+
+      // Update SOL price every minute
+      setInterval(async () => {
+        try {
+          const response = await fetch(
+            'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd'
+          );
+          const data = await response.json();
+          this.solPriceUSD = data.solana.usd;
+          console.log('Updated SOL price:', this.solPriceUSD);
+        } catch (error) {
+          console.error('Failed to update SOL price:', error);
+        }
+      }, 60000);
+    } catch (error) {
+      console.error('Failed to initialize SOL price:', error);
+    }
   }
 
   private connect() {
@@ -23,10 +52,12 @@ class TokenWebSocket {
 
       this.ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.marketCapSol !== undefined && this.onNewTokenCallback) {
+        if (data.marketCapSol !== undefined && this.solPriceUSD && this.onNewTokenCallback) {
+          const marketCapUSD = data.marketCapSol * this.solPriceUSD;
           this.onNewTokenCallback({
             ...data,
-            marketCapSol: data.marketCapSol
+            marketCapSol: data.marketCapSol,
+            marketCapUSD: marketCapUSD
           });
         }
       };

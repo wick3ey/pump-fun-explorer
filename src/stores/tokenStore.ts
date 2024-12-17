@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { TokenData } from '@/types/token';
-import { getCachedSolPrice } from '@/lib/solPriceCache';
 import { tokenWebSocket } from '@/lib/websocket';
 
 interface TokenStore {
@@ -17,8 +16,6 @@ export const useTokenStore = create<TokenStore>()(
       tokens: [],
       addToken: async (token) => {
         try {
-          const solPrice = await getCachedSolPrice();
-          
           // Subscribe to token trades
           if (token.contractAddress) {
             tokenWebSocket.subscribeToTokenTrade(token.contractAddress);
@@ -27,7 +24,7 @@ export const useTokenStore = create<TokenStore>()(
           set((state) => ({
             tokens: [{
               ...token,
-              marketCap: token.marketCapSol ? token.marketCapSol * solPrice : 0,
+              marketCap: token.marketCapUSD || 0,
               totalSupply: token.totalSupply || 1_000_000_000,
             }, ...state.tokens].slice(0, 10)
           }));
@@ -43,15 +40,8 @@ export const useTokenStore = create<TokenStore>()(
         })),
       updateMarketCaps: async () => {
         try {
-          const solPrice = await getCachedSolPrice();
           const tokens = get().tokens;
-          
-          const updatedTokens = tokens.map(token => ({
-            ...token,
-            marketCap: token.marketCapSol ? token.marketCapSol * solPrice : token.marketCap
-          }));
-          
-          set({ tokens: updatedTokens });
+          set({ tokens });
         } catch (error) {
           console.error('Error updating market caps:', error);
         }
