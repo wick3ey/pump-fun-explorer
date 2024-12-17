@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Mic, MicOff, Users } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useConversation } from '@11labs/react';
 import { LoginDialog } from "./LoginDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface VoiceChatProps {
   tokenSymbol: string;
@@ -12,17 +13,38 @@ interface VoiceChatProps {
 
 export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   const [isMuted, setIsMuted] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // This should come from auth context later
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [participants, setParticipants] = useState([
     { id: 1, name: "Anon#1234", speaking: false },
     { id: 2, name: "Degen#5678", speaking: true }
   ]);
+  
+  const { isAuthenticated } = useAuth();
   const { toast } = useToast();
-  const conversation = useConversation();
+  const conversation = useConversation({
+    onConnect: () => {
+      toast({
+        title: "Connected to voice chat",
+        description: "You can now speak with other participants",
+      });
+    },
+    onDisconnect: () => {
+      toast({
+        title: "Disconnected from voice chat",
+        description: "Voice chat connection ended",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Voice chat error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 
   const handleJoinVoice = async () => {
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
       setShowLoginDialog(true);
       return;
     }
@@ -32,10 +54,11 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
         agentId: "default_agent_id",
         overrides: {
           tts: {
-            voiceId: "21m00Tcm4TlvDq8ikWAM"
+            voiceId: "21m00Tcm4TlvDq8ikWAM" // Using a default voice
           }
         }
       });
+      
       toast({
         title: "Joined voice chat",
         description: "You've joined the voice chat room",
@@ -50,7 +73,7 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   };
 
   const handleMuteToggle = () => {
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
       setShowLoginDialog(true);
       return;
     }
@@ -61,6 +84,13 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
       description: `You've ${isMuted ? 'unmuted' : 'muted'} your microphone`,
     });
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      conversation.endSession();
+    };
+  }, []);
 
   return (
     <>
@@ -110,12 +140,10 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
           </div>
         </div>
       </Card>
-      {showLoginDialog && (
-        <LoginDialog 
-          open={showLoginDialog} 
-          onOpenChange={setShowLoginDialog} 
-        />
-      )}
+      <LoginDialog 
+        open={showLoginDialog} 
+        onOpenChange={setShowLoginDialog} 
+      />
     </>
   );
 };
