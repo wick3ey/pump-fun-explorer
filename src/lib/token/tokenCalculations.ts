@@ -1,13 +1,12 @@
 export const calculateHolders = (vTokensInBondingCurve: number): number => {
-  // Each transaction represents a unique holder in this case
-  // We'll use a more conservative estimate based on transaction volume
-  return Math.max(2, Math.floor(Math.sqrt(vTokensInBondingCurve / 1000000)));
+  // For new tokens, start with 2 holders (creator and contract)
+  return 2;
 };
 
 export const calculatePercentageChange = (initialBuy: number, vSolInBondingCurve: number): string => {
   if (!initialBuy || !vSolInBondingCurve) return "0.00";
   
-  // Calculate percentage change between initial buy and current bonding curve value
+  // Calculate percentage change between initial SOL amount and current SOL in bonding curve
   const change = ((vSolInBondingCurve - initialBuy) / initialBuy) * 100;
   
   // Return formatted string with 2 decimal places
@@ -30,13 +29,13 @@ export const calculateAge = (timestamp: number): string => {
 export const generateTransactionCounts = (vSolInBondingCurve: number): { [key: string]: number } => {
   if (!vSolInBondingCurve) return { '5m': 0, '1h': 0, '6h': 0, '24h': 0 };
   
-  // Base transactions on actual SOL volume
-  const baseTransactions = Math.max(2, Math.floor(vSolInBondingCurve));
+  // Start with 1 transaction (the creation transaction)
+  const baseTransactions = 1;
   
   return {
-    '5m': Math.floor(baseTransactions * 0.1),
-    '1h': Math.floor(baseTransactions * 0.3),
-    '6h': Math.floor(baseTransactions * 0.6),
+    '5m': baseTransactions,
+    '1h': baseTransactions,
+    '6h': baseTransactions,
     '24h': baseTransactions
   };
 };
