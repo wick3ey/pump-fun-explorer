@@ -24,9 +24,9 @@ export const PowerBanner = () => {
   ];
 
   const getTickerColor = (power: number) => {
-    if (power >= 1000) return "text-yellow-500 font-bold"; // Gold for 1000+ POWER
-    if (power >= 500) return "text-green-500 font-bold"; // Green for 500+ POWER
-    return "text-purple-500 font-bold"; // Purple for others
+    if (power >= 1000) return "text-yellow-500"; // Gold for 1000+ POWER
+    if (power >= 500) return "text-green-500"; // Green for 500+ POWER
+    return "text-purple-500"; // Purple for others
   };
 
   return (
@@ -52,7 +52,7 @@ export const PowerBanner = () => {
                     </>
                   )}
                   <div className="flex items-center space-x-2">
-                    <span className={cn(getTickerColor(token.power))}>{token.symbol}</span>
+                    <span className={cn(getTickerColor(token.power), "font-bold")}>{token.symbol}</span>
                     <Zap className="h-4 w-4 text-orange-500" />
                     <span className="text-orange-500">{token.power} POWER</span>
                     {token.percentage && (

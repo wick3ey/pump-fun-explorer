@@ -18,12 +18,10 @@ interface TrendingToken {
 export const TrendingTokensBanner = () => {
   const navigate = useNavigate();
 
-  // Mock data - i en riktig app skulle detta komma från din API
   const trendingTokens: TrendingToken[] = [
-    { rank: 1, symbol: "PENGU", name: "Pudgy Penguins", percentageGain: 468, marketCap: 5000, timeFrame: "1h" },
-    { rank: 2, symbol: "PEPE", name: "Pepe", percentageGain: 214, marketCap: 5000, timeFrame: "2h" },
+    { rank: 1, symbol: "PENGU", name: "Pengu", percentageGain: 468, marketCap: 5000, timeFrame: "2h" },
     { rank: 3, symbol: "FLOSS", name: "Floss", percentageGain: 74, marketCap: 3000, timeFrame: "16h" },
-    { rank: 4, symbol: "DOGE", name: "Dogecoin", percentageGain: 156, marketCap: 4500, timeFrame: "4h" },
+    { rank: 4, symbol: "DOGE", name: "Doge", percentageGain: 156, marketCap: 4500, timeFrame: "4h" },
     { rank: 5, symbol: "SHIB", name: "Shiba Inu", percentageGain: 89, marketCap: 3500, timeFrame: "8h" },
   ];
 
@@ -52,8 +50,8 @@ export const TrendingTokensBanner = () => {
               >
                 <div className="flex items-center space-x-2 text-sm whitespace-nowrap">
                   <span className="text-gray-500">#{token.rank}</span>
+                  <Crown className="h-4 w-4 text-yellow-500" />
                   <div className="flex items-center space-x-2">
-                    <Crown className="h-4 w-4 text-yellow-500" />
                     <span className="text-orange-500 font-bold">{token.symbol}</span>
                     <Zap className="h-4 w-4 text-orange-500" />
                     <span className="text-orange-500">{token.marketCap}</span>
