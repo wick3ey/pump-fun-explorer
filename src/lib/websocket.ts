@@ -20,7 +20,6 @@ class TokenWebSocket {
       this.solPriceUSD = data.solana.usd;
       console.log('Initial SOL price:', this.solPriceUSD);
 
-      // Update SOL price every minute
       setInterval(async () => {
         try {
           const response = await fetch(
@@ -38,6 +37,21 @@ class TokenWebSocket {
     }
   }
 
+  private async fetchTokenMetadata(uri: string) {
+    try {
+      const response = await fetch(uri);
+      const metadata = await response.json();
+      return {
+        image: metadata.image || '',
+        description: metadata.description || '',
+        name: metadata.name || ''
+      };
+    } catch (error) {
+      console.error('Error fetching token metadata:', error);
+      return null;
+    }
+  }
+
   private connect() {
     try {
       this.ws = new WebSocket('wss://pumpportal.fun/api/data');
@@ -49,7 +63,7 @@ class TokenWebSocket {
         this.subscribedTokens.forEach(token => this.subscribeToTokenTrade(token));
       };
 
-      this.ws.onmessage = (event) => {
+      this.ws.onmessage = async (event) => {
         try {
           const parsedData = JSON.parse(event.data);
           console.log('Received WebSocket data:', parsedData);
@@ -61,6 +75,12 @@ class TokenWebSocket {
               solPriceUSD: this.solPriceUSD,
               marketCapUSD
             });
+
+            let metadata = null;
+            if (parsedData.uri) {
+              metadata = await this.fetchTokenMetadata(parsedData.uri);
+              console.log('Fetched metadata:', metadata);
+            }
             
             if (this.onNewTokenCallback) {
               const tokenData = {
@@ -74,6 +94,9 @@ class TokenWebSocket {
                 percentageChange: 0,
                 age: "new",
                 totalSupply: 1_000_000_000,
+                image: metadata?.image || '',
+                description: metadata?.description || `${parsedData.symbol} Token on Solana`,
+                name: metadata?.name || parsedData.symbol,
               };
               console.log('Sending token data to callback:', tokenData);
               this.onNewTokenCallback(tokenData);

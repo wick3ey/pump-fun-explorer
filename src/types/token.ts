@@ -17,6 +17,9 @@ export interface TokenData {
   contractAddress?: string;
   lastPrice?: number;
   price?: number;
+  image?: string;
+  description?: string;
+  uri?: string;
 }
 
 export interface NewTokenData {
@@ -31,4 +34,7 @@ export interface NewTokenData {
   contractAddress?: string;
   marketCapSol?: number;
   marketCapUSD?: number;
+  image?: string;
+  description?: string;
+  uri?: string;
 }

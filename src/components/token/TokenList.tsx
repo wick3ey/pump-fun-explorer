@@ -53,7 +53,15 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
               >
                 <td className="p-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
+                    <img 
+                      src={token.image || "/placeholder.svg"} 
+                      alt={token.symbol}
+                      className="w-8 h-8 rounded-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder.svg";
+                      }}
+                    />
                     <div className="flex items-center gap-2">
                       <div>
                         <div className="font-medium text-white">{token.symbol}</div>
