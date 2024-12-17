@@ -14,6 +14,12 @@ export interface TokenData {
   description?: string;
   uri?: string;
   timestamp: number;
+  metadata?: {
+    name: string;
+    symbol: string;
+    image?: string;
+    description?: string;
+  };
 }
 
 export interface NewTokenData {

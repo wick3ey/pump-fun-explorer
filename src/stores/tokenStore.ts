@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { TokenData } from '@/types/token';
+import { fetchTokenMetadata } from '@/lib/solana/tokenMetadata';
 
 interface TokenStore {
   tokens: TokenData[];
@@ -18,33 +19,43 @@ export const useTokenStore = create<TokenStore>()(
       
       addToken: async (token) => {
         try {
+          const metadata = await fetchTokenMetadata(token.contractAddress);
+          
           set((state) => {
             const existingTokenIndex = state.tokens.findIndex(t => t.symbol === token.symbol);
             const timestamp = token.timestamp || Date.now();
             
+            const enrichedToken = {
+              ...token,
+              name: metadata.name || token.name,
+              symbol: metadata.symbol || token.symbol,
+              image: metadata.image || '/placeholder.svg',
+              description: metadata.description || `${token.symbol} Token on Solana`,
+              marketCap: token.marketCapUSD || token.marketCap || 0,
+              timestamp,
+            };
+            
             if (existingTokenIndex !== -1) {
               const updatedTokens = [...state.tokens];
-              updatedTokens[existingTokenIndex] = {
-                ...updatedTokens[existingTokenIndex],
-                ...token,
-                marketCap: token.marketCapUSD || token.marketCap || 0,
-                timestamp,
-              };
+              updatedTokens[existingTokenIndex] = enrichedToken;
               return { tokens: updatedTokens };
             } else {
               return {
-                tokens: [{
-                  ...token,
-                  marketCap: token.marketCapUSD || token.marketCap || 0,
-                  image: "/placeholder.svg",
-                  description: `${token.symbol} Token on Solana`,
-                  timestamp,
-                }, ...state.tokens].slice(0, 100)
+                tokens: [enrichedToken, ...state.tokens].slice(0, 100)
               };
             }
           });
         } catch (error) {
           console.error('Error adding token:', error);
+          set((state) => ({
+            tokens: [{
+              ...token,
+              marketCap: token.marketCapUSD || token.marketCap || 0,
+              image: '/placeholder.svg',
+              description: `${token.symbol} Token on Solana`,
+              timestamp: token.timestamp || Date.now(),
+            }, ...state.tokens].slice(0, 100)
+          }));
         }
       },
 
