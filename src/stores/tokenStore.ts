@@ -22,7 +22,6 @@ export const useTokenStore = create<TokenStore>()(
             return;
           }
 
-          // Less strict validation to allow more tokens through
           const isValid = TokenMetadataValidator.validateTokenData(token);
           console.log(`Token ${token.symbol} validation result:`, isValid);
 
@@ -32,6 +31,7 @@ export const useTokenStore = create<TokenStore>()(
 
           set((state) => {
             const existingTokenIndex = state.tokens.findIndex(t => t.symbol === token.symbol);
+            const timestamp = token.timestamp || Date.now();
             
             if (existingTokenIndex !== -1) {
               const updatedTokens = [...state.tokens];
@@ -39,6 +39,7 @@ export const useTokenStore = create<TokenStore>()(
                 ...updatedTokens[existingTokenIndex],
                 ...token,
                 marketCap: token.marketCapUSD || token.marketCap || 0,
+                timestamp,
               };
               return { tokens: updatedTokens };
             } else {
@@ -48,6 +49,13 @@ export const useTokenStore = create<TokenStore>()(
                   marketCap: token.marketCapUSD || token.marketCap || 0,
                   image: token.image || "/placeholder.svg",
                   description: token.description || `${token.symbol} Token on Solana`,
+                  timestamp,
+                  transactionCounts: {
+                    '5m': 0,
+                    '1h': 0,
+                    '6h': 0,
+                    '24h': 0,
+                  }
                 }, ...state.tokens].slice(0, 100)
               };
             }

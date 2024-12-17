@@ -20,6 +20,13 @@ export interface TokenData {
   image?: string;
   description?: string;
   uri?: string;
+  timestamp: number; // Adding timestamp
+  transactionCounts?: {
+    '5m': number;
+    '1h': number;
+    '6h': number;
+    '24h': number;
+  };
 }
 
 export interface NewTokenData {

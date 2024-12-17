@@ -8,11 +8,13 @@ import { tokenWebSocket } from "@/lib/websocket";
 import { TokenList } from "./token/TokenList";
 import { useTokenStore } from "@/stores/tokenStore";
 import { useToast } from "@/components/ui/use-toast";
+import { TokenData } from "@/types/token";
 
 export const TokenBoard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedTimeframe, setSelectedTimeframe] = useState("1h");
+  const [sortBy, setSortBy] = useState("newest");
   const { tokens, addToken, updateMarketCaps } = useTokenStore();
 
   useEffect(() => {
@@ -34,7 +36,10 @@ export const TokenBoard = () => {
     tokenWebSocket.onNewToken(async (data) => {
       try {
         console.log('Received new token data:', data);
-        await addToken(data);
+        await addToken({
+          ...data,
+          timestamp: Date.now(), // Add timestamp when receiving new tokens
+        });
       } catch (error) {
         console.error('Error processing new token:', error);
         toast({
@@ -54,7 +59,32 @@ export const TokenBoard = () => {
     setSelectedTimeframe(timeframe);
   };
 
-  console.log('Current tokens in TokenBoard:', tokens);
+  const handleSortChange = (sort: string) => {
+    setSortBy(sort);
+  };
+
+  const getSortedTokens = (tokens: TokenData[]) => {
+    return [...tokens].sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return (b.timestamp || 0) - (a.timestamp || 0);
+        case "oldest":
+          return (a.timestamp || 0) - (b.timestamp || 0);
+        case "marketcap_high":
+          return (b.marketCap || 0) - (a.marketCap || 0);
+        case "marketcap_low":
+          return (a.marketCap || 0) - (b.marketCap || 0);
+        case "trending":
+          const aCount = a.transactionCounts?.[selectedTimeframe as keyof typeof a.transactionCounts] || 0;
+          const bCount = b.transactionCounts?.[selectedTimeframe as keyof typeof b.transactionCounts] || 0;
+          return bCount - aCount;
+        default:
+          return 0;
+      }
+    });
+  };
+
+  const sortedTokens = getSortedTokens(tokens);
 
   return (
     <div className="space-y-6">
@@ -70,10 +100,12 @@ export const TokenBoard = () => {
       <TrendingFilter 
         selectedTimeframe={selectedTimeframe}
         onTimeframeChange={handleTimeframeChange}
+        sortBy={sortBy}
+        onSortChange={handleSortChange}
       />
 
       <TokenList 
-        tokens={tokens} 
+        tokens={sortedTokens}
         onTokenClick={(symbol) => navigate(`/token/${symbol}`)}
       />
     </div>
