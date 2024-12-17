@@ -1,67 +1,74 @@
-import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import { Crown, Zap, Timer } from "lucide-react";
 
 interface TrendingToken {
+  rank: number;
   symbol: string;
   name: string;
   percentageGain: number;
   marketCap: number;
+  timeFrame: string;
 }
 
 export const TrendingTokensBanner = () => {
   const navigate = useNavigate();
-  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Mock data - in a real app, this would come from your API
+  // Mock data - i en riktig app skulle detta komma från din API
   const trendingTokens: TrendingToken[] = [
-    { symbol: "PENGU", name: "Pudgy Penguins", percentageGain: 156.2, marketCap: 93374 },
-    { symbol: "DOGE", name: "Dogecoin", percentageGain: 89.5, marketCap: 75000 },
-    { symbol: "PEPE", name: "Pepe", percentageGain: 234.7, marketCap: 65000 },
-    // Add more mock data as needed
+    { rank: 1, symbol: "PENGU", name: "Pudgy Penguins", percentageGain: 468, marketCap: 5000, timeFrame: "1h" },
+    { rank: 2, symbol: "PEPE", name: "Pepe", percentageGain: 214, marketCap: 5000, timeFrame: "2h" },
+    { rank: 3, symbol: "FLOSS", name: "Floss", percentageGain: 74, marketCap: 3000, timeFrame: "16h" },
+    { rank: 4, symbol: "DOGE", name: "Dogecoin", percentageGain: 156, marketCap: 4500, timeFrame: "4h" },
+    { rank: 5, symbol: "SHIB", name: "Shiba Inu", percentageGain: 89, marketCap: 3500, timeFrame: "8h" },
   ];
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => 
-        prevIndex === trendingTokens.length - 1 ? 0 : prevIndex + 1
-      );
-    }, 3000);
-
-    return () => clearInterval(timer);
-  }, [trendingTokens.length]);
 
   const handleClick = (symbol: string) => {
     navigate(`/token/${symbol}`);
   };
 
   return (
-    <Card 
-      className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20 p-3 mb-6 cursor-pointer overflow-hidden"
-      onClick={() => handleClick(trendingTokens[currentIndex].symbol)}
-    >
-      <div className="flex items-center justify-between animate-slide-left">
-        <div className="flex items-center space-x-3">
-          <Crown className="text-yellow-500 h-6 w-6" />
-          <div>
-            <h3 className="font-bold text-white">
-              {trendingTokens[currentIndex].name} ({trendingTokens[currentIndex].symbol})
-            </h3>
-            <p className="text-sm text-gray-400">
-              King of the Hill Token
-            </p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="font-bold text-green-400">
-            +{trendingTokens[currentIndex].percentageGain.toFixed(1)}%
-          </p>
-          <p className="text-sm text-gray-400">
-            ${trendingTokens[currentIndex].marketCap.toLocaleString()}
-          </p>
-        </div>
+    <div className="w-full bg-[#13141F] border-b border-gray-800">
+      <div className="overflow-hidden">
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+            skipSnaps: true,
+            dragFree: true,
+          }}
+          className="w-full cursor-pointer"
+        >
+          <CarouselContent className="animate-scroll">
+            {[...trendingTokens, ...trendingTokens].map((token, index) => (
+              <CarouselItem 
+                key={index} 
+                className="basis-auto pl-8 py-2"
+                onClick={() => handleClick(token.symbol)}
+              >
+                <div className="flex items-center space-x-2 text-sm whitespace-nowrap">
+                  <span className="text-gray-500">#{token.rank}</span>
+                  <div className="flex items-center space-x-2">
+                    <Crown className="h-4 w-4 text-yellow-500" />
+                    <span className="text-orange-500 font-bold">{token.symbol}</span>
+                    <Zap className="h-4 w-4 text-orange-500" />
+                    <span className="text-orange-500">{token.marketCap}</span>
+                    <span className="text-green-500">+{token.percentageGain}%</span>
+                    <div className="flex items-center text-gray-500">
+                      <Timer className="h-3 w-3 mr-1" />
+                      <span>{token.timeFrame}</span>
+                    </div>
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
       </div>
-    </Card>
+    </div>
   );
 };
