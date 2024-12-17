@@ -12,16 +12,30 @@ const TokenProfile = () => {
   const navigate = useNavigate();
   const { symbol } = useParams();
 
-  // This would normally fetch the token data from your backend
   const { data: token } = useQuery({
     queryKey: ['token', symbol],
-    queryFn: async () => ({
-      name: "Dogecoin",
-      symbol: "DOGE",
-      description: "The Original Meme Coin",
-      pfpUrl: "/lovable-uploads/6b165013-9c87-47f9-8ac0-9127b2f927e6.png",
-      headerUrl: "/lovable-uploads/ace4dc8b-8a5d-4d71-9f5d-b0815369aff5.png"
-    })
+    queryFn: async () => {
+      // This is where you'd normally fetch from your API
+      // For now, we'll return DOGE-specific data only for DOGE
+      if (symbol === 'DOGE') {
+        return {
+          name: "Dogecoin",
+          symbol: "DOGE",
+          description: "The Original Meme Coin",
+          pfpUrl: "/lovable-uploads/6b165013-9c87-47f9-8ac0-9127b2f927e6.png",
+          headerUrl: "/lovable-uploads/ace4dc8b-8a5d-4d71-9f5d-b0815369aff5.png"
+        };
+      }
+      
+      // Default data for other tokens
+      return {
+        name: symbol,
+        symbol: symbol,
+        description: `${symbol} Token on Solana`,
+        pfpUrl: "/placeholder.svg",
+        headerUrl: ""
+      };
+    }
   });
 
   return (

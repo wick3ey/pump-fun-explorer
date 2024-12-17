@@ -25,61 +25,116 @@ export const TokenBoard = () => {
 
   const tokens: TokenData[] = [
     {
-      symbol: "PENGU",
-      name: "Pudgy Penguins",
-      marketCap: 5000,
-      age: "1h",
-      transactions: 156,
-      holders: 89,
+      symbol: "WIF",
+      name: "Friend.tech",
+      marketCap: 675000000,
+      age: "3m",
+      transactions: 1562,
+      holders: 890,
       power: 468,
       chain: "SOL",
       percentageChange: 12.5,
       isSafeDegen: true
     },
     {
-      symbol: "PEPE",
-      name: "Pepe",
-      marketCap: 3000,
-      age: "2h",
-      transactions: 200,
-      holders: 150,
-      power: 214,
+      symbol: "BONK",
+      name: "Bonk",
+      marketCap: 543000000,
+      age: "1y",
+      transactions: 2341,
+      holders: 1502,
+      power: 389,
       chain: "SOL",
-      percentageChange: 5.0
+      percentageChange: -2.3
     },
     {
-      symbol: "FLOSS",
-      name: "Floss",
-      marketCap: 4000,
-      age: "16h",
-      transactions: 100,
-      holders: 75,
-      power: 74,
+      symbol: "MYRO",
+      name: "Myro",
+      marketCap: 234000000,
+      age: "2m",
+      transactions: 892,
+      holders: 456,
+      power: 345,
       chain: "SOL",
-      percentageChange: 8.0
+      percentageChange: 5.6
+    },
+    {
+      symbol: "POPCAT",
+      name: "Pop Cat",
+      marketCap: 123000000,
+      age: "1m",
+      transactions: 567,
+      holders: 234,
+      power: 289,
+      chain: "SOL",
+      percentageChange: -1.2
+    },
+    {
+      symbol: "SLERF",
+      name: "Slerf",
+      marketCap: 98000000,
+      age: "2w",
+      transactions: 456,
+      holders: 189,
+      power: 234,
+      chain: "SOL",
+      percentageChange: 8.9
+    },
+    {
+      symbol: "BOME",
+      name: "Book of Meme",
+      marketCap: 87000000,
+      age: "1m",
+      transactions: 345,
+      holders: 167,
+      power: 198,
+      chain: "SOL",
+      percentageChange: 3.4
+    },
+    {
+      symbol: "MNGO",
+      name: "Mango",
+      marketCap: 76000000,
+      age: "2y",
+      transactions: 289,
+      holders: 145,
+      power: 167,
+      chain: "SOL",
+      percentageChange: -0.8
+    },
+    {
+      symbol: "SAMO",
+      name: "Samoyedcoin",
+      marketCap: 65000000,
+      age: "2y",
+      transactions: 234,
+      holders: 123,
+      power: 145,
+      chain: "SOL",
+      percentageChange: 1.2
+    },
+    {
+      symbol: "PEPE",
+      name: "Pepe on Solana",
+      marketCap: 54000000,
+      age: "6m",
+      transactions: 189,
+      holders: 98,
+      power: 123,
+      chain: "SOL",
+      percentageChange: -4.5
     },
     {
       symbol: "DOGE",
-      name: "Dogecoin",
-      marketCap: 4500,
-      age: "4h",
-      transactions: 300,
-      holders: 200,
-      power: 156,
+      name: "Dogecoin on Solana",
+      marketCap: 43000000,
+      age: "1y",
+      transactions: 145,
+      holders: 76,
+      power: 98,
       chain: "SOL",
-      percentageChange: 10.0
-    },
-    {
-      symbol: "SHIB",
-      name: "Shiba Inu",
-      marketCap: 3500,
-      age: "8h",
-      transactions: 250,
-      holders: 180,
-      power: 89,
-      chain: "SOL",
-      percentageChange: 6.0
-    },
+      percentageChange: 2.1
+    }
   ];
 
   const formatNumber = (num: number) => {
