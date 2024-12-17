@@ -136,7 +136,6 @@ const Memescope = () => {
 
   return (
     <div className="min-h-screen bg-[#13141F] text-white">
-      <Header />
       <main className="container mx-auto px-4 pt-28 pb-12">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">MEMESCOPE</h1>
