@@ -16,16 +16,24 @@ export const useTokenStore = create<TokenStore>()(
       tokens: [],
       addToken: async (token) => {
         try {
+          if (!token.marketCap || token.marketCap <= 0) {
+            console.log('Skipping token with invalid market cap:', token);
+            return;
+          }
+
+          if (!token.image || token.image === '/placeholder.svg') {
+            console.log('Skipping token with missing image:', token);
+            return;
+          }
+
           if (token.contractAddress) {
             tokenWebSocket.subscribeToTokenTrade(token.contractAddress);
           }
 
           set((state) => {
-            // Check if token already exists
             const existingTokenIndex = state.tokens.findIndex(t => t.symbol === token.symbol);
             
             if (existingTokenIndex !== -1) {
-              // Update existing token
               const updatedTokens = [...state.tokens];
               updatedTokens[existingTokenIndex] = {
                 ...updatedTokens[existingTokenIndex],
@@ -34,12 +42,11 @@ export const useTokenStore = create<TokenStore>()(
               };
               return { tokens: updatedTokens };
             } else {
-              // Add new token
               return {
                 tokens: [{
                   ...token,
                   marketCap: token.marketCapUSD || token.marketCap || 0,
-                }, ...state.tokens].slice(0, 100) // Keep only the last 100 tokens
+                }, ...state.tokens].slice(0, 100)
               };
             }
           });
