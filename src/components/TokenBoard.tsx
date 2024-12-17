@@ -4,6 +4,8 @@ import { Zap, Timer, ExternalLink } from "lucide-react";
 import { TrendingTokensBanner } from "./TrendingTokensBanner";
 import { useNavigate } from "react-router-dom";
 import { KingOfTheHill } from "./KingOfTheHill";
+import { TrendingFilter } from "./TrendingFilter";
+import { useState } from "react";
 
 interface TokenData {
   symbol: string;
@@ -20,8 +22,8 @@ interface TokenData {
 
 export const TokenBoard = () => {
   const navigate = useNavigate();
+  const [selectedTimeframe, setSelectedTimeframe] = useState("1h");
 
-  // Mock data - in a real app this would come from your API
   const tokens: TokenData[] = [
     {
       symbol: "PENGU",
@@ -98,8 +100,18 @@ export const TokenBoard = () => {
     navigate(`/token/${symbol}`);
   };
 
+  const handleTimeframeChange = (timeframe: string) => {
+    setSelectedTimeframe(timeframe);
+    // Here you would typically fetch new data based on the timeframe
+  };
+
   return (
     <div className="space-y-6">
+      <TrendingFilter 
+        selectedTimeframe={selectedTimeframe}
+        onTimeframeChange={handleTimeframeChange}
+      />
+
       <KingOfTheHill 
         symbol="PENGU"
         chain="SOL"
@@ -107,6 +119,7 @@ export const TokenBoard = () => {
         age="14h"
         marketCap={75000}
         bondingCurveTarget={98000}
+        imageUrl="/placeholder.svg"
       />
 
       <TrendingTokensBanner />
