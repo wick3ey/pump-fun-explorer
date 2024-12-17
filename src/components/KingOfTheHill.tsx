@@ -8,6 +8,7 @@ interface KingOfTheHillProps {
   age: string;
   marketCap: number;
   bondingCurveTarget: number;
+  image?: string;
 }
 
 export const KingOfTheHill = ({
@@ -17,6 +18,7 @@ export const KingOfTheHill = ({
   age,
   marketCap,
   bondingCurveTarget,
+  image,
 }: KingOfTheHillProps) => {
   const percentageToTarget = ((marketCap / bondingCurveTarget) * 100).toFixed(2);
 
@@ -31,9 +33,13 @@ export const KingOfTheHill = ({
           <div className="flex items-center space-x-4">
             <div className="relative">
               <img 
-                src="/lovable-uploads/6b165013-9c87-47f9-8ac0-9127b2f927e6.png"
+                src={image || "/placeholder.svg"}
                 alt="King of the Hill" 
                 className="w-16 h-16 rounded-full object-cover border-2 border-yellow-500"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/placeholder.svg";
+                }}
               />
               <Crown className="h-6 w-6 text-yellow-500 absolute -top-2 -right-2" />
             </div>

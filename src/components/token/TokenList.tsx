@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Zap, Timer, Lock, Copy } from "lucide-react";
 import { TokenData } from "@/types/token";
 import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
 
 interface TokenListProps {
   tokens: TokenData[];
@@ -29,6 +30,11 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
       title: "Address Copied",
       description: "Contract address has been copied to clipboard",
     });
+  };
+
+  const formatContractAddress = (address: string) => {
+    if (!address) return 'N/A';
+    return `${address.slice(0, 3)}...${address.slice(-3)}`;
   };
 
   return (
@@ -96,15 +102,19 @@ export const TokenList = ({ tokens, onTokenClick }: TokenListProps) => {
                 </td>
                 <td className="text-right p-4">
                   {token.contractAddress && (
-                    <button
-                      onClick={(e) => handleCopyAddress(e, token.contractAddress!)}
-                      className="flex items-center justify-end space-x-1 text-gray-400 hover:text-white transition-colors w-full"
-                    >
-                      <span className="truncate max-w-[100px]">
-                        {token.contractAddress.slice(0, 6)}...{token.contractAddress.slice(-4)}
+                    <div className="flex items-center justify-end space-x-2">
+                      <span className="text-sm text-gray-400">
+                        {formatContractAddress(token.contractAddress)}
                       </span>
-                      <Copy className="h-4 w-4" />
-                    </button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => handleCopyAddress(e, token.contractAddress!)}
+                        className="text-gray-400 hover:text-white h-6 w-6 p-0"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </td>
               </tr>

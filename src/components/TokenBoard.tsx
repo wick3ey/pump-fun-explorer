@@ -110,6 +110,7 @@ export const TokenBoard = () => {
           age={kingOfHill.age}
           marketCap={kingOfHill.marketCap || 0}
           bondingCurveTarget={98000}
+          image={kingOfHill.image}
         />
       )}
 
