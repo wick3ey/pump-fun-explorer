@@ -32,18 +32,25 @@ export class TokenMetadataValidator {
   }
 
   static isImageUsed(imageUrl: string, currentSymbol: string): boolean {
-    // Temporarily disable image uniqueness check
-    return false;
+    const existingSymbol = this.usedImages.get(imageUrl);
+    return existingSymbol !== undefined && existingSymbol !== currentSymbol;
   }
 
   static verifyMetadata(symbol: string, metadata: TokenMetadata): boolean {
-    // Basic validation checks
     if (!metadata.image || !metadata.name) {
+      console.log(`Invalid metadata for ${symbol}:`, metadata);
       return false;
     }
 
     // Verify image URL is valid
     if (!metadata.image.startsWith('http') && !metadata.image.startsWith('/')) {
+      console.log(`Invalid image URL for ${symbol}:`, metadata.image);
+      return false;
+    }
+
+    // Check if image is already used by another token
+    if (this.isImageUsed(metadata.image, symbol)) {
+      console.log(`Image already used for ${symbol}:`, metadata.image);
       return false;
     }
 
@@ -52,7 +59,9 @@ export class TokenMetadataValidator {
 
   static cacheMetadata(symbol: string, metadata: TokenMetadata): void {
     this.metadataCache.set(symbol, metadata);
+    this.usedImages.set(metadata.image, symbol);
     this.verifiedMetadata.set(symbol, true);
+    console.log(`Cached metadata for ${symbol}:`, metadata);
   }
 
   static validateTokenData(token: Partial<TokenData>): boolean {
@@ -61,7 +70,6 @@ export class TokenMetadataValidator {
       return false;
     }
 
-    // Allow tokens even without market cap for now
     return true;
   }
 

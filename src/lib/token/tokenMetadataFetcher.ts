@@ -19,13 +19,6 @@ export class TokenMetadataFetcher {
     }
   };
 
-  private static defaultImages = [
-    "https://images.unsplash.com/photo-1649972904349-6e44c42644a7",
-    "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-    "https://images.unsplash.com/photo-1518770660439-4636190af475",
-    "https://images.unsplash.com/photo-1461749280684-dccba630e2f6"
-  ];
-
   static async fetchMetadata(symbol: string, uri: string): Promise<TokenMetadata | null> {
     try {
       if (TokenMetadataValidator.isProcessing(symbol)) {
@@ -52,30 +45,77 @@ export class TokenMetadataFetcher {
 
       TokenMetadataValidator.startProcessing(symbol);
 
-      // Generate deterministic metadata for the token
-      const hash = await this.generateHash(symbol);
-      const imageIndex = Math.abs(hash.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % this.defaultImages.length;
-      
-      const defaultMetadata: TokenMetadata = {
-        image: this.defaultImages[imageIndex],
-        description: `${symbol} Token on Solana`,
-        name: symbol
-      };
+      try {
+        // Attempt to fetch metadata from URI
+        const response = await fetch(uri);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch metadata from ${uri}`);
+        }
 
-      // Verify and cache the metadata
-      if (TokenMetadataValidator.verifyMetadata(symbol, defaultMetadata)) {
-        TokenMetadataValidator.cacheMetadata(symbol, defaultMetadata);
-        return defaultMetadata;
+        const data = await response.json();
+        const metadata: TokenMetadata = {
+          image: data.image || await this.generateUniqueImage(symbol),
+          description: data.description || `${symbol} Token on Solana`,
+          name: data.name || symbol
+        };
+
+        // Verify the image is unique and valid
+        if (TokenMetadataValidator.isImageUsed(metadata.image, symbol)) {
+          metadata.image = await this.generateUniqueImage(symbol);
+        }
+
+        // Verify and cache the metadata
+        if (TokenMetadataValidator.verifyMetadata(symbol, metadata)) {
+          TokenMetadataValidator.cacheMetadata(symbol, metadata);
+          return metadata;
+        }
+
+        return metadata;
+      } catch (error) {
+        console.error('Error fetching metadata from URI:', error);
+        // Fallback to generating unique metadata
+        const fallbackMetadata: TokenMetadata = {
+          image: await this.generateUniqueImage(symbol),
+          description: `${symbol} Token on Solana`,
+          name: symbol
+        };
+
+        if (TokenMetadataValidator.verifyMetadata(symbol, fallbackMetadata)) {
+          TokenMetadataValidator.cacheMetadata(symbol, fallbackMetadata);
+          return fallbackMetadata;
+        }
+
+        return fallbackMetadata;
       }
-
-      return defaultMetadata;
-
     } catch (error) {
-      console.error('Error fetching metadata for:', symbol, error);
+      console.error('Error in fetchMetadata:', error);
       return null;
     } finally {
       TokenMetadataValidator.finishProcessing(symbol);
     }
+  }
+
+  private static async generateUniqueImage(symbol: string): Promise<string> {
+    const defaultImages = [
+      "https://images.unsplash.com/photo-1639762681485-074b7f938ba0",
+      "https://images.unsplash.com/photo-1639762681057-408e52192e55",
+      "https://images.unsplash.com/photo-1639762681286-39def2c7930c",
+      "https://images.unsplash.com/photo-1639762681253-225ca2f2c666",
+      "https://images.unsplash.com/photo-1639762681634-fb4c3f69c3aa",
+      "https://images.unsplash.com/photo-1639762681767-06f7c4d8c73e"
+    ];
+
+    const hash = await this.generateHash(symbol);
+    let imageIndex = Math.abs(hash.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % defaultImages.length;
+    let selectedImage = defaultImages[imageIndex];
+
+    // Keep trying different indices until we find an unused image
+    while (TokenMetadataValidator.isImageUsed(selectedImage, symbol)) {
+      imageIndex = (imageIndex + 1) % defaultImages.length;
+      selectedImage = defaultImages[imageIndex];
+    }
+
+    return selectedImage;
   }
 
   private static async generateHash(input: string): Promise<string> {
