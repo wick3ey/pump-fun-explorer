@@ -2,10 +2,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { Mail, CreditCard } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { auth, googleProvider } from "@/lib/firebase";
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithGoogle, signInWithEmail, signUpWithEmail } from "@/lib/supabase";
 
 interface LoginDialogProps {
   open: boolean;
@@ -21,15 +20,16 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
 
   const handleGoogleSignIn = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
+      const { error } = await signInWithGoogle();
+      
+      if (error) throw error;
       
       toast({
         title: "Successfully signed in",
-        description: `Welcome ${user.email}!`,
+        description: "Welcome to pump.fun!",
       });
       
-      setShowPayment(true);
+      onOpenChange(false);
     } catch (error: any) {
       toast({
         title: "Error signing in",
@@ -43,10 +43,12 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
     e.preventDefault();
     try {
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const { error } = await signUpWithEmail(email, password);
+        if (error) throw error;
         setShowPayment(true);
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const { error } = await signInWithEmail(email, password);
+        if (error) throw error;
         onOpenChange(false);
       }
       
@@ -92,7 +94,7 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
               className="w-full bg-purple-500 hover:bg-purple-600"
               onClick={() => handlePayment('card')}
             >
-              <CreditCard className="mr-2 h-4 w-4" />
+              <Mail className="mr-2 h-4 w-4" />
               Pay with Card
             </Button>
             <p className="text-sm text-gray-400 text-center">
