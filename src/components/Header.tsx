@@ -15,7 +15,7 @@ export const Header = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
             <Link to="/" className="text-xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-              pump.fun
+              Solup
             </Link>
             <Link to="/">
               <Button variant="ghost" className="text-gray-400 hover:text-white">

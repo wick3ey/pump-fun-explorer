@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { useState } from "react";
 import { LoginDialog } from "./LoginDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ChatMessage {
   id: number;
@@ -14,8 +15,8 @@ interface ChatMessage {
 
 export const TokenChat = () => {
   const [message, setMessage] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // This should come from auth context later
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const { isAuthenticated } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
@@ -32,7 +33,7 @@ export const TokenChat = () => {
   ]);
 
   const handleSendMessage = () => {
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
       setShowLoginDialog(true);
       return;
     }
@@ -70,26 +71,20 @@ export const TokenChat = () => {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder={isLoggedIn ? "Type your message..." : "Login to chat..."}
-                disabled={!isLoggedIn}
+                placeholder={isAuthenticated ? "Type your message..." : "Login to chat..."}
                 className="bg-[#13141F]/50 border-[#2A2F3C] text-white"
               />
-              <Button 
-                onClick={handleSendMessage}
-                disabled={!isLoggedIn}
-              >
+              <Button onClick={handleSendMessage}>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
-      {showLoginDialog && (
-        <LoginDialog 
-          open={showLoginDialog} 
-          onOpenChange={setShowLoginDialog} 
-        />
-      )}
+      <LoginDialog 
+        open={showLoginDialog} 
+        onOpenChange={setShowLoginDialog} 
+      />
     </>
   );
 };
