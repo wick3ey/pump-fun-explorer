@@ -3,7 +3,7 @@ import { Zap, Timer, ExternalLink, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { KingOfTheHill } from "./KingOfTheHill";
 import { TrendingFilter } from "./TrendingFilter";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { tokenWebSocket } from "@/lib/websocket";
 import { TokenList } from "./token/TokenList";
 import { useTokenStore } from "@/stores/tokenStore";
@@ -22,35 +22,35 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
   const [sortBy, setSortBy] = useState("newest");
   const { tokens, addToken, updateMarketCaps, searchTokens } = useTokenStore();
   const [kingOfHill, setKingOfHill] = useState<TokenData | null>(null);
+  const updateInterval = useRef<NodeJS.Timeout>();
 
-  // Memoize the update function to prevent recreation on every render
   const updateTokenAges = useCallback(() => {
     const updatedTokens = tokens.map(token => ({
       ...token,
       age: calculateAge(token.timestamp)
     }));
     
-    // Only update market caps if needed
     if (JSON.stringify(updatedTokens) !== JSON.stringify(tokens)) {
-      updateMarketCaps().catch((error) => {
-        console.error('Error updating market caps:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update market caps",
-          variant: "destructive",
-        });
-      });
+      updateMarketCaps().catch(console.error);
     }
-  }, [tokens, updateMarketCaps, toast]);
+  }, [tokens, updateMarketCaps]);
 
   // Update token ages every minute
   useEffect(() => {
-    // Initial update
     updateTokenAges();
     
-    // Set up interval for updates
-    const intervalId = setInterval(updateTokenAges, 60000);
-    return () => clearInterval(intervalId);
+    // Clear existing interval before setting a new one
+    if (updateInterval.current) {
+      clearInterval(updateInterval.current);
+    }
+    
+    updateInterval.current = setInterval(updateTokenAges, 60000);
+    
+    return () => {
+      if (updateInterval.current) {
+        clearInterval(updateInterval.current);
+      }
+    };
   }, [updateTokenAges]);
 
   // Update King of the Hill
@@ -63,31 +63,29 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
     if (newKing && (!kingOfHill || newKing.marketCap > (kingOfHill.marketCap || 0))) {
       setKingOfHill(newKing);
     }
-  }, [tokens, kingOfHill]);
+  }, [tokens]);
 
   // WebSocket token updates
   useEffect(() => {
-    tokenWebSocket.onNewToken(async (data) => {
+    const handleNewToken = async (data: TokenData) => {
       try {
+        const timestamp = Date.now();
         await addToken({
           ...data,
-          timestamp: Date.now(),
-          age: calculateAge(Date.now())
+          timestamp,
+          age: calculateAge(timestamp)
         });
       } catch (error) {
         console.error('Error processing new token:', error);
-        toast({
-          title: "Error",
-          description: "Failed to add new token",
-          variant: "destructive",
-        });
       }
-    });
+    };
+
+    tokenWebSocket.onNewToken(handleNewToken);
 
     return () => {
       tokenWebSocket.disconnect();
     };
-  }, [addToken, toast]);
+  }, [addToken]);
 
   const handleTimeframeChange = (timeframe: string) => {
     setSelectedTimeframe(timeframe);
