@@ -32,12 +32,19 @@ export const useTokenStore = create<TokenStore>()(
           console.error('Error adding token:', error);
         }
       },
-      updateToken: (symbol, updates) =>
+      updateToken: (symbol, updates) => {
         set((state) => ({
           tokens: state.tokens.map((token) =>
-            token.symbol === symbol ? { ...token, ...updates } : token
+            token.symbol === symbol 
+              ? { 
+                  ...token, 
+                  ...updates,
+                  marketCap: updates.marketCapUSD || token.marketCap 
+                } 
+              : token
           )
-        })),
+        }));
+      },
       updateMarketCaps: async () => {
         try {
           const tokens = get().tokens;

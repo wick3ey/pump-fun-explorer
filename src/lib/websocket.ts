@@ -46,19 +46,29 @@ class TokenWebSocket {
         console.log('Connected to PumpPortal WebSocket');
         this.reconnectAttempts = 0;
         this.subscribeToNewTokens();
-        // Resubscribe to all tokens after reconnection
         this.subscribedTokens.forEach(token => this.subscribeToTokenTrade(token));
       };
 
       this.ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.marketCapSol !== undefined && this.solPriceUSD && this.onNewTokenCallback) {
-          const marketCapUSD = data.marketCapSol * this.solPriceUSD;
-          this.onNewTokenCallback({
-            ...data,
-            marketCapSol: data.marketCapSol,
-            marketCapUSD: marketCapUSD
-          });
+        try {
+          const data = JSON.parse(event.data);
+          if (data.marketCapSol !== undefined && this.solPriceUSD && this.onNewTokenCallback) {
+            // Calculate market cap in USD
+            const marketCapUSD = parseFloat(data.marketCapSol) * this.solPriceUSD;
+            console.log('Market Cap calculation:', {
+              marketCapSol: data.marketCapSol,
+              solPriceUSD: this.solPriceUSD,
+              marketCapUSD: marketCapUSD
+            });
+            
+            this.onNewTokenCallback({
+              ...data,
+              marketCapSol: parseFloat(data.marketCapSol),
+              marketCapUSD: marketCapUSD
+            });
+          }
+        } catch (error) {
+          console.error('Error processing WebSocket message:', error);
         }
       };
 
