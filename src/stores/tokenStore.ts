@@ -1,9 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { TokenData } from '@/types/token';
-import { fetchSolPrice, calculateTokenMarketCap } from '@/lib/priceUtils';
-
-const TOTAL_SUPPLY = 1_000_000_000; // 1 billion tokens
+import { getCachedSolPrice } from '@/lib/solPriceCache';
+import { tokenWebSocket } from '@/lib/websocket';
 
 interface TokenStore {
   tokens: TokenData[];
@@ -18,19 +17,18 @@ export const useTokenStore = create<TokenStore>()(
       tokens: [],
       addToken: async (token) => {
         try {
-          const solPrice = await fetchSolPrice();
-          const marketCap = await calculateTokenMarketCap(
-            TOTAL_SUPPLY,
-            token.initialSolAmount || 1,
-            solPrice
-          );
+          const solPrice = await getCachedSolPrice();
+          
+          // Subscribe to token trades
+          if (token.contractAddress) {
+            tokenWebSocket.subscribeToTokenTrade(token.contractAddress);
+          }
 
           set((state) => ({
             tokens: [{
               ...token,
-              marketCap,
-              totalSupply: TOTAL_SUPPLY,
-              lastTransactionSolAmount: token.initialSolAmount || 1
+              marketCap: token.marketCapSol ? token.marketCapSol * solPrice : 0,
+              totalSupply: token.totalSupply || 1_000_000_000,
             }, ...state.tokens].slice(0, 10)
           }));
         } catch (error) {
@@ -45,19 +43,13 @@ export const useTokenStore = create<TokenStore>()(
         })),
       updateMarketCaps: async () => {
         try {
-          const solPrice = await fetchSolPrice();
+          const solPrice = await getCachedSolPrice();
           const tokens = get().tokens;
           
-          const updatedTokens = await Promise.all(
-            tokens.map(async (token) => {
-              const marketCap = await calculateTokenMarketCap(
-                TOTAL_SUPPLY,
-                token.lastTransactionSolAmount || token.initialSolAmount || 1,
-                solPrice
-              );
-              return { ...token, marketCap };
-            })
-          );
+          const updatedTokens = tokens.map(token => ({
+            ...token,
+            marketCap: token.marketCapSol ? token.marketCapSol * solPrice : token.marketCap
+          }));
           
           set({ tokens: updatedTokens });
         } catch (error) {

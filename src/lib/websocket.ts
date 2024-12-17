@@ -3,6 +3,7 @@ class TokenWebSocket {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private onNewTokenCallback: ((data: any) => void) | null = null;
+  private subscribedTokens: Set<string> = new Set();
 
   constructor() {
     this.connect();
@@ -16,12 +17,17 @@ class TokenWebSocket {
         console.log('Connected to PumpPortal WebSocket');
         this.reconnectAttempts = 0;
         this.subscribeToNewTokens();
+        // Resubscribe to all tokens after reconnection
+        this.subscribedTokens.forEach(token => this.subscribeToTokenTrade(token));
       };
 
       this.ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (this.onNewTokenCallback) {
-          this.onNewTokenCallback(data);
+        if (data.marketCapSol !== undefined && this.onNewTokenCallback) {
+          this.onNewTokenCallback({
+            ...data,
+            marketCapSol: data.marketCapSol
+          });
         }
       };
 
@@ -52,6 +58,17 @@ class TokenWebSocket {
       this.ws.send(JSON.stringify({
         method: "subscribeNewToken"
       }));
+    }
+  }
+
+  public subscribeToTokenTrade(tokenAddress: string) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        method: 'subscribeTokenTrade',
+        keys: [tokenAddress]
+      }));
+      this.subscribedTokens.add(tokenAddress);
+      console.log('Subscribed to token trades:', tokenAddress);
     }
   }
 

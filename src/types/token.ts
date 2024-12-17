@@ -2,6 +2,7 @@ export interface TokenData {
   symbol: string;
   name: string;
   marketCap: number;
+  marketCapSol?: number;
   age: string;
   transactions: number;
   holders: number;
@@ -12,6 +13,7 @@ export interface TokenData {
   initialSolAmount?: number;
   lastTransactionSolAmount?: number;
   totalSupply: number;
+  contractAddress?: string;
 }
 
 export interface NewTokenData {
@@ -23,4 +25,6 @@ export interface NewTokenData {
   holders?: number;
   power?: number;
   initialSolAmount?: number;
+  contractAddress?: string;
+  marketCapSol?: number;
 }
