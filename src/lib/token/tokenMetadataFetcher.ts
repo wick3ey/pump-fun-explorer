@@ -59,14 +59,11 @@ export class TokenMetadataFetcher {
         return this.getDefaultMetadata(symbol);
       }
 
-      // Try to fetch from direct URI first
+      // Try to fetch from direct URI first with no-cors
       try {
         const response = await fetch(uri, {
-          mode: 'cors',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
+          mode: 'no-cors',
+          headers: { 'Accept': '*/*' }
         });
         
         if (response.ok) {
@@ -96,9 +93,9 @@ export class TokenMetadataFetcher {
           console.warn(`Attempt ${attempt} failed for ${symbol}:`, error);
           if (attempt === 3) {
             console.error(`All fetch attempts failed for ${symbol}:`, error);
-          } else {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            return this.getDefaultMetadata(symbol);
           }
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
       }
 
