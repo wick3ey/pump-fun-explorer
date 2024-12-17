@@ -53,6 +53,10 @@ export const TokenForm = () => {
     });
   };
 
+  const handleQuickSelect = (amount: string) => {
+    setInitialBuyAmount(amount);
+  };
+
   return (
     <>
       <Form {...form}>
@@ -146,6 +150,29 @@ export const TokenForm = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="flex gap-2 mb-4">
+              <Button 
+                type="button"
+                onClick={() => handleQuickSelect("1")}
+                className="flex-1 bg-[#2A2F3C] hover:bg-[#3A3F4C] text-white"
+              >
+                1 SOL
+              </Button>
+              <Button 
+                type="button"
+                onClick={() => handleQuickSelect("3")}
+                className="flex-1 bg-[#2A2F3C] hover:bg-[#3A3F4C] text-white"
+              >
+                3 SOL
+              </Button>
+              <Button 
+                type="button"
+                onClick={() => handleQuickSelect("5")}
+                className="flex-1 bg-[#2A2F3C] hover:bg-[#3A3F4C] text-white"
+              >
+                5 SOL
+              </Button>
+            </div>
             <div className="flex items-center space-x-2">
               <Input
                 type="number"
