@@ -40,13 +40,13 @@ export class TokenMetadataFetcher {
     try {
       console.log(`Fetching metadata for ${symbol} with URI: ${uri}`);
 
-      // Check hardcoded metadata first
+      // Return hardcoded metadata if available
       if (this.hardcodedMetadata[symbol]) {
         console.log(`Using hardcoded metadata for ${symbol}`);
         return this.hardcodedMetadata[symbol];
       }
 
-      // Check cache
+      // Check cache first
       const cachedMetadata = TokenMetadataValidator.getCachedMetadata(symbol);
       if (cachedMetadata) {
         console.log(`Using cached metadata for ${symbol}`);
@@ -54,12 +54,13 @@ export class TokenMetadataFetcher {
         return { ...cachedMetadata, image: validatedImage };
       }
 
+      // If no URI provided, return default metadata
       if (!uri) {
         console.log(`No URI provided for ${symbol}, using default metadata`);
         return this.getDefaultMetadata(symbol);
       }
 
-      // Try to fetch from direct URI first with no-cors
+      // Try to fetch from direct URI first
       try {
         const response = await fetch(uri, {
           mode: 'no-cors',
@@ -85,8 +86,14 @@ export class TokenMetadataFetcher {
         try {
           console.log(`Attempt ${attempt} to fetch metadata for ${symbol}`);
           const response = await IPFSGateway.fetchFromGateways(cid, attempt);
-          const data = await response.json();
           
+          // Return default metadata if response is not ok or status is 0
+          if (!response.ok || response.status === 0) {
+            console.warn(`Invalid response for ${symbol} on attempt ${attempt}`);
+            continue;
+          }
+
+          const data = await response.json();
           const metadata = this.processMetadataResponse(data, symbol);
           if (metadata) return metadata;
         } catch (error) {
@@ -128,7 +135,7 @@ export class TokenMetadataFetcher {
 
       const sanitizedImageUrl = ImageHandler.sanitizeImageUrl(data.image);
       const metadata: TokenMetadata = {
-        image: sanitizedImageUrl,
+        image: sanitizedImageUrl || '/placeholder.svg',
         description: data.description?.slice(0, 500) || `${symbol} Token on Solana`,
         name: data.name?.slice(0, 100) || symbol
       };
@@ -152,6 +159,7 @@ export class TokenMetadataFetcher {
     };
     
     TokenMetadataValidator.cacheMetadata(symbol, defaultMetadata);
+    console.log(`Cached metadata for ${symbol}:`, defaultMetadata);
     return defaultMetadata;
   }
 }

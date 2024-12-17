@@ -1,7 +1,6 @@
 export class IPFSGateway {
   private static readonly BACKUP_GATEWAYS = [
-    'https://ipfs.io/ipfs/',
-    'https://dweb.link/ipfs/',
+    'https://w3s.link/ipfs/',
     'https://cloudflare-ipfs.com/ipfs/',
     'https://nftstorage.link/ipfs/',
     'https://cf-ipfs.com/ipfs/'
@@ -14,14 +13,16 @@ export class IPFSGateway {
       .sort(() => Math.random() - 0.5)
       .slice(0, gatewayCount);
 
+    console.log(`Attempting to fetch CID ${cid} from ${gatewayCount} gateways`);
+
     const fetchPromises = shuffledGateways.map(async (gateway) => {
       try {
         const url = `${gateway}${cid}`;
-        console.log(`Attempting fetch from gateway ${gateway}, attempt ${attempt}`);
+        console.log(`Attempting fetch from gateway ${gateway}`);
         
         const response = await this.fetchWithTimeout(url, 5000);
         
-        if (!response.ok) {
+        if (!response.ok && response.status !== 0) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
@@ -50,7 +51,7 @@ export class IPFSGateway {
     try {
       const response = await fetch(url, {
         signal: controller.signal,
-        mode: 'no-cors', // Changed to no-cors to handle CORS issues
+        mode: 'no-cors',
         headers: {
           'Accept': '*/*'
         }

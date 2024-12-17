@@ -55,7 +55,7 @@ export class ImageHandler {
         headers: { 'Accept': '*/*' }
       });
       
-      const isValid = response.ok;
+      const isValid = response.ok || response.status === 0; // Consider status 0 as valid for no-cors
       this.validationCache.set(url, isValid);
       return isValid;
     } catch {
