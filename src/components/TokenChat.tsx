@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { useState } from "react";
+import { LoginDialog } from "./LoginDialog";
 
 interface ChatMessage {
   id: number;
@@ -13,6 +14,8 @@ interface ChatMessage {
 
 export const TokenChat = () => {
   const [message, setMessage] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // This should come from auth context later
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
@@ -29,6 +32,11 @@ export const TokenChat = () => {
   ]);
 
   const handleSendMessage = () => {
+    if (!isLoggedIn) {
+      setShowLoginDialog(true);
+      return;
+    }
+
     if (!message.trim()) return;
     
     setMessages([...messages, {
@@ -41,35 +49,47 @@ export const TokenChat = () => {
   };
 
   return (
-    <Card className="bg-[#1A1F2C] border-[#2A2F3C]">
-      <CardContent className="p-6">
-        <div className="space-y-4">
-          <div className="h-[300px] overflow-y-auto space-y-4">
-            {messages.map((msg) => (
-              <div key={msg.id} className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-purple-400">{msg.user}</span>
-                  <span className="text-xs text-gray-400">{msg.timestamp}</span>
+    <>
+      <Card className="bg-[#1A1F2C] border-[#2A2F3C]">
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div className="h-[300px] overflow-y-auto space-y-4">
+              {messages.map((msg) => (
+                <div key={msg.id} className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-purple-400">{msg.user}</span>
+                    <span className="text-xs text-gray-400">{msg.timestamp}</span>
+                  </div>
+                  <p className="text-white">{msg.message}</p>
                 </div>
-                <p className="text-white">{msg.message}</p>
-              </div>
-            ))}
+              ))}
+            </div>
+            
+            <div className="flex gap-2">
+              <Input
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                placeholder={isLoggedIn ? "Type your message..." : "Login to chat..."}
+                disabled={!isLoggedIn}
+                className="bg-[#13141F]/50 border-[#2A2F3C] text-white"
+              />
+              <Button 
+                onClick={handleSendMessage}
+                disabled={!isLoggedIn}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          
-          <div className="flex gap-2">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Type your message..."
-              className="bg-[#13141F]/50 border-[#2A2F3C] text-white"
-            />
-            <Button onClick={handleSendMessage}>
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      {showLoginDialog && (
+        <LoginDialog 
+          open={showLoginDialog} 
+          onOpenChange={setShowLoginDialog} 
+        />
+      )}
+    </>
   );
 };

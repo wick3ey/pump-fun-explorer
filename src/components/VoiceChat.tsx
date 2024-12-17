@@ -11,6 +11,8 @@ interface VoiceChatProps {
 
 export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   const [isMuted, setIsMuted] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // This should come from auth context later
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [participants, setParticipants] = useState([
     { id: 1, name: "Anon#1234", speaking: false },
     { id: 2, name: "Degen#5678", speaking: true }
@@ -19,6 +21,11 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   const conversation = useConversation();
 
   const handleJoinVoice = async () => {
+    if (!isLoggedIn) {
+      setShowLoginDialog(true);
+      return;
+    }
+
     try {
       await conversation.startSession({
         agentId: "default_agent_id",
@@ -42,6 +49,11 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   };
 
   const handleMuteToggle = () => {
+    if (!isLoggedIn) {
+      setShowLoginDialog(true);
+      return;
+    }
+    
     setIsMuted(!isMuted);
     toast({
       title: isMuted ? "Unmuted" : "Muted",
@@ -50,51 +62,59 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   };
 
   return (
-    <Card className="bg-[#1A1F2C] border-[#2A2F3C] p-4">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white">Voice Chat - {tokenSymbol}</h3>
-          <div className="flex items-center space-x-2">
-            <Users className="h-4 w-4 text-gray-400" />
-            <span className="text-gray-400">{participants.length}</span>
+    <>
+      <Card className="bg-[#1A1F2C] border-[#2A2F3C] p-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-white">Voice Chat - {tokenSymbol}</h3>
+            <div className="flex items-center space-x-2">
+              <Users className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-400">{participants.length}</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {participants.map((participant) => (
+              <div 
+                key={participant.id}
+                className="flex items-center justify-between p-2 rounded-lg bg-[#2A2F3C]"
+              >
+                <span className="text-white">{participant.name}</span>
+                {participant.speaking && (
+                  <span className="text-xs text-green-400">Speaking...</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center space-x-4">
+            <Button
+              variant="outline"
+              className="bg-[#2A2F3C] text-white hover:bg-[#3A3F4C]"
+              onClick={handleJoinVoice}
+            >
+              Join Voice
+            </Button>
+            <Button
+              variant="outline"
+              className={`${
+                isMuted 
+                  ? 'bg-[#2A2F3C] text-white hover:bg-[#3A3F4C]' 
+                  : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+              }`}
+              onClick={handleMuteToggle}
+            >
+              {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </Button>
           </div>
         </div>
-
-        <div className="space-y-2">
-          {participants.map((participant) => (
-            <div 
-              key={participant.id}
-              className="flex items-center justify-between p-2 rounded-lg bg-[#2A2F3C]"
-            >
-              <span className="text-white">{participant.name}</span>
-              {participant.speaking && (
-                <span className="text-xs text-green-400">Speaking...</span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex justify-center space-x-4">
-          <Button
-            variant="outline"
-            className="bg-[#2A2F3C] text-white hover:bg-[#3A3F4C]"
-            onClick={handleJoinVoice}
-          >
-            Join Voice
-          </Button>
-          <Button
-            variant="outline"
-            className={`${
-              isMuted 
-                ? 'bg-[#2A2F3C] text-white hover:bg-[#3A3F4C]' 
-                : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-            }`}
-            onClick={handleMuteToggle}
-          >
-            {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-        </div>
-      </div>
-    </Card>
+      </Card>
+      {showLoginDialog && (
+        <LoginDialog 
+          open={showLoginDialog} 
+          onOpenChange={setShowLoginDialog} 
+        />
+      )}
+    </>
   );
 };
