@@ -17,10 +17,10 @@ export const PowerBanner = () => {
     { symbol: "WIF", name: "Friend.tech", power: 1000 },
     { symbol: "BONK", name: "Bonk", power: 500 },
     { symbol: "MYRO", name: "Myro", power: 100 },
-    { rank: 1, symbol: "PENGU", power: 5000, percentage: 468, timeFrame: "2h" },
-    { rank: 3, symbol: "FLOSS", power: 3000, percentage: 74, timeFrame: "16h" },
-    { rank: 4, symbol: "DOGE", power: 4500, percentage: 156, timeFrame: "4h" },
-    { rank: 5, symbol: "SHIB", power: 3500, percentage: 89, timeFrame: "8h" }
+    { rank: 1, symbol: "PENGU", name: "Pengu", power: 5000, percentage: 468, timeFrame: "2h" },
+    { rank: 3, symbol: "FLOSS", name: "Floss", power: 3000, percentage: 74, timeFrame: "16h" },
+    { rank: 4, symbol: "DOGE", name: "Doge", power: 4500, percentage: 156, timeFrame: "4h" },
+    { rank: 5, symbol: "SHIB", name: "Shiba Inu", power: 3500, percentage: 89, timeFrame: "8h" }
   ];
 
   const getTickerColor = (power: number) => {

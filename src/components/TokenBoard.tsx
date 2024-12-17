@@ -164,7 +164,6 @@ export const TokenBoard = () => {
         age="14h"
         marketCap={75000}
         bondingCurveTarget={98000}
-        imageUrl="/placeholder.svg"
       />
 
       <TrendingFilter 
