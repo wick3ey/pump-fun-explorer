@@ -4,17 +4,36 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Crown, Twitter, Globe, MessageCircle } from "lucide-react";
+import { useState } from "react";
 
 export const TokenInfo = () => {
+  const [slippage, setSlippage] = useState(1);
+  const [isBuying, setIsBuying] = useState(true);
+
   return (
     <Card className="bg-[#1A1F2C] border-[#2A2F3C]">
       <CardContent className="p-6 space-y-6">
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
           <div>
-            <h2 className="text-xl font-bold">PENGU</h2>
+            <h2 className="text-xl font-bold text-white">PENGU</h2>
             <p className="text-gray-400">Spreading good vibes across the meta 🐧</p>
           </div>
+        </div>
+
+        <div className="flex gap-2 mb-4">
+          <Button 
+            className={`flex-1 ${isBuying ? 'bg-[#0FA0CE] hover:bg-[#0D8CB6] text-black' : 'bg-transparent border border-[#0FA0CE] text-[#0FA0CE]'}`}
+            onClick={() => setIsBuying(true)}
+          >
+            Buy
+          </Button>
+          <Button 
+            className={`flex-1 ${!isBuying ? 'bg-[#ea384c] hover:bg-[#d32f41] text-white' : 'bg-transparent border border-[#ea384c] text-[#ea384c]'}`}
+            onClick={() => setIsBuying(false)}
+          >
+            Sell
+          </Button>
         </div>
 
         <div className="space-y-4">
@@ -23,22 +42,57 @@ export const TokenInfo = () => {
             <Input 
               type="number" 
               placeholder="0.00" 
-              className="bg-[#1A1F2C] border-[#2A2F3C]" 
+              className="bg-[#1A1F2C] border-[#2A2F3C] text-white" 
             />
           </div>
 
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1">0.1 SOL</Button>
-            <Button variant="outline" size="sm" className="flex-1">0.5 SOL</Button>
-            <Button variant="outline" size="sm" className="flex-1">1 SOL</Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
+            >
+              0.1 SOL
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
+            >
+              0.5 SOL
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
+            >
+              1 SOL
+            </Button>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm text-gray-400">Slippage</label>
-            <Slider defaultValue={[1]} max={5} step={0.1} />
+            <div className="flex justify-between items-center">
+              <label className="text-sm text-gray-400">Slippage</label>
+              <span className="text-sm text-white">{slippage}%</span>
+            </div>
+            <Slider 
+              defaultValue={[1]} 
+              max={5} 
+              step={0.1} 
+              value={[slippage]}
+              onValueChange={([value]) => setSlippage(value)}
+            />
           </div>
 
-          <Button className="w-full bg-purple-600 hover:bg-purple-700">Place Trade</Button>
+          <Button 
+            className={`w-full ${
+              isBuying 
+                ? 'bg-[#0FA0CE] hover:bg-[#0D8CB6] text-black' 
+                : 'bg-[#ea384c] hover:bg-[#d32f41] text-white'
+            }`}
+          >
+            {isBuying ? 'Place Buy Order' : 'Place Sell Order'}
+          </Button>
         </div>
 
         <div className="space-y-4 pt-4 border-t border-[#2A2F3C]">
@@ -58,20 +112,20 @@ export const TokenInfo = () => {
         </div>
 
         <div className="flex space-x-4 pt-4 border-t border-[#2A2F3C]">
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
             <Twitter className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
             <MessageCircle className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
             <Globe className="h-4 w-4" />
           </Button>
         </div>
 
         <div className="pt-4 border-t border-[#2A2F3C]">
           <p className="text-sm text-gray-400">Contract Address:</p>
-          <p className="text-sm font-mono">PENGU...vqs6</p>
+          <p className="text-sm font-mono text-white">PENGU...vqs6</p>
         </div>
       </CardContent>
     </Card>
