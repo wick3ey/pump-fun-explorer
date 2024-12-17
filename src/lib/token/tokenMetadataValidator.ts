@@ -7,9 +7,10 @@ export interface TokenMetadata {
 }
 
 export class TokenMetadataValidator {
+  // Layer 1: Image Tracking
   private static metadataCache = new Map<string, TokenMetadata>();
   private static processingTokens = new Set<string>();
-  private static usedImages = new Map<string, string>();
+  private static usedImages = new Map<string, string>(); // image URL -> token symbol
   private static validationQueue = new Map<string, number>();
   private static MAX_VALIDATION_ATTEMPTS = 3;
   private static verifiedMetadata = new Map<string, boolean>();
@@ -27,6 +28,7 @@ export class TokenMetadataValidator {
     this.processingTokens.delete(symbol);
   }
 
+  // Layer 2: Metadata Validation and Caching
   static getCachedMetadata(symbol: string): TokenMetadata | null {
     return this.metadataCache.get(symbol) || null;
   }
@@ -36,6 +38,7 @@ export class TokenMetadataValidator {
     return existingSymbol !== undefined && existingSymbol !== currentSymbol;
   }
 
+  // Layer 3: Metadata Verification
   static verifyMetadata(symbol: string, metadata: TokenMetadata): boolean {
     if (!metadata.image || !metadata.name) {
       console.log(`Invalid metadata for ${symbol}:`, metadata);

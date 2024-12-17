@@ -21,12 +21,13 @@ export class TokenMetadataFetcher {
 
   static async fetchMetadata(symbol: string, uri: string): Promise<TokenMetadata | null> {
     try {
+      // Layer 1: Check if token is already being processed
       if (TokenMetadataValidator.isProcessing(symbol)) {
         console.log('Token already being processed:', symbol);
         return null;
       }
 
-      // Use hardcoded metadata if available
+      // Layer 2: Use hardcoded metadata if available
       if (this.hardcodedMetadata[symbol]) {
         console.log('Using hardcoded metadata for:', symbol);
         const metadata = this.hardcodedMetadata[symbol];
@@ -36,7 +37,7 @@ export class TokenMetadataFetcher {
         }
       }
 
-      // Check cache first
+      // Layer 2: Check cache first
       const cachedMetadata = TokenMetadataValidator.getCachedMetadata(symbol);
       if (cachedMetadata) {
         console.log('Using cached metadata for:', symbol);
@@ -46,7 +47,7 @@ export class TokenMetadataFetcher {
       TokenMetadataValidator.startProcessing(symbol);
 
       try {
-        // Attempt to fetch metadata from URI
+        // Layer 3: Attempt to fetch metadata from URI
         const response = await fetch(uri);
         if (!response.ok) {
           throw new Error(`Failed to fetch metadata from ${uri}`);
@@ -59,12 +60,12 @@ export class TokenMetadataFetcher {
           name: data.name || symbol
         };
 
-        // Verify the image is unique and valid
+        // Layer 3: Verify the image is unique and valid
         if (TokenMetadataValidator.isImageUsed(metadata.image, symbol)) {
           metadata.image = await this.generateUniqueImage(symbol);
         }
 
-        // Verify and cache the metadata
+        // Layer 3: Verify and cache the metadata
         if (TokenMetadataValidator.verifyMetadata(symbol, metadata)) {
           TokenMetadataValidator.cacheMetadata(symbol, metadata);
           return metadata;
@@ -73,7 +74,7 @@ export class TokenMetadataFetcher {
         return metadata;
       } catch (error) {
         console.error('Error fetching metadata from URI:', error);
-        // Fallback to generating unique metadata
+        // Layer 3: Fallback to generating unique metadata
         const fallbackMetadata: TokenMetadata = {
           image: await this.generateUniqueImage(symbol),
           description: `${symbol} Token on Solana`,
