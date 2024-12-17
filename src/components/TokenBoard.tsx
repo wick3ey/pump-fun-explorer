@@ -31,6 +31,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
         age: calculateAge(token.timestamp)
       }));
       
+      // Force a re-render by updating market caps
       updateMarketCaps().catch((error) => {
         console.error('Error updating market caps:', error);
         toast({
@@ -41,7 +42,12 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
       });
     };
 
-    const intervalId = setInterval(updateTokenAges, 60000);
+    // Initial update
+    updateTokenAges();
+
+    // Set up interval for updates
+    const intervalId = setInterval(updateTokenAges, 60000); // Update every minute
+    
     return () => clearInterval(intervalId);
   }, [updateMarketCaps, toast, tokens]);
 
@@ -66,7 +72,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
         await addToken({
           ...data,
           timestamp: Date.now(),
-          age: '1m' // Initial age
+          age: calculateAge(Date.now()) // Calculate initial age
         });
       } catch (error) {
         console.error('Error processing new token:', error);

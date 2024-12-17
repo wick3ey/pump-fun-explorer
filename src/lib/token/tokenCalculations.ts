@@ -18,7 +18,8 @@ export const calculateAge = (timestamp: number): string => {
   const ONE_HOUR = ONE_MINUTE * 60;
   const ONE_DAY = ONE_HOUR * 24;
   
-  const diffInMinutes = Math.max(1, Math.floor((now - timestamp) / ONE_MINUTE));
+  const diffInMs = Math.max(ONE_MINUTE, now - timestamp);
+  const diffInMinutes = Math.floor(diffInMs / ONE_MINUTE);
   
   if (diffInMinutes < 60) {
     return `${diffInMinutes}m`;
