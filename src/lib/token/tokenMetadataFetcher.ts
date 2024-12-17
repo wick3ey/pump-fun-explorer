@@ -19,24 +19,27 @@ export class TokenMetadataFetcher {
     }
   };
 
-  private static readonly MAX_RETRIES = 5;
+  private static readonly MAX_RETRIES = 3;
   private static readonly RETRY_DELAY = 1000;
-  private static readonly FETCH_TIMEOUT = 15000; // Increased timeout to 15 seconds
+  private static readonly FETCH_TIMEOUT = 8000;
   private static readonly BACKUP_GATEWAYS = [
-    'https://ipfs.io/ipfs/',
     'https://cloudflare-ipfs.com/ipfs/',
-    'https://gateway.pinata.cloud/ipfs/',
+    'https://ipfs.io/ipfs/',
     'https://dweb.link/ipfs/',
-    'https://ipfs.eth.aragon.network/ipfs/',
     'https://gateway.ipfs.io/ipfs/'
   ];
 
   private static async fetchWithTimeout(url: string, timeout: number): Promise<Response> {
     const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
+    const timeoutPromise = new Promise<Response>((_, reject) => {
+      setTimeout(() => {
+        controller.abort();
+        reject(new Error(`Timeout after ${timeout}ms`));
+      }, timeout);
+    });
 
     try {
-      const response = await fetch(url, {
+      const fetchPromise = fetch(url, {
         signal: controller.signal,
         headers: {
           'Accept': 'application/json',
@@ -44,37 +47,43 @@ export class TokenMetadataFetcher {
         }
       });
 
+      const response = await Promise.race([fetchPromise, timeoutPromise]);
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       return response;
-    } finally {
-      clearTimeout(id);
+    } catch (error) {
+      console.warn(`Fetch failed for ${url}:`, error);
+      throw error;
     }
   }
 
   private static async tryFetchFromGateways(cid: string, attempt: number): Promise<Response> {
     const errors: Error[] = [];
-    const shuffledGateways = [...this.BACKUP_GATEWAYS].sort(() => Math.random() - 0.5);
+    const shuffledGateways = [...this.BACKUP_GATEWAYS]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2); // Only try 2 random gateways per attempt to avoid too many concurrent requests
 
-    for (const gateway of shuffledGateways) {
+    const fetchPromises = shuffledGateways.map(async (gateway) => {
       try {
         const url = `${gateway}${cid}`;
         console.log(`Attempting fetch from gateway ${gateway}, attempt ${attempt}`);
-        
-        const response = await this.fetchWithTimeout(
-          url, 
-          this.FETCH_TIMEOUT + (attempt * 1000) // Increase timeout with each attempt
-        );
-        
-        return response;
+        return await this.fetchWithTimeout(url, this.FETCH_TIMEOUT);
       } catch (error) {
         errors.push(error as Error);
         console.warn(`Failed to fetch from ${gateway}:`, error);
-        await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY * attempt));
-        continue;
+        return null;
       }
+    });
+
+    // Try gateways concurrently but wait for first successful response
+    const responses = await Promise.all(fetchPromises);
+    const successfulResponse = responses.find(response => response !== null);
+
+    if (successfulResponse) {
+      return successfulResponse;
     }
 
     throw new Error(`All gateways failed: ${errors.map(e => e.message).join(', ')}`);
@@ -104,7 +113,7 @@ export class TokenMetadataFetcher {
       }
 
       // Extract CID if it's an IPFS URI
-      const cid = uri.replace(/^https?:\/\/[^/]+\/ipfs\//, '');
+      const cid = uri.replace(/^https?:\/\/[^/]+\/ipfs\//, '').replace('ipfs://', '');
       
       let lastError: Error | null = null;
       for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
@@ -124,7 +133,8 @@ export class TokenMetadataFetcher {
             return metadata;
           }
 
-          throw new Error('Metadata verification failed');
+          console.warn(`Invalid metadata for ${symbol}, using default`);
+          return this.getDefaultMetadata(symbol);
         } catch (error) {
           lastError = error as Error;
           console.warn(`Attempt ${attempt} failed:`, error);
@@ -135,7 +145,7 @@ export class TokenMetadataFetcher {
         }
       }
 
-      console.error('All fetch attempts failed:', lastError);
+      console.error(`All fetch attempts failed for ${symbol}:`, lastError);
       return this.getDefaultMetadata(symbol);
 
     } catch (error) {
