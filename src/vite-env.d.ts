@@ -3,7 +3,7 @@
 interface Window {
   Buffer: typeof Buffer;
   global: typeof window;
-  process: { env: Record<string, string> };
+  process: NodeJS.Process;
   EventEmitter: any;
   eventEmitter: any;
 }

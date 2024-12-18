@@ -8,7 +8,31 @@ import { EventEmitter } from 'events';
 // Polyfill Buffer global
 window.Buffer = Buffer;
 window.global = window;
-window.process = { env: {} };
+
+// Create minimal process object with required properties
+const process = {
+  env: {},
+  stdout: null,
+  stderr: null,
+  stdin: null,
+  argv: [],
+  argv0: '',
+  execArgv: [],
+  version: '',
+  versions: {},
+  pid: -1,
+  ppid: -1,
+  platform: 'browser',
+  arch: '',
+  title: 'browser',
+  browser: true,
+  env: {},
+  release: {},
+  config: {},
+  nextTick: (fn: Function, ...args: any[]) => setTimeout(() => fn(...args), 0),
+} as NodeJS.Process;
+
+window.process = process;
 
 // Add EventEmitter polyfill
 const eventEmitter = new EventEmitter();
