@@ -5,11 +5,14 @@ import { DegenModeToggle } from "./DegenModeToggle";
 import { useState } from "react";
 import { LoginDialog } from "./LoginDialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 export const Header = () => {
   const [isDegenMode, setIsDegenMode] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const location = useLocation();
+  const { connected } = useWallet();
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -59,10 +62,7 @@ export const Header = () => {
               Log in
             </Button>
             <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-              <Wallet className="h-4 w-4 mr-2" />
-              Connect Wallet
-            </Button>
+            <WalletMultiButton />
           </div>
 
           {/* Mobile Menu */}
@@ -122,10 +122,7 @@ export const Header = () => {
                       Log in
                     </Button>
                     <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
-                    <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white text-lg py-4">
-                      <Wallet className="h-5 w-5 mr-3" />
-                      Connect Wallet
-                    </Button>
+                    <WalletMultiButton className="w-full" />
                   </div>
                 </div>
               </SheetContent>
