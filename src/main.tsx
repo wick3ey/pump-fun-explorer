@@ -5,23 +5,15 @@ import App from './App.tsx';
 import './index.css';
 import { EventEmitter } from 'events';
 
-// Declare global window properties
-declare global {
-  interface Window {
-    Buffer: typeof Buffer;
-    global: typeof window;
-    process: { env: Record<string, string> };
-    EventEmitter: typeof EventEmitter;
-  }
-}
-
 // Polyfill Buffer global
 window.Buffer = Buffer;
 window.global = window;
-window.process = { env: {} } as any;
+window.process = { env: {} };
 
 // Add EventEmitter polyfill
-window.EventEmitter = EventEmitter;
+const eventEmitter = new EventEmitter();
+(window as any).EventEmitter = EventEmitter;
+(window as any).eventEmitter = eventEmitter;
 
 const renderApp = () => {
   const rootElement = document.getElementById('root');

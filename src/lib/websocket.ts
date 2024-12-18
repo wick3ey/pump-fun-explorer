@@ -1,122 +1,22 @@
+import { EventEmitter } from 'events';
+import { solPriceService } from './token/solPriceService';
+import { processTokenData } from './token/tokenProcessor';
+import { TokenData } from '@/types/token';
+
 class TokenWebSocket {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
-  private onNewTokenCallback: ((data: any) => void) | null = null;
+  private onNewTokenCallback: ((data: TokenData) => void) | null = null;
   private subscribedTokens: Set<string> = new Set();
-  private solPriceUSD: number | null = null;
 
   constructor() {
+    this.initialize();
+  }
+
+  private async initialize() {
+    await solPriceService.initialize();
     this.connect();
-    this.initializeSolPrice();
-  }
-
-  private async initializeSolPrice() {
-    try {
-      const response = await fetch(
-        'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd'
-      );
-      const data = await response.json();
-      this.solPriceUSD = data.solana.usd;
-      console.log('Initial SOL price:', this.solPriceUSD);
-
-      setInterval(async () => {
-        try {
-          const response = await fetch(
-            'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd'
-          );
-          const data = await response.json();
-          this.solPriceUSD = data.solana.usd;
-        } catch (error) {
-          console.error('Failed to update SOL price:', error);
-        }
-      }, 60000);
-    } catch (error) {
-      console.error('Failed to initialize SOL price:', error);
-    }
-  }
-
-  private async fetchTokenMetadata(uri: string) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-      try {
-        const response = await fetch(uri, { 
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const metadata = await response.json();
-        return {
-          image: metadata.image || '/placeholder.svg',
-          description: metadata.description || '',
-          name: metadata.name || ''
-        };
-      } catch (error) {
-        if (error.name === 'AbortError') {
-          console.log('Fetch request timed out for URI:', uri);
-        } else {
-          console.error('Error fetching token metadata:', error);
-        }
-        throw error;
-      }
-    } catch (error) {
-      return {
-        image: '/placeholder.svg',
-        description: '',
-        name: ''
-      };
-    }
-  }
-
-  private async processTokenData(parsedData: any) {
-    try {
-      if (!this.solPriceUSD) return null;
-
-      const marketCapUSD = parsedData.marketCapSol * this.solPriceUSD;
-      let metadata = {
-        image: '/placeholder.svg',
-        description: `${parsedData.symbol} Token on Solana`,
-        name: parsedData.symbol
-      };
-
-      if (parsedData.uri) {
-        try {
-          const fetchedMetadata = await this.fetchTokenMetadata(parsedData.uri);
-          metadata = fetchedMetadata;
-        } catch (error) {
-          console.log('Using fallback metadata due to fetch error');
-        }
-      }
-
-      return {
-        ...parsedData,
-        marketCapUSD,
-        marketCap: marketCapUSD,
-        transactions: parsedData.transactions || 0,
-        holders: parsedData.holders || 0,
-        power: parsedData.power || 0,
-        chain: "SOL",
-        percentageChange: 0,
-        age: "new",
-        totalSupply: 1_000_000_000,
-        image: metadata.image,
-        description: metadata.description,
-        name: metadata.name || parsedData.symbol,
-      };
-    } catch (error) {
-      console.error('Error processing token data:', error);
-      return null;
-    }
   }
 
   private connect() {
@@ -136,7 +36,7 @@ class TokenWebSocket {
           console.log('Received WebSocket data:', parsedData);
           
           if (parsedData.marketCapSol !== undefined) {
-            const tokenData = await this.processTokenData(parsedData);
+            const tokenData = await processTokenData(parsedData);
             if (tokenData && this.onNewTokenCallback) {
               this.onNewTokenCallback(tokenData);
             }
@@ -188,7 +88,7 @@ class TokenWebSocket {
     }
   }
 
-  public onNewToken(callback: (data: any) => void) {
+  public onNewToken(callback: (data: TokenData) => void) {
     this.onNewTokenCallback = callback;
   }
 
@@ -197,6 +97,7 @@ class TokenWebSocket {
       this.ws.close();
       this.ws = null;
     }
+    solPriceService.cleanup();
   }
 }
 
