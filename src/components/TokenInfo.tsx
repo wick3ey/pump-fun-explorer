@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Crown, Twitter, Globe, MessageCircle, Copy } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { useTokenStore } from "@/stores/tokenStore";
 
 interface TokenInfoProps {
   symbol: string;
@@ -16,6 +17,8 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
   const [isBuying, setIsBuying] = useState(true);
   const [amount, setAmount] = useState("");
   const { toast } = useToast();
+  const getGraduationProgress = useTokenStore(state => state.getGraduationProgress);
+  const graduationProgress = getGraduationProgress(symbol);
 
   const mockBalance = 10.5;
 
@@ -28,7 +31,6 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
   };
 
   const handleCopyAddress = () => {
-    // Mock contract address for demonstration
     const contractAddress = `${symbol}...vqs6`;
     navigator.clipboard.writeText(contractAddress);
     toast({
@@ -48,22 +50,17 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <Button 
-            className={`flex-1 ${isBuying ? 'bg-[#22c55e] hover:bg-[#16a34a] text-black' : 'bg-transparent border border-[#22c55e] text-[#22c55e]'}`}
-            onClick={() => setIsBuying(true)}
-          >
-            Buy
-          </Button>
-          <Button 
-            className={`flex-1 ${!isBuying ? 'bg-[#ea384c] hover:bg-[#dc2626] text-white' : 'bg-transparent border border-[#ea384c] text-[#ea384c]'}`}
-            onClick={() => setIsBuying(false)}
-          >
-            Sell
-          </Button>
-        </div>
-
         <div className="space-y-4">
+          <div>
+            <p className="text-sm text-gray-400 mb-2">Graduation Progress</p>
+            <Progress value={graduationProgress} className="h-2" />
+            <p className="text-xs text-gray-400 mt-1">
+              {graduationProgress < 100 
+                ? `${graduationProgress.toFixed(1)}% to graduation ($90,000 market cap)`
+                : "Token has graduated! 🎓"}
+            </p>
+          </div>
+
           <div>
             <div className="flex justify-between items-center">
               <label className="text-sm text-gray-400">Amount (SOL)</label>
@@ -112,20 +109,6 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
             </Button>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="text-sm text-gray-400">Slippage</label>
-              <span className="text-sm text-white">{slippage}%</span>
-            </div>
-            <Slider 
-              defaultValue={[1]} 
-              max={5} 
-              step={0.1} 
-              value={[slippage]}
-              onValueChange={([value]) => setSlippage(value)}
-            />
-          </div>
-
           <Button 
             className={`w-full ${
               isBuying 
@@ -135,22 +118,6 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
           >
             {isBuying ? 'Place Buy Order' : 'Place Sell Order'}
           </Button>
-        </div>
-
-        <div className="space-y-4 pt-4 border-t border-[#2A2F3C]">
-          <div>
-            <p className="text-sm text-gray-400">Bonding Curve Progress</p>
-            <Progress value={57} className="mt-2" />
-            <p className="text-xs text-gray-400 mt-1">Graduate at $93,374 market cap</p>
-          </div>
-
-          <div>
-            <div className="flex items-center space-x-2">
-              <Crown className="text-yellow-500" />
-              <p className="text-sm text-gray-400">King of the Hill Progress: 67%</p>
-            </div>
-            <Progress value={67} className="mt-2" />
-          </div>
         </div>
 
         <div className="flex justify-center space-x-4 pt-4 border-t border-[#2A2F3C]">
