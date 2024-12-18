@@ -5,11 +5,11 @@ import App from './App.tsx';
 import './index.css';
 import { EventEmitter } from 'events';
 
-// Polyfill Buffer global
+// Ensure Buffer is available globally
 window.Buffer = Buffer;
 window.global = window;
 
-// Create minimal process object with required properties
+// Create complete process object with required properties
 const process = {
   env: {},
   stdout: null,
@@ -33,15 +33,32 @@ const process = {
   chdir: () => { throw new Error('Not implemented'); },
   exit: () => { throw new Error('Not implemented'); },
   kill: () => { throw new Error('Not implemented'); },
+  abort: () => { throw new Error('Not implemented'); },
+  umask: () => 0,
+  uptime: () => 0,
+  hrtime: () => [0, 0],
+  cpuUsage: () => ({ user: 0, system: 0 }),
+  memoryUsage: () => ({
+    rss: 0,
+    heapTotal: 0,
+    heapUsed: 0,
+    external: 0,
+    arrayBuffers: 0
+  }),
   nextTick: (fn: Function, ...args: any[]) => setTimeout(() => fn(...args), 0),
 } as unknown as NodeJS.Process;
 
 window.process = process;
 
-// Add EventEmitter polyfill
+// Set up EventEmitter
 const eventEmitter = new EventEmitter();
 window.EventEmitter = EventEmitter;
 window.eventEmitter = eventEmitter;
+
+// Initialize stream polyfills
+if (!window.Stream) {
+  window.Stream = require('stream-browserify');
+}
 
 const renderApp = () => {
   const rootElement = document.getElementById('root');

@@ -6,4 +6,5 @@ interface Window {
   process: NodeJS.Process;
   EventEmitter: any;
   eventEmitter: any;
+  Stream: any;
 }
