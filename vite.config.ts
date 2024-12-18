@@ -20,6 +20,9 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
     chunkSizeWarningLimit: 1000,
   },
   plugins: [
@@ -42,7 +45,8 @@ export default defineConfig(({ mode }) => ({
       util: 'util',
       zlib: 'browserify-zlib',
       vm: 'vm-browserify',
-      path: 'path-browserify'
+      path: 'path-browserify',
+      'process/browser': 'process/browser'
     },
   },
   optimizeDeps: {
@@ -62,7 +66,12 @@ export default defineConfig(({ mode }) => ({
       'stream-browserify',
       'crypto-browserify',
       'assert',
-      'path-browserify'
+      'path-browserify',
+      '@solana/web3.js',
+      '@solana/wallet-adapter-base',
+      '@solana/wallet-adapter-react',
+      '@solana/wallet-adapter-react-ui',
+      '@solana/wallet-adapter-wallets'
     ],
   },
   define: {
