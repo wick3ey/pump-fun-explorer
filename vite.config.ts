@@ -16,11 +16,13 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           ui: ['@radix-ui/react-toast', '@radix-ui/react-portal', '@radix-ui/react-dismissable-layer'],
+          polyfills: ['buffer', 'process', 'events', 'stream-browserify', 'util'],
         },
       },
     },
     commonjsOptions: {
       transformMixedEsModules: true,
+      include: [/node_modules/],
     },
   },
   plugins: [
@@ -39,6 +41,9 @@ export default defineConfig(({ mode }) => ({
       url: 'url',
       buffer: 'buffer',
       process: 'process/browser',
+      util: 'util',
+      zlib: 'browserify-zlib',
+      path: 'path-browserify',
     },
   },
   optimizeDeps: {
@@ -47,9 +52,24 @@ export default defineConfig(({ mode }) => ({
         global: 'globalThis'
       },
     },
+    include: [
+      'buffer',
+      'process/browser',
+      'util',
+      'assert',
+      'stream-browserify',
+      'events',
+      'crypto-browserify',
+      'path-browserify',
+      'os-browserify',
+      'https-browserify',
+      'stream-http',
+      'browserify-zlib',
+    ],
   },
   define: {
     'process.env': {},
     global: 'globalThis',
+    Buffer: ['buffer', 'Buffer'],
   },
 }));

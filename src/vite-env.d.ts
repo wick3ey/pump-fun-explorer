@@ -5,3 +5,8 @@ interface Window {
   global: typeof window;
   process: any;
 }
+
+declare module 'process/browser' {
+  const process: NodeJS.Process;
+  export default process;
+}
