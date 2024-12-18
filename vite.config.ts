@@ -35,15 +35,29 @@ export default defineConfig(({ mode }) => ({
       url: 'url',
       buffer: 'buffer',
       process: 'process/browser',
+      events: 'events',
+      util: 'util',
+      zlib: 'browserify-zlib',
+      vm: 'vm-browserify'
     },
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
     esbuildOptions: {
       define: {
         global: 'globalThis'
       },
     },
+    include: [
+      'react', 
+      'react-dom', 
+      'react-router-dom',
+      'buffer',
+      'process',
+      'events',
+      'util',
+      'stream-browserify',
+      'crypto-browserify'
+    ],
   },
   define: {
     'process.env': {},

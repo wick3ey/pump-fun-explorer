@@ -7,6 +7,11 @@ import './index.css';
 // Polyfill Buffer global
 window.Buffer = Buffer;
 window.global = window;
+window.process = { env: {} } as any;
+
+// Add EventEmitter polyfill
+import { EventEmitter } from 'events';
+window.EventEmitter = EventEmitter;
 
 const renderApp = () => {
   const rootElement = document.getElementById('root');
