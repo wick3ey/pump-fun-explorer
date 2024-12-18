@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { EventEmitter } from 'events';
+import stream from 'stream-browserify';
 
 // Ensure Buffer is available globally
 window.Buffer = Buffer;
@@ -56,9 +57,7 @@ window.EventEmitter = EventEmitter;
 window.eventEmitter = eventEmitter;
 
 // Initialize stream polyfills
-if (!window.Stream) {
-  window.Stream = require('stream-browserify');
-}
+window.Stream = stream;
 
 const renderApp = () => {
   const rootElement = document.getElementById('root');
