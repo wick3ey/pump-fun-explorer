@@ -1,32 +1,56 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Crown, Twitter, Globe, MessageCircle, Copy } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useTokenStore } from "@/stores/tokenStore";
+import { useSolanaToken } from "@/hooks/useSolanaToken";
 
 interface TokenInfoProps {
   symbol: string;
 }
 
 export const TokenInfo = ({ symbol }: TokenInfoProps) => {
-  const [slippage, setSlippage] = useState(1);
-  const [isBuying, setIsBuying] = useState(true);
   const [amount, setAmount] = useState("");
   const { toast } = useToast();
   const getGraduationProgress = useTokenStore(state => state.getGraduationProgress);
   const graduationProgress = getGraduationProgress(symbol);
+  
+  const {
+    price,
+    marketCap,
+    isGraduated,
+    updateTokenMetrics,
+  } = useSolanaToken();
 
-  const mockBalance = 10.5;
+  const handleBuyToken = async () => {
+    try {
+      const buyAmount = parseFloat(amount);
+      if (isNaN(buyAmount) || buyAmount <= 0) {
+        toast({
+          title: "Invalid Amount",
+          description: "Please enter a valid amount to buy",
+          variant: "destructive",
+        });
+        return;
+      }
 
-  const handleMaxClick = () => {
-    if (isBuying) {
-      setAmount(mockBalance.toString());
-    } else {
-      setAmount("1000000");
+      // Here you would integrate with your Solana smart contract
+      // For now, we'll just simulate the purchase
+      updateTokenMetrics(buyAmount);
+      
+      toast({
+        title: "Purchase Successful",
+        description: `Successfully bought ${buyAmount} ${symbol}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Transaction Failed",
+        description: "Failed to complete the purchase",
+        variant: "destructive",
+      });
     }
   };
 
@@ -55,23 +79,19 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
             <p className="text-sm text-gray-400 mb-2">Graduation Progress</p>
             <Progress value={graduationProgress} className="h-2" />
             <p className="text-xs text-gray-400 mt-1">
-              {graduationProgress < 100 
+              {!isGraduated 
                 ? `${graduationProgress.toFixed(1)}% to graduation ($90,000 market cap)`
-                : "Token has graduated! 🎓"}
+                : "Token has graduated! 🎓 Distribution to Raydium in progress..."
+              }
             </p>
           </div>
 
           <div>
             <div className="flex justify-between items-center">
               <label className="text-sm text-gray-400">Amount (SOL)</label>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleMaxClick}
-                className="text-xs bg-[#2A2F3C] text-white hover:bg-[#3A3F4C] border-[#3A3F4C]"
-              >
-                Max {isBuying ? `${mockBalance} SOL` : `1M ${symbol}`}
-              </Button>
+              <div className="text-sm text-gray-400">
+                Price: {price.toFixed(6)} SOL
+              </div>
             </div>
             <Input 
               type="number" 
@@ -110,13 +130,11 @@ export const TokenInfo = ({ symbol }: TokenInfoProps) => {
           </div>
 
           <Button 
-            className={`w-full ${
-              isBuying 
-                ? 'bg-[#22c55e] hover:bg-[#16a34a] text-black' 
-                : 'bg-[#ea384c] hover:bg-[#dc2626] text-white'
-            }`}
+            className="w-full bg-[#22c55e] hover:bg-[#16a34a] text-black"
+            onClick={handleBuyToken}
+            disabled={isGraduated}
           >
-            {isBuying ? 'Place Buy Order' : 'Place Sell Order'}
+            {isGraduated ? 'Token Graduated - Trading on Raydium' : 'Buy Token'}
           </Button>
         </div>
 
