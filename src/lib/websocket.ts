@@ -1,5 +1,4 @@
 import { TokenData } from "@/types/token";
-import { calculateAge } from "./token/tokenCalculations";
 
 class TokenWebSocket {
   private ws: WebSocket | null = null;
@@ -38,24 +37,43 @@ class TokenWebSocket {
     }
   }
 
+  private async fetchTokenMetadata(uri: string) {
+    try {
+      const response = await fetch(uri);
+      const metadata = await response.json();
+      return {
+        image: metadata.image || '',
+        description: metadata.description || '',
+        name: metadata.name || ''
+      };
+    } catch (error) {
+      console.error('Error fetching token metadata:', error);
+      return null;
+    }
+  }
+
   private async processTokenData(parsedData: any) {
     try {
       const marketCapUSD = (parsedData.marketCapSol || 0) * (this.solPriceUSD || 0);
-      const timestamp = Date.now();
+      let metadata = null;
       
+      if (parsedData.uri) {
+        metadata = await this.fetchTokenMetadata(parsedData.uri);
+      }
+
       const tokenData: TokenData = {
         ...parsedData,
         marketCapUSD,
         marketCap: marketCapUSD,
         power: parsedData.power || 0,
         chain: "SOL",
-        age: calculateAge(timestamp),
+        age: "new",
         totalSupply: 1_000_000_000,
-        name: parsedData.symbol,
-        timestamp,
+        name: metadata?.name || parsedData.symbol,
+        timestamp: Date.now(),
         contractAddress: parsedData.mint,
-        image: "/placeholder.svg",
-        description: `${parsedData.symbol} Token on Solana`
+        image: metadata?.image || "/placeholder.svg",
+        description: metadata?.description || `${parsedData.symbol} Token on Solana`
       };
 
       if (this.onNewTokenCallback) {
