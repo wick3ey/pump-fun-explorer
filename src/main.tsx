@@ -17,6 +17,7 @@ const process = {
   stdin: null,
   argv: [],
   argv0: '',
+  execPath: '',
   execArgv: [],
   version: '',
   versions: {},
@@ -26,18 +27,21 @@ const process = {
   arch: '',
   title: 'browser',
   browser: true,
-  env: {},
   release: {},
   config: {},
+  cwd: () => '/',
+  chdir: () => { throw new Error('Not implemented'); },
+  exit: () => { throw new Error('Not implemented'); },
+  kill: () => { throw new Error('Not implemented'); },
   nextTick: (fn: Function, ...args: any[]) => setTimeout(() => fn(...args), 0),
-} as NodeJS.Process;
+} as unknown as NodeJS.Process;
 
 window.process = process;
 
 // Add EventEmitter polyfill
 const eventEmitter = new EventEmitter();
-(window as any).EventEmitter = EventEmitter;
-(window as any).eventEmitter = eventEmitter;
+window.EventEmitter = EventEmitter;
+window.eventEmitter = eventEmitter;
 
 const renderApp = () => {
   const rootElement = document.getElementById('root');
