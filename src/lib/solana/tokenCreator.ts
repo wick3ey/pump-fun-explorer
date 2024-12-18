@@ -1,20 +1,19 @@
 import { Connection, PublicKey, Keypair } from '@solana/web3.js';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { createMint } from '@solana/spl-token';
 import { toast } from "@/components/ui/use-toast";
 
 export const createToken = async (
   connection: Connection,
   payer: Keypair,
   decimals: number = 9
-): Promise<{ token: Token; mint: PublicKey }> => {
+): Promise<{ mint: PublicKey }> => {
   try {
-    const mint = await Token.createMint(
+    const mint = await createMint(
       connection,
       payer,
       payer.publicKey,
       payer.publicKey,
-      decimals,
-      TOKEN_PROGRAM_ID
+      decimals
     );
 
     toast({
@@ -22,7 +21,7 @@ export const createToken = async (
       description: "Successfully created new token on Solana",
     });
 
-    return { token: mint, mint: mint.publicKey };
+    return { mint };
   } catch (error) {
     console.error('Error creating token:', error);
     toast({
