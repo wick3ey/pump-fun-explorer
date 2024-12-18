@@ -4,7 +4,7 @@ interface TokenMetadata {
   name: string;
 }
 
-export const fetchTokenMetadata = async (uri?: string): Promise<TokenMetadata> => {
+export const fetchTokenMetadata = async (): Promise<TokenMetadata> => {
   return {
     image: '/placeholder.svg',
     description: '',
