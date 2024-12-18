@@ -46,7 +46,8 @@ export default defineConfig(({ mode }) => ({
       zlib: 'browserify-zlib',
       vm: 'vm-browserify',
       path: 'path-browserify',
-      'process/browser': 'process/browser'
+      'process/browser': 'process/browser',
+      'readable-stream': 'vite-compatible-readable-stream'
     },
   },
   optimizeDeps: {
@@ -71,7 +72,8 @@ export default defineConfig(({ mode }) => ({
       '@solana/wallet-adapter-base',
       '@solana/wallet-adapter-react',
       '@solana/wallet-adapter-react-ui',
-      '@solana/wallet-adapter-wallets'
+      '@solana/wallet-adapter-wallets',
+      'readable-stream'
     ],
   },
   define: {
