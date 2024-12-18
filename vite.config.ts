@@ -38,7 +38,8 @@ export default defineConfig(({ mode }) => ({
       events: 'events',
       util: 'util',
       zlib: 'browserify-zlib',
-      vm: 'vm-browserify'
+      vm: 'vm-browserify',
+      path: 'path-browserify'
     },
   },
   optimizeDeps: {
@@ -56,7 +57,9 @@ export default defineConfig(({ mode }) => ({
       'events',
       'util',
       'stream-browserify',
-      'crypto-browserify'
+      'crypto-browserify',
+      'assert',
+      'path-browserify'
     ],
   },
   define: {

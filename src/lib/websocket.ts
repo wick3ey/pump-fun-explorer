@@ -38,31 +38,38 @@ class TokenWebSocket {
 
   private async fetchTokenMetadata(uri: string) {
     try {
-      // Add timeout to fetch request
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-      const response = await fetch(uri, { 
-        signal: controller.signal,
-        headers: {
-          'Accept': 'application/json'
+      try {
+        const response = await fetch(uri, { 
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      });
 
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const metadata = await response.json();
+        return {
+          image: metadata.image || '/placeholder.svg',
+          description: metadata.description || '',
+          name: metadata.name || ''
+        };
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Fetch request timed out for URI:', uri);
+        } else {
+          console.error('Error fetching token metadata:', error);
+        }
+        throw error;
       }
-
-      const metadata = await response.json();
-      return {
-        image: metadata.image || '/placeholder.svg',
-        description: metadata.description || '',
-        name: metadata.name || ''
-      };
     } catch (error) {
-      console.error('Error fetching token metadata:', error);
       return {
         image: '/placeholder.svg',
         description: '',
@@ -73,7 +80,7 @@ class TokenWebSocket {
 
   private async processTokenData(parsedData: any) {
     try {
-      if (!this.solPriceUSD) return;
+      if (!this.solPriceUSD) return null;
 
       const marketCapUSD = parsedData.marketCapSol * this.solPriceUSD;
       let metadata = {
@@ -83,9 +90,11 @@ class TokenWebSocket {
       };
 
       if (parsedData.uri) {
-        const fetchedMetadata = await this.fetchTokenMetadata(parsedData.uri);
-        if (fetchedMetadata) {
+        try {
+          const fetchedMetadata = await this.fetchTokenMetadata(parsedData.uri);
           metadata = fetchedMetadata;
+        } catch (error) {
+          console.log('Using fallback metadata due to fetch error');
         }
       }
 
