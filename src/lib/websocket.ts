@@ -1,10 +1,9 @@
-import { TokenData } from "@/types/token";
-
 class TokenWebSocket {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
-  private onNewTokenCallback: ((data: TokenData) => void) | null = null;
+  private onNewTokenCallback: ((data: any) => void) | null = null;
+  private subscribedTokens: Set<string> = new Set();
   private solPriceUSD: number | null = null;
 
   constructor() {
@@ -39,48 +38,75 @@ class TokenWebSocket {
 
   private async fetchTokenMetadata(uri: string) {
     try {
-      const response = await fetch(uri);
+      // Add timeout to fetch request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch(uri, { 
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const metadata = await response.json();
       return {
-        image: metadata.image || '',
+        image: metadata.image || '/placeholder.svg',
         description: metadata.description || '',
         name: metadata.name || ''
       };
     } catch (error) {
       console.error('Error fetching token metadata:', error);
-      return null;
+      return {
+        image: '/placeholder.svg',
+        description: '',
+        name: ''
+      };
     }
   }
 
   private async processTokenData(parsedData: any) {
     try {
-      const marketCapUSD = (parsedData.marketCapSol || 0) * (this.solPriceUSD || 0);
-      let metadata = null;
-      
+      if (!this.solPriceUSD) return;
+
+      const marketCapUSD = parsedData.marketCapSol * this.solPriceUSD;
+      let metadata = {
+        image: '/placeholder.svg',
+        description: `${parsedData.symbol} Token on Solana`,
+        name: parsedData.symbol
+      };
+
       if (parsedData.uri) {
-        metadata = await this.fetchTokenMetadata(parsedData.uri);
+        const fetchedMetadata = await this.fetchTokenMetadata(parsedData.uri);
+        if (fetchedMetadata) {
+          metadata = fetchedMetadata;
+        }
       }
 
-      const tokenData: TokenData = {
+      return {
         ...parsedData,
         marketCapUSD,
         marketCap: marketCapUSD,
+        transactions: parsedData.transactions || 0,
+        holders: parsedData.holders || 0,
         power: parsedData.power || 0,
         chain: "SOL",
+        percentageChange: 0,
         age: "new",
         totalSupply: 1_000_000_000,
-        name: metadata?.name || parsedData.symbol,
-        timestamp: Date.now(),
-        contractAddress: parsedData.mint,
-        image: metadata?.image || "/placeholder.svg",
-        description: metadata?.description || `${parsedData.symbol} Token on Solana`
+        image: metadata.image,
+        description: metadata.description,
+        name: metadata.name || parsedData.symbol,
       };
-
-      if (this.onNewTokenCallback) {
-        this.onNewTokenCallback(tokenData);
-      }
     } catch (error) {
       console.error('Error processing token data:', error);
+      return null;
     }
   }
 
@@ -92,13 +118,20 @@ class TokenWebSocket {
         console.log('Connected to PumpPortal WebSocket');
         this.reconnectAttempts = 0;
         this.subscribeToNewTokens();
+        this.subscribedTokens.forEach(token => this.subscribeToTokenTrade(token));
       };
 
       this.ws.onmessage = async (event) => {
         try {
           const parsedData = JSON.parse(event.data);
           console.log('Received WebSocket data:', parsedData);
-          await this.processTokenData(parsedData);
+          
+          if (parsedData.marketCapSol !== undefined) {
+            const tokenData = await this.processTokenData(parsedData);
+            if (tokenData && this.onNewTokenCallback) {
+              this.onNewTokenCallback(tokenData);
+            }
+          }
         } catch (error) {
           console.error('Error processing WebSocket message:', error);
         }
@@ -128,12 +161,25 @@ class TokenWebSocket {
 
   private subscribeToNewTokens() {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify({ method: "subscribeNewToken" }));
+      this.ws.send(JSON.stringify({
+        method: "subscribeNewToken"
+      }));
       console.log('Subscribed to new tokens');
     }
   }
 
-  public onNewToken(callback: (data: TokenData) => void) {
+  public subscribeToTokenTrade(tokenAddress: string) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        method: 'subscribeTokenTrade',
+        keys: [tokenAddress]
+      }));
+      this.subscribedTokens.add(tokenAddress);
+      console.log('Subscribed to token trades:', tokenAddress);
+    }
+  }
+
+  public onNewToken(callback: (data: any) => void) {
     this.onNewTokenCallback = callback;
   }
 
