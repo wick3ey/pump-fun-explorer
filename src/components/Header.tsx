@@ -17,14 +17,14 @@ export const Header = () => {
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#13141F] border-b border-gray-800 shadow-lg">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-4">
-            <Link to="/" className="flex items-center space-x-3">
+          <div className="flex items-center space-x-6">
+            <Link to="/" className="flex items-center space-x-4">
               <img 
                 src="/lovable-uploads/3c6eb1d4-4d2f-4f87-a090-6c26cddb19f8.png" 
                 alt="DegenZone Logo" 
-                className="h-8 w-8"
+                className="h-12 w-12 hover:scale-105 transition-transform"
               />
-              <span className="text-xl font-orbitron font-bold text-white">
+              <span className="text-2xl font-orbitron font-bold bg-gradient-radial from-[#9b87f5] via-[#7E69AB] to-[#6E59A5] bg-clip-text text-transparent hover:from-[#8B5CF6] hover:via-[#D946EF] hover:to-[#F97316] transition-colors">
                 DegenZone
               </span>
             </Link>
