@@ -48,6 +48,21 @@ export const TokenForm = () => {
     },
   });
 
+  const handleWalletConnection = async () => {
+    try {
+      if (!wallet.connected && wallet.connect) {
+        await wallet.connect();
+      }
+    } catch (error) {
+      console.error("Wallet connection error:", error);
+      toast({
+        title: "Connection Failed",
+        description: "Failed to connect to wallet. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!wallet.connected) {
       toast({
@@ -55,6 +70,7 @@ export const TokenForm = () => {
         description: "Please connect your wallet to create a token",
         variant: "destructive",
       });
+      await handleWalletConnection();
       return;
     }
 
@@ -93,9 +109,10 @@ export const TokenForm = () => {
         });
       }
     } catch (error) {
+      console.error("Token creation error:", error);
       toast({
         title: "Error",
-        description: "Failed to create token. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create token. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -117,7 +134,7 @@ export const TokenForm = () => {
           {!wallet.connected ? (
             <Button 
               type="button"
-              onClick={() => wallet.connect()}
+              onClick={handleWalletConnection}
               className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
             >
               <Wallet className="mr-2 h-5 w-5" /> Connect Wallet
