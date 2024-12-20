@@ -3,15 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
-
-interface AuthContextType {
-  isAuthenticated: boolean;
-  user: User | null;
-  session: Session | null;
-  login: () => Promise<void>;
-  logout: () => Promise<void>;
-  isLoading: boolean;
-}
+import { AuthContextType } from "./auth/types";
+import { clearAuthState, verifySession, setupInactivityTimer } from "./auth/utils";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -23,49 +16,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Clear session and user data
-  const clearAuthState = useCallback(() => {
-    setSession(null);
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('supabase.auth.token');
+  const updateAuthState = useCallback((session: Session | null) => {
+    if (session?.user) {
+      setSession(session);
+      setUser(session.user);
+      setIsAuthenticated(true);
+    } else {
+      setSession(null);
+      setUser(null);
+      setIsAuthenticated(false);
+    }
   }, []);
 
-  // Initialize session with strict checking
   const initSession = useCallback(async () => {
     try {
       setIsLoading(true);
       const { data: { session }, error } = await supabase.auth.getSession();
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      if (!session || !session.user) {
-        clearAuthState();
-        return;
-      }
-
-      // Verify session is still valid
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', session.user.id)
-        .single();
-
-      if (!profile) {
-        console.warn('No profile found for user, logging out');
+      if (session && await verifySession(session)) {
+        updateAuthState(session);
+      } else {
         await supabase.auth.signOut();
-        clearAuthState();
-        return;
+        updateAuthState(null);
       }
-
-      setSession(session);
-      setUser(session.user);
-      setIsAuthenticated(true);
     } catch (error) {
       console.error('Session initialization error:', error);
-      clearAuthState();
+      updateAuthState(null);
       toast({
         title: "Session Error",
         description: "Please log in again",
@@ -74,31 +52,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [clearAuthState, toast]);
+  }, [updateAuthState, toast]);
 
-  // Set up auth state listener
   useEffect(() => {
     initSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event);
-      
       if (event === 'SIGNED_IN' && session) {
-        setSession(session);
-        setUser(session.user);
-        setIsAuthenticated(true);
+        updateAuthState(session);
         navigate('/');
-        
         toast({
           title: "Welcome back!",
-          description: `Signed in successfully`,
+          description: "Signed in successfully",
         });
-      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-        clearAuthState();
+      } else if (event === 'SIGNED_OUT') {
+        updateAuthState(null);
         navigate('/');
-        
         toast({
           title: "Signed out",
           description: "You have been signed out successfully",
@@ -106,33 +77,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Auto-logout after 1 hour of inactivity
-    let inactivityTimeout: NodeJS.Timeout;
-    
-    const resetInactivityTimer = () => {
-      clearTimeout(inactivityTimeout);
-      inactivityTimeout = setTimeout(async () => {
-        if (isAuthenticated) {
-          await logout();
-          toast({
-            title: "Session Expired",
-            description: "You have been logged out due to inactivity",
-            variant: "destructive",
-          });
-        }
-      }, 60 * 60 * 1000); // 1 hour
-    };
-
-    window.addEventListener('mousemove', resetInactivityTimer);
-    window.addEventListener('keypress', resetInactivityTimer);
+    const cleanup = setupInactivityTimer(async () => {
+      if (isAuthenticated) {
+        await logout();
+        toast({
+          title: "Session Expired",
+          description: "You have been logged out due to inactivity",
+          variant: "destructive",
+        });
+      }
+    }, isAuthenticated);
 
     return () => {
       subscription.unsubscribe();
-      window.removeEventListener('mousemove', resetInactivityTimer);
-      window.removeEventListener('keypress', resetInactivityTimer);
-      clearTimeout(inactivityTimeout);
+      cleanup();
     };
-  }, [navigate, initSession, clearAuthState, isAuthenticated]);
+  }, [navigate, initSession, updateAuthState, isAuthenticated, toast]);
 
   const login = async () => {
     try {
@@ -166,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      updateAuthState(null);
       clearAuthState();
       navigate('/');
       
