@@ -5,6 +5,7 @@ import { fetchTrendingTokens } from "@/services/dexscreener";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { Zap } from "lucide-react";
 
 interface TokenBoardProps {
   searchQuery?: string;
@@ -40,7 +41,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
       <TrendingFilter 
         selectedTimeframe="1h"
         onTimeframeChange={() => {}}
-        sortBy="volume"
+        sortBy="power"
         onSortChange={() => {}}
       />
       
@@ -100,11 +101,14 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-white">
-                    ${Number(token.priceUsd).toFixed(6)}
+                  <div className="flex items-center justify-end space-x-2">
+                    <Zap className="h-4 w-4 text-orange-500" />
+                    <span className="text-orange-500 font-bold">
+                      {token.power || 0}
+                    </span>
                   </div>
                   <div className="text-sm text-gray-400">
-                    Vol 1h ${formatNumber(token.volume?.h1 || 0)}
+                    MC ${formatNumber(token.marketCap || 0)}
                   </div>
                 </div>
               </div>

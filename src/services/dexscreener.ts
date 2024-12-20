@@ -1,9 +1,8 @@
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface DexToken {
   chainId: string;
-  dexId: string;
-  url: string;
   pairAddress: string;
   baseToken: {
     address: string;
@@ -22,6 +21,7 @@ export interface DexToken {
   info?: {
     imageUrl?: string;
   };
+  power?: number;
 }
 
 export interface DexScreenerResponse {
@@ -31,39 +31,45 @@ export interface DexScreenerResponse {
 
 export const fetchTrendingTokens = async (): Promise<DexToken[]> => {
   try {
-    console.log('Fetching trending tokens...');
+    console.log('Fetching trending tokens based on boost...');
     
-    // Use search endpoint to get more comprehensive results
-    const response = await fetch('https://api.dexscreener.com/latest/dex/pairs/solana', {
-      method: 'GET',
-    });
+    const { data: tokens, error } = await supabase
+      .from('tokens')
+      .select('*')
+      .order('power', { ascending: false })
+      .limit(50);
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch trending tokens');
+    if (error) {
+      throw error;
     }
 
-    const data: DexScreenerResponse = await response.json();
-    console.log('Raw response:', data);
-    
-    // Filter for valid tokens and sort by 1h volume
-    const solanaTokens = data.pairs
-      .filter(pair => {
-        const isValid = 
-          pair.chainId.toLowerCase() === 'solana' && 
-          pair.baseToken.name && 
-          pair.baseToken.symbol &&
-          pair.volume?.h1 > 0;
-        
-        if (!isValid) {
-          console.log('Filtered out token:', pair.baseToken.symbol, 'due to invalid data');
-        }
-        return isValid;
-      })
-      .sort((a, b) => (b.volume?.h1 || 0) - (a.volume?.h1 || 0))
-      .slice(0, 50);
+    console.log('Fetched tokens:', tokens);
 
-    console.log('Filtered tokens:', solanaTokens.length);
-    return solanaTokens;
+    // Transform the tokens into the expected DexToken format
+    const formattedTokens: DexToken[] = tokens.map(token => ({
+      chainId: 'solana',
+      pairAddress: token.contract_address || '',
+      baseToken: {
+        address: token.contract_address || '',
+        name: token.name,
+        symbol: token.symbol,
+      },
+      priceUsd: '0', // You might want to fetch this from another source
+      volume: {
+        h24: 0,
+        h1: 0,
+      },
+      liquidity: {
+        usd: 0,
+      },
+      marketCap: Number(token.market_cap) || 0,
+      info: {
+        imageUrl: `/placeholder.svg`, // You might want to store image URLs in your tokens table
+      },
+      power: token.power || 0,
+    }));
+
+    return formattedTokens;
   } catch (error) {
     console.error('Error fetching trending tokens:', error);
     toast({
