@@ -66,7 +66,7 @@ export const TokenForm = () => {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!wallet.connected) {
+    if (!wallet.connected || !wallet.publicKey) {
       toast({
         title: "Wallet not connected",
         description: "Please connect your wallet to create a token",
@@ -109,7 +109,6 @@ export const TokenForm = () => {
           title: "Token Created!",
           description: `Your token has been created successfully! View transaction: ${result.txUrl}`,
         });
-        // Navigate to token profile page after successful creation
         navigate(`/token/${values.symbol}`);
       }
     } catch (error) {

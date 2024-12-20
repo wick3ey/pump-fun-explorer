@@ -9,8 +9,12 @@ export const createToken = async ({
   initialBuyAmount,
   wallet
 }: TokenCreationConfig): Promise<CreateTokenResponse> => {
-  if (!wallet.publicKey || !wallet.signTransaction) {
+  if (!wallet.connected) {
     throw new Error("Wallet not connected");
+  }
+
+  if (!wallet.publicKey || !wallet.signTransaction) {
+    throw new Error("Wallet not properly initialized");
   }
 
   if (!metadata.pfpImage || !metadata.name || !metadata.symbol) {
