@@ -43,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else if (event === 'SIGNED_OUT') {
         updateAuthState(null);
+        clearAuthState();
         navigate('/');
       }
     });

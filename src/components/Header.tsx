@@ -138,9 +138,20 @@ export const Header = () => {
                   <div className="mt-auto space-y-6">
                     <Button 
                       onClick={handleAuthAction}
-                      className="w-full bg-[#9b87f5] hover:bg-[#8b77e5] text-white text-lg py-4"
+                      disabled={isLoading}
+                      className={`w-full ${
+                        isAuthenticated 
+                          ? 'bg-red-500 hover:bg-red-600' 
+                          : 'bg-[#9b87f5] hover:bg-[#8b77e5]'
+                      } text-white text-lg py-4`}
                     >
-                      Log in
+                      {isLoading ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        </div>
+                      ) : (
+                        isAuthenticated ? 'SIGN OUT' : 'LOG IN'
+                      )}
                     </Button>
                     <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
                     <WalletMultiButton className="w-full bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white" />
