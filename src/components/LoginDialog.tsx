@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { UsernameSetupDialog } from "./UsernameSetupDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface LoginDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const checkUserProfile = async (userId: string) => {
     const { data: profile } = await supabase
@@ -31,21 +33,7 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}`,
-        },
-      });
-
-      if (error) {
-        console.error('Auth error:', error);
-        toast({
-          title: "Authentication Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      await login();
     } catch (error) {
       console.error('Login error:', error);
       toast({
