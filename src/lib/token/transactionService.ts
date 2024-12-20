@@ -60,25 +60,23 @@ export async function sendTransactionWithRetry(
     try {
       console.log(`Attempt ${i + 1} to send transaction`);
 
-      if (!transaction.message || !transaction.message.recentBlockhash) {
-        throw new Error("Invalid transaction structure");
-      }
-
       // Get a fresh blockhash for each attempt
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
       transaction.message.recentBlockhash = blockhash;
 
       console.log("Using blockhash:", blockhash);
 
+      // Send with more aggressive confirmation strategy
       const signature = await connection.sendTransaction(transaction, {
-        maxRetries: 3,
+        maxRetries: 5,
         skipPreflight: false,
-        preflightCommitment: 'confirmed',
+        preflightCommitment: 'processed',
         minContextSlot: await connection.getSlot('finalized'),
       });
       
       console.log("Transaction sent with signature:", signature);
       
+      // Wait for confirmation with a more detailed strategy
       const confirmationStrategy: TransactionConfirmationStrategy = {
         signature,
         blockhash,
@@ -106,7 +104,7 @@ export async function sendTransactionWithRetry(
         
         toast({
           title: "Transaction failed",
-          description: `Attempt ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          description: `Attempt ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
           variant: "destructive",
         });
       }

@@ -87,6 +87,7 @@ export const createToken = async ({
     const metadataUri = await uploadMetadataToIPFS(metadata);
     console.log("Metadata uploaded to IPFS:", metadataUri);
     
+    // Generate a new keypair for the mint account
     const entropy = new Uint8Array(32);
     window.crypto.getRandomValues(entropy);
     const mint = Keypair.fromSeed(entropy);
@@ -119,10 +120,6 @@ export const createToken = async ({
     console.log("Transaction data received, deserializing...");
     const tx = VersionedTransaction.deserialize(txData);
     
-    if (!tx.message || !tx.message.recentBlockhash) {
-      throw new Error("Invalid transaction structure");
-    }
-
     console.log("Signing transaction with mint account...");
     tx.sign([mint]);
     
