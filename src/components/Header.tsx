@@ -22,7 +22,7 @@ export const Header = () => {
               <img 
                 src="/lovable-uploads/3c6eb1d4-4d2f-4f87-a090-6c26cddb19f8.png" 
                 alt="DegenZone Logo" 
-                className="h-20 w-20 hover:scale-105 transition-transform"
+                className="h-24 w-24 hover:scale-105 transition-transform"
               />
             </Link>
             <div className="hidden md:flex items-center space-x-4">
