@@ -40,6 +40,10 @@ export default defineConfig(({ mode }) => ({
     'Buffer': ['buffer', 'Buffer'],
   },
   optimizeDeps: {
+    include: [
+      'buffer',
+      'process',
+    ],
     esbuildOptions: {
       define: {
         global: 'globalThis'

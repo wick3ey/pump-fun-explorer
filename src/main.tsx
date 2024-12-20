@@ -6,6 +6,7 @@ import './index.css';
 
 // Polyfill Buffer for the browser
 window.Buffer = Buffer;
+globalThis.Buffer = Buffer;
 
 // Initialize root element
 const rootElement = document.getElementById('root');
