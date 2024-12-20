@@ -49,6 +49,7 @@ export default defineConfig(({ mode }) => ({
     include: [
       'buffer',
       'process',
+      'memfs',
     ],
     esbuildOptions: {
       target: 'esnext',
