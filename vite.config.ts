@@ -32,6 +32,12 @@ export default defineConfig(({ mode }) => ({
       "https": "https-browserify",
       "zlib": "browserify-zlib",
       "buffer": "buffer",
+      "process": "process/browser",
+      "util": "util",
+      "assert": "assert",
+      "fs": false,
+      "path": "path-browserify",
+      "os": "os-browserify/browser",
     },
   },
   define: {
@@ -45,6 +51,7 @@ export default defineConfig(({ mode }) => ({
       'process',
     ],
     esbuildOptions: {
+      target: 'esnext',
       define: {
         global: 'globalThis'
       }
