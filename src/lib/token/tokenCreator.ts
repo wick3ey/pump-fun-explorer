@@ -10,6 +10,8 @@ const MAX_RETRIES = 3;
 const TRANSACTION_TIMEOUT = 60000;
 const MIN_SOL_AMOUNT = 0.1;
 const MAX_SOL_AMOUNT = 100;
+const TRADING_FEE_PERCENTAGE = 0.5;
+const ESTIMATED_SOL_NETWORK_FEE = 0.000005;
 
 export const validateInitialBuy = (amount: number): string | null => {
   if (isNaN(amount) || amount < MIN_SOL_AMOUNT) {
@@ -100,6 +102,19 @@ export const createToken = async ({
       description: "Preparing secure transaction...",
     });
 
+    console.log("Creating transaction with config:", {
+      publicKey: wallet.publicKey.toBase58(),
+      metadata: {
+        name: metadata.name,
+        symbol: metadata.symbol,
+        uri: metadataUri,
+      },
+      mint: mintKeypair.publicKey,
+      metadataUri,
+      initialBuyAmount,
+      supply,
+    });
+
     const txData = await getCreateTransaction({
       publicKey: wallet.publicKey.toBase58(),
       metadata: {
@@ -113,10 +128,11 @@ export const createToken = async ({
       supply,
     });
 
-    const tx = VersionedTransaction.deserialize(txData);
     console.log("Transaction data received, deserializing...");
+    const tx = VersionedTransaction.deserialize(txData);
     
     console.log("Signing transaction with mint account...");
+    tx.sign([mintKeypair]);
     
     console.log("Getting wallet signature...");
     const signedTx = await wallet.signTransaction(tx);
