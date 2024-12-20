@@ -8,6 +8,25 @@ import { supabase } from "@/integrations/supabase/client";
 const TRUSTED_RPC_ENDPOINT = import.meta.env.VITE_RPC_ENDPOINT || "https://api.mainnet-beta.solana.com";
 const MAX_RETRIES = 3;
 const TRANSACTION_TIMEOUT = 60000;
+const MIN_SOL_AMOUNT = 0.1;
+const MAX_SOL_AMOUNT = 100;
+
+export const validateInitialBuy = (amount: number): string | null => {
+  if (isNaN(amount) || amount < MIN_SOL_AMOUNT) {
+    return `Minsta tillåtna belopp är ${MIN_SOL_AMOUNT} SOL`;
+  }
+  if (amount > MAX_SOL_AMOUNT) {
+    return `Högsta tillåtna belopp är ${MAX_SOL_AMOUNT} SOL`;
+  }
+  return null;
+};
+
+export const calculateTokenSupply = (initialBuyAmount: number): number => {
+  // Improved token supply calculation based on initial buy amount
+  const baseSupply = 1000000; // 1 million base supply
+  const multiplier = Math.sqrt(initialBuyAmount * 100); // Square root scaling
+  return Math.floor(baseSupply * multiplier);
+};
 
 export const createToken = async ({
   metadata,
@@ -15,15 +34,16 @@ export const createToken = async ({
   wallet
 }: TokenCreationConfig): Promise<CreateTokenResponse> => {
   if (!wallet.connected || !wallet.publicKey || !wallet.signTransaction) {
-    throw new Error("Please connect your wallet to continue");
+    throw new Error("Vänligen anslut din plånbok för att fortsätta");
+  }
+
+  const validationError = validateInitialBuy(initialBuyAmount);
+  if (validationError) {
+    throw new Error(validationError);
   }
 
   if (!metadata.pfpImage || !metadata.name || !metadata.symbol) {
-    throw new Error("Please provide all required token information");
-  }
-
-  if (initialBuyAmount < 0.1) {
-    throw new Error("Minimum initial buy amount is 0.1 SOL");
+    throw new Error("Vänligen fyll i all nödvändig information om token");
   }
 
   const connection = new Connection(TRUSTED_RPC_ENDPOINT, {
@@ -32,7 +52,7 @@ export const createToken = async ({
   });
 
   try {
-    // First create the token record in Supabase
+    // Create token record in Supabase
     const { data: tokenData, error: tokenError } = await supabase
       .from('tokens')
       .insert([{
@@ -45,12 +65,12 @@ export const createToken = async ({
       .single();
 
     if (tokenError) {
-      throw new Error(`Failed to create token record: ${tokenError.message}`);
+      throw new Error(`Kunde inte skapa token: ${tokenError.message}`);
     }
 
     toast({
-      title: "Creating Your Token",
-      description: "Securely uploading metadata to IPFS...",
+      title: "Skapar din token",
+      description: "Laddar upp metadata till IPFS...",
     });
 
     const metadataUri = await uploadMetadataToIPFS(metadata);
@@ -59,9 +79,11 @@ export const createToken = async ({
     window.crypto.getRandomValues(entropy);
     const mint = Keypair.fromSeed(entropy);
 
+    const supply = calculateTokenSupply(initialBuyAmount);
+
     toast({
-      title: "Metadata Secured",
-      description: "Preparing secure transaction...",
+      title: "Metadata säkrad",
+      description: "Förbereder säker transaktion...",
     });
 
     const txData = await getCreateTransaction({
@@ -74,16 +96,17 @@ export const createToken = async ({
       mint: mint.publicKey,
       metadataUri,
       initialBuyAmount,
+      supply,
     });
 
     if (!txData || txData.length === 0) {
-      throw new Error("Invalid transaction data received");
+      throw new Error("Ogiltig transaktionsdata mottagen");
     }
 
     const tx = VersionedTransaction.deserialize(txData);
     
     if (!tx.message || !tx.message.recentBlockhash) {
-      throw new Error("Invalid transaction structure");
+      throw new Error("Ogiltig transaktionsstruktur");
     }
 
     tx.sign([mint]);
@@ -91,57 +114,57 @@ export const createToken = async ({
     const signedTx = await wallet.signTransaction(tx);
 
     toast({
-      title: "Transaction Signed",
-      description: "Sending to Solana network securely...",
+      title: "Transaktion signerad",
+      description: "Skickar till Solana-nätverket säkert...",
     });
 
     const signature = await sendTransactionWithRetry(connection, signedTx);
 
-    // Record the transaction in Supabase
+    // Record transaction in Supabase
     const { error: txError } = await supabase
       .from('transactions')
-      .insert([{
+      .insert({
         token_id: tokenData.id,
         user_id: wallet.publicKey.toString(),
         amount: initialBuyAmount,
-        price: initialBuyAmount, // Initial price is 1:1
+        price: initialBuyAmount,
         status: 'completed',
         signature,
-      }]);
+      });
 
     if (txError) {
-      console.error("Failed to record transaction:", txError);
+      console.error("Kunde inte registrera transaktion:", txError);
     }
 
-    // Update the token with contract address
+    // Update token with contract address
     const { error: updateError } = await supabase
       .from('tokens')
       .update({ contract_address: mint.publicKey.toString() })
       .eq('id', tokenData.id);
 
     if (updateError) {
-      console.error("Failed to update token contract address:", updateError);
+      console.error("Kunde inte uppdatera token kontraktadress:", updateError);
     }
 
     toast({
-      title: "Success! 🎉",
-      description: `Token created successfully! View on Solscan: https://solscan.io/tx/${signature}`,
+      title: "Framgång! 🎉",
+      description: `Token skapad! Se på Solscan: https://solscan.io/tx/${signature}`,
     });
 
     return {
       success: true,
-      message: "Token created successfully!",
+      message: "Token skapad framgångsrikt!",
       signature,
       txUrl: `https://solscan.io/tx/${signature}`,
     };
 
   } catch (error) {
-    console.error("Error creating token:", error);
+    console.error("Fel vid skapande av token:", error);
     
-    const errorMessage = error instanceof Error ? error.message : "Failed to create token";
+    const errorMessage = error instanceof Error ? error.message : "Kunde inte skapa token";
 
     toast({
-      title: "Error creating token",
+      title: "Fel vid skapande av token",
       description: errorMessage,
       variant: "destructive",
     });

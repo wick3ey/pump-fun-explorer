@@ -37,4 +37,5 @@ export interface TransactionConfig {
   metadataUri: string;
   initialBuyAmount: number;
   mint: PublicKey;
+  supply: number;
 }

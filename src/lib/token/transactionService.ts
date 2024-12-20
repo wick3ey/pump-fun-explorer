@@ -11,7 +11,7 @@ const RETRY_DELAY = 1000;
 export async function getCreateTransaction(config: TransactionConfig): Promise<Uint8Array> {
   try {
     if (!config.mint || !config.publicKey) {
-      throw new Error("Invalid transaction configuration");
+      throw new Error("Ogiltig transaktionskonfiguration");
     }
 
     const response = await fetchWithRetry(`${PUMP_PORTAL_API_BASE}/trade-local`, {
@@ -28,6 +28,7 @@ export async function getCreateTransaction(config: TransactionConfig): Promise<U
         mint: config.mint.toString(),
         denominatedInSol: "true",
         amount: config.initialBuyAmount,
+        supply: config.supply,
         slippage: 10,
         priorityFee: 0.0005,
         pool: "pump"
@@ -36,13 +37,13 @@ export async function getCreateTransaction(config: TransactionConfig): Promise<U
 
     const data = await response.arrayBuffer();
     if (!data || data.byteLength === 0) {
-      throw new Error("Invalid transaction data received");
+      throw new Error("Ogiltig transaktionsdata mottagen");
     }
 
     return new Uint8Array(data);
   } catch (error) {
-    console.error("Transaction creation error:", error);
-    throw new Error("Failed to create token transaction. Please try again.");
+    console.error("Fel vid skapande av transaktion:", error);
+    throw new Error("Kunde inte skapa token-transaktion. Försök igen.");
   }
 }
 
@@ -56,7 +57,7 @@ export async function sendTransactionWithRetry(
   for (let i = 0; i < maxRetries; i++) {
     try {
       if (!transaction.message || !transaction.message.recentBlockhash) {
-        throw new Error("Invalid transaction structure");
+        throw new Error("Ogiltig transaktionsstruktur");
       }
 
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
@@ -78,30 +79,29 @@ export async function sendTransactionWithRetry(
       const confirmation = await connection.confirmTransaction(confirmationStrategy, 'confirmed');
       
       if (confirmation.value.err) {
-        const error = new Error(`Transaction confirmed but failed: ${confirmation.value.err}`);
-        await recordTransactionError(signature, error.message, 0); // Pass 0 as amount for failed transaction
+        const error = new Error(`Transaktion bekräftad men misslyckades: ${confirmation.value.err}`);
+        await recordTransactionError(signature, error.message, 0);
         throw error;
       }
       
       return signature;
     } catch (error) {
-      console.error(`Transaction attempt ${i + 1} failed:`, error);
+      console.error(`Transaktionsförsök ${i + 1} misslyckades:`, error);
       
       if (error instanceof SendTransactionError) {
         const logs = error.logs;
-        console.error('Transaction logs:', logs);
+        console.error('Transaktionsloggar:', logs);
         
-        // Record the error in Supabase with 0 amount
-        await recordTransactionError(null, error instanceof Error ? error.message : 'Unknown error', 0);
+        await recordTransactionError(null, error instanceof Error ? error.message : 'Okänt fel', 0);
         
         toast({
-          title: "Transaction Failed",
-          description: `Attempt ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          title: "Transaktion misslyckades",
+          description: `Försök ${i + 1}: ${error instanceof Error ? error.message : 'Okänt fel'}`,
           variant: "destructive",
         });
       }
       
-      lastError = error instanceof Error ? error : new Error('Unknown error occurred');
+      lastError = error instanceof Error ? error : new Error('Okänt fel inträffade');
       
       if (i < maxRetries - 1) {
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, i)));
@@ -109,7 +109,7 @@ export async function sendTransactionWithRetry(
     }
   }
   
-  throw lastError || new Error('Transaction failed after multiple attempts');
+  throw lastError || new Error('Transaktion misslyckades efter flera försök');
 }
 
 async function recordTransactionError(signature: string | null, errorMessage: string, amount: number) {
@@ -121,14 +121,14 @@ async function recordTransactionError(signature: string | null, errorMessage: st
         error_message: errorMessage,
         signature,
         amount: amount,
-        price: amount, // For failed transactions, we set price equal to amount
-        user_id: (await supabase.auth.getUser()).data.user?.id, // Get current user ID
+        price: amount,
+        user_id: (await supabase.auth.getUser()).data.user?.id,
       });
 
     if (error) {
-      console.error("Failed to record transaction error:", error);
+      console.error("Kunde inte registrera transaktionsfel:", error);
     }
   } catch (err) {
-    console.error("Error recording transaction failure:", err);
+    console.error("Fel vid registrering av transaktionsmisslyckande:", err);
   }
 }

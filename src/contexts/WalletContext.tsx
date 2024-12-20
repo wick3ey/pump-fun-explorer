@@ -1,37 +1,70 @@
-import { FC, ReactNode, useMemo } from 'react';
+import { FC, ReactNode, useMemo, useState, useEffect } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { 
+  PhantomWalletAdapter, 
+  SolflareWalletAdapter,
+  BackpackWalletAdapter,
+  CoinbaseWalletAdapter
+} from '@solana/wallet-adapter-wallets';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl } from '@solana/web3.js';
-
-// Import wallet adapter CSS
-import '@solana/wallet-adapter-react-ui/styles.css';
+import { useToast } from '@/components/ui/use-toast';
 
 interface WalletContextProviderProps {
   children: ReactNode;
 }
 
 export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children }) => {
-  // Use QuickNode RPC endpoint from environment variable
-  const endpoint = import.meta.env.VITE_RPC_ENDPOINT;
+  const { toast } = useToast();
+  const [isConnecting, setIsConnecting] = useState(false);
   
-  if (!endpoint) {
-    console.error('No RPC endpoint provided in environment variables');
-  }
+  // Use QuickNode RPC endpoint from environment variable or fallback to public endpoint
+  const endpoint = import.meta.env.VITE_RPC_ENDPOINT || clusterApiUrl('mainnet-beta');
   
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
+      new BackpackWalletAdapter(),
+      new CoinbaseWalletAdapter()
     ],
     []
   );
 
+  useEffect(() => {
+    const handleWalletError = (error: Error) => {
+      console.error('Wallet error:', error);
+      toast({
+        title: "Plånboksfel",
+        description: `Ett fel uppstod med plånboken: ${error.message}`,
+        variant: "destructive",
+      });
+      setIsConnecting(false);
+    };
+
+    window.addEventListener('walletError', handleWalletError as any);
+    return () => window.removeEventListener('walletError', handleWalletError as any);
+  }, [toast]);
+
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect={false}>
-        <WalletModalProvider>{children}</WalletModalProvider>
+      <WalletProvider 
+        wallets={wallets} 
+        autoConnect={false}
+        onError={(error) => {
+          console.error('Wallet error:', error);
+          toast({
+            title: "Anslutningsfel",
+            description: "Kunde inte ansluta till plånboken. Försök igen.",
+            variant: "destructive",
+          });
+          setIsConnecting(false);
+        }}
+      >
+        <WalletModalProvider>
+          {children}
+        </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );
