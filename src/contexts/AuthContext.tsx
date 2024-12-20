@@ -4,28 +4,22 @@ import { useToast } from "@/components/ui/use-toast";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { AuthContextType } from "./auth/types";
-import { clearAuthState, verifySession, setupInactivityTimer } from "./auth/utils";
+import { clearAuthState } from "./auth/utils";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const updateAuthState = useCallback((session: Session | null) => {
-    if (session?.user) {
-      setSession(session);
-      setUser(session.user);
-      setIsAuthenticated(true);
-    } else {
-      setSession(null);
-      setUser(null);
-      setIsAuthenticated(false);
-    }
+    setSession(session);
+    setUser(session?.user || null);
+    setIsAuthenticated(!!session?.user);
   }, []);
 
   const initSession = useCallback(async () => {
@@ -55,37 +49,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
         updateAuthState(session);
-        navigate('/');
-        toast({
-          title: "Welcome back!",
-          description: "Signed in successfully",
-        });
       } else if (event === 'SIGNED_OUT') {
         updateAuthState(null);
         navigate('/');
-        toast({
-          title: "Signed out",
-          description: "You have been signed out successfully",
-        });
       }
     });
 
-    const cleanup = setupInactivityTimer(async () => {
-      if (isAuthenticated) {
-        await logout();
-        toast({
-          title: "Session Expired",
-          description: "You have been logged out due to inactivity",
-          variant: "destructive",
-        });
-      }
-    }, isAuthenticated);
-
     return () => {
       subscription.unsubscribe();
-      cleanup();
     };
-  }, [navigate, initSession, updateAuthState, isAuthenticated, toast]);
+  }, [navigate, initSession, updateAuthState]);
 
   const login = async () => {
     try {

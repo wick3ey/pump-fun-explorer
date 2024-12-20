@@ -2,12 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { BarChart3, Menu } from "lucide-react";
 import { DegenModeToggle } from "./DegenModeToggle";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { LoginDialog } from "./LoginDialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const Header = () => {
@@ -16,27 +15,6 @@ export const Header = () => {
   const location = useLocation();
   const { connected } = useWallet();
   const { isAuthenticated, logout, isLoading } = useAuth();
-  const [username, setUsername] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchUsername = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', user.id)
-          .single();
-        setUsername(profile?.username || null);
-      } else {
-        setUsername(null);
-      }
-    };
-
-    if (isAuthenticated) {
-      fetchUsername();
-    }
-  }, [isAuthenticated]);
 
   const handleAuthAction = async () => {
     if (isAuthenticated) {

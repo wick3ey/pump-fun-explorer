@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { Mail, Chrome } from "lucide-react";
+import { Chrome } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -52,32 +52,9 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
     }
   };
 
-  const handleEmailSignIn = async () => {
-    toast({
-      title: "Coming Soon",
-      description: "Email authentication will be available soon",
-    });
-  };
-
   useEffect(() => {
     if (!open) {
       setIsGoogleSignInActive(false);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const hasProfile = await checkUserProfile(session.user.id);
-        if (!hasProfile) {
-          setShowUsernameSetup(true);
-        }
-      }
-    };
-    
-    if (open) {
-      checkAuth();
     }
   }, [open]);
 
@@ -110,7 +87,7 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
           <DialogHeader>
             <DialogTitle>Welcome to SolUp</DialogTitle>
             <DialogDescription className="text-gray-400">
-              Sign in to access all features and start trading
+              Sign in with Google to access all features
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-4">
@@ -129,21 +106,6 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
                 Continue with Google
               </Button>
             )}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-700" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-[#1A1F2C] px-2 text-gray-400">Or continue with</span>
-              </div>
-            </div>
-            <Button
-              className="w-full bg-[#2A2F3C] hover:bg-[#3A3F4C] text-white"
-              onClick={handleEmailSignIn}
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              Email
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
