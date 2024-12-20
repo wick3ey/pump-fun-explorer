@@ -31,48 +31,19 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "stream": "stream-browserify",
-      "crypto": "crypto-browserify",
-      "http": "stream-http",
-      "https": "https-browserify",
-      "zlib": "browserify-zlib",
-      "buffer": "buffer",
-      "process": "process",
-      "util": "util",
-      "assert": "assert",
-      "fs": "memfs",
-      "path": "path-browserify",
-      "os": "os-browserify/browser",
+      buffer: 'buffer',
     },
   },
   define: {
     'process.env': {},
-    global: 'globalThis',
-    'Buffer': ['buffer', 'Buffer'],
+    'global': {},
   },
   optimizeDeps: {
-    include: [
-      'buffer',
-      'process',
-      'memfs',
-      'util',
-      'assert',
-      'stream-browserify',
-      'path-browserify',
-      'crypto-browserify',
-      'os-browserify/browser',
-      'browserify-zlib',
-      'https-browserify',
-      'stream-http',
-    ],
     esbuildOptions: {
       target: 'esnext',
       supported: {
         'top-level-await': true
       },
-      define: {
-        global: 'globalThis'
-      }
     }
   }
 }));
