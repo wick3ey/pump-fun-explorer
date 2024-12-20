@@ -17,3 +17,10 @@ export function formatNumber(num: number): string {
   }
   return num.toFixed(1);
 }
+
+// Add polyfills for browser compatibility
+if (typeof window !== 'undefined') {
+  window.global = window;
+  window.process = { env: {} };
+  window.Buffer = window.Buffer || require('buffer').Buffer;
+}
