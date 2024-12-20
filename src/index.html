@@ -57,7 +57,7 @@
           if (currentCharIndex < text[currentTextIndex].length) {
             const span = document.createElement('span');
             span.textContent = text[currentTextIndex][currentCharIndex];
-            span.className = 'typed-text glitch';
+            span.className = 'typed-text';
             currentLine.appendChild(span);
             currentCharIndex++;
             setTimeout(typeText, 50);

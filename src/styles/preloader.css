@@ -4,13 +4,11 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: #0a0f1a;
+  background: #000;
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  opacity: 1;
-  transition: opacity 0.5s ease-out;
   font-family: 'Courier New', monospace;
 }
 
@@ -25,7 +23,17 @@
   font-size: 2.5rem;
   margin: 0;
   white-space: pre-wrap;
+}
+
+.typed-line {
+  margin-bottom: 1rem;
   opacity: 0;
+  animation: fadeIn 0.3s forwards;
+}
+
+.typed-text {
+  display: inline-block;
+  text-shadow: 0 0 10px #00ff00;
 }
 
 .cursor {
@@ -42,56 +50,14 @@
   50% { opacity: 0; }
 }
 
-.typed-text {
-  display: inline-block;
-  opacity: 0;
-  animation: typeIn 0.1s forwards;
-}
-
-@keyframes typeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.glitch {
-  text-shadow: 
-    0 0 5px #00ff00,
-    0 0 10px #00ff00,
-    0 0 20px #00ff00;
-  animation: glitch 0.3s infinite;
-}
-
-@keyframes glitch {
-  0% {
-    text-shadow: 
-      2px 0 #00ff00,
-      -2px 0 #00ff00;
-  }
-  25% {
-    text-shadow: 
-      -2px 0 #00ff00,
-      2px 0 #00ff00;
-  }
-  50% {
-    text-shadow: 
-      2px 0 #00ff00,
-      -2px 0 #00ff00;
-  }
-  100% {
-    text-shadow: 
-      -2px 0 #00ff00,
-      2px 0 #00ff00;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .fade-out {
   opacity: 0;
+  transition: opacity 0.5s ease-out;
 }
 
 #root {
