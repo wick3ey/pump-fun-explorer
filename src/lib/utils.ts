@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { Buffer } from 'buffer';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -30,5 +31,5 @@ declare global {
 if (typeof window !== 'undefined') {
   window.global = window;
   window.process = { env: {} } as any;
-  window.Buffer = window.Buffer || require('buffer').Buffer;
+  window.Buffer = Buffer;
 }
