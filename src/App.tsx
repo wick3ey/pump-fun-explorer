@@ -26,31 +26,33 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#13141F] flex items-center justify-center">
+      <div className="text-white">Loading...</div>
+    </div>}>
       <WalletContextProvider>
         <AuthProvider>
           <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <div className="min-h-screen bg-[#13141F]">
-                <div className="flex flex-col">
-                  <Header />
+            <div className="min-h-screen bg-[#13141F]">
+              <Header />
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <main className="flex flex-col">
                   <div className="mt-16">
                     <TrendingTokensBanner />
                     <PowerBanner />
                   </div>
-                  <main className="pt-4">
+                  <div className="container mx-auto px-4 py-4">
                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/create" element={<CreateToken />} />
                       <Route path="/token/:symbol" element={<TokenProfile />} />
                       <Route path="/memescope" element={<Memescope />} />
                     </Routes>
-                  </main>
-                </div>
-              </div>
-            </BrowserRouter>
+                  </div>
+                </main>
+              </BrowserRouter>
+            </div>
           </TooltipProvider>
         </AuthProvider>
       </WalletContextProvider>

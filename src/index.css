@@ -71,13 +71,8 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground pt-16;
+    @apply bg-[#13141F] text-foreground;
   }
-}
-
-/* Ensure content is pushed down below fixed header */
-main {
-  padding-top: 4rem;
 }
 
 /* Mobile optimizations */
