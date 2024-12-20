@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SolUp - Secure Solana Token Creation Platform</title>
+    <meta name="description" content="Create and launch Solana tokens securely with SolUp. Trusted by the Solana community." />
+    <meta name="author" content="SolUp" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta name="keywords" content="solana, token creation, cryptocurrency, blockchain, secure" />
+    <link rel="icon" type="image/png" href="/favicon.ico" />
+    <link rel="stylesheet" href="/src/styles/preloader.css" />
+    <!-- Security headers -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self' https:;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
+      style-src 'self' 'unsafe-inline' https:;
+      img-src 'self' https: data: blob:;
+      connect-src 'self' https: wss:;
+      font-src 'self' https:;
+      object-src 'none';
+      media-src 'self' https:;
+      frame-src 'self' https:;
+    " />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta name="referrer" content="strict-origin" />
+  </head>
+  <body>
+    <div class="preloader">
+      <div class="terminal-container">
+        <div class="terminal-text"></div>
+        <span class="cursor"></span>
+      </div>
+    </div>
+    <div id="root"></div>
+    <script>
+      const text = [
+        "INITIALIZING DEGEN PROTOCOL...",
+        "ACCESSING MEME WAR ZONE...",
+        "DEGEN ZONE",
+        "THE MEME WAR ZONE PVP",
+        "ONE WINS ANOTHER ONE LOSE",
+        "SYSTEM READY..."
+      ];
+
+      let currentTextIndex = 0;
+      let currentCharIndex = 0;
+      const terminalText = document.querySelector('.terminal-text');
+      
+      function typeText() {
+        if (currentTextIndex < text.length) {
+          if (currentCharIndex === 0) {
+            terminalText.innerHTML += '<div class="typed-line"></div>';
+          }
+          
+          const currentLine = terminalText.lastElementChild;
+          if (currentCharIndex < text[currentTextIndex].length) {
+            const span = document.createElement('span');
+            span.textContent = text[currentTextIndex][currentCharIndex];
+            span.className = 'typed-text glitch';
+            currentLine.appendChild(span);
+            currentCharIndex++;
+            setTimeout(typeText, 50);
+          } else {
+            currentTextIndex++;
+            currentCharIndex = 0;
+            setTimeout(typeText, 500);
+          }
+        } else {
+          setTimeout(finishLoading, 1000);
+        }
+      }
+
+      function finishLoading() {
+        const preloader = document.querySelector('.preloader');
+        const root = document.getElementById('root');
+        
+        preloader.classList.add('fade-out');
+        root.classList.add('visible');
+        
+        setTimeout(() => {
+          preloader.style.display = 'none';
+        }, 500);
+      }
+
+      window.addEventListener('load', () => {
+        setTimeout(typeText, 500);
+      });
+    </script>
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
