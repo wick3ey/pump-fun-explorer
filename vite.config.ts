@@ -48,7 +48,7 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: [
       'buffer',
-      'process',
+      'process/browser',
       'memfs',
     ],
     esbuildOptions: {
