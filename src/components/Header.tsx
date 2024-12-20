@@ -2,17 +2,27 @@ import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { BarChart3, Menu } from "lucide-react";
 import { DegenModeToggle } from "./DegenModeToggle";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LoginDialog } from "./LoginDialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { supabase } from "@/integrations/supabase/client";
 
 export const Header = () => {
   const [isDegenMode, setIsDegenMode] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const location = useLocation();
   const { connected } = useWallet();
+  const [isSignedIn, setIsSignedIn] = useState(false);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsSignedIn(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -57,9 +67,13 @@ export const Header = () => {
           <div className="hidden md:flex items-center space-x-4">
             <Button 
               onClick={() => setShowLoginDialog(true)}
-              className="bg-[#9b87f5] hover:bg-[#8b77e5] text-white"
+              className={`${
+                isSignedIn 
+                  ? 'bg-green-500 hover:bg-green-600' 
+                  : 'bg-[#9b87f5] hover:bg-[#8b77e5]'
+              } text-white`}
             >
-              Log in
+              {isSignedIn ? 'SIGNED IN' : 'LOG IN'}
             </Button>
             <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
             <WalletMultiButton className="bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white" />
