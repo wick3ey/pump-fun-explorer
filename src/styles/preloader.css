@@ -22,16 +22,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 2rem;
   padding: 2rem;
 }
 
 .logo-container {
-  margin-bottom: 2rem;
-  width: 120px;
-  height: 120px;
+  width: 180px;
+  height: 180px;
   opacity: 0;
-  animation: logo-reveal 0.8s ease forwards;
+  animation: logo-reveal 1.2s ease forwards;
+  margin-bottom: 1rem;
 }
 
 .logo-container img {
@@ -42,14 +42,4 @@
 
 .preloader.fade-out {
   opacity: 0;
-}
-
-@media (max-width: 768px) {
-  .degen-text, .zone-text {
-    font-size: 3rem;
-  }
-  
-  .progress-container {
-    width: 90%;
-  }
 }
