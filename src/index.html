@@ -27,64 +27,23 @@
   </head>
   <body>
     <div class="preloader">
-      <div class="terminal-container">
-        <div class="terminal-text"></div>
-        <span class="cursor"></span>
-      </div>
+      <div class="degen-title">DEGEN ZONE</div>
+      <div class="subtitle">The number one place for degenerates</div>
     </div>
     <div id="root"></div>
     <script>
-      const text = [
-        "INITIALIZING DEGEN PROTOCOL...",
-        "ACCESSING MEME WAR ZONE...",
-        "DEGEN ZONE",
-        "THE MEME WAR ZONE PVP",
-        "ONE WINS ANOTHER ONE LOSE",
-        "SYSTEM READY..."
-      ];
-
-      let currentTextIndex = 0;
-      let currentCharIndex = 0;
-      const terminalText = document.querySelector('.terminal-text');
-      
-      function typeText() {
-        if (currentTextIndex < text.length) {
-          if (currentCharIndex === 0) {
-            terminalText.innerHTML += '<div class="typed-line"></div>';
-          }
-          
-          const currentLine = terminalText.lastElementChild;
-          if (currentCharIndex < text[currentTextIndex].length) {
-            const span = document.createElement('span');
-            span.textContent = text[currentTextIndex][currentCharIndex];
-            span.className = 'typed-text';
-            currentLine.appendChild(span);
-            currentCharIndex++;
-            setTimeout(typeText, 50);
-          } else {
-            currentTextIndex++;
-            currentCharIndex = 0;
-            setTimeout(typeText, 500);
-          }
-        } else {
-          setTimeout(finishLoading, 1000);
-        }
-      }
-
-      function finishLoading() {
-        const preloader = document.querySelector('.preloader');
-        const root = document.getElementById('root');
-        
-        preloader.classList.add('fade-out');
-        root.classList.add('visible');
-        
+      window.addEventListener('load', function() {
         setTimeout(() => {
-          preloader.style.display = 'none';
-        }, 500);
-      }
-
-      window.addEventListener('load', () => {
-        setTimeout(typeText, 500);
+          const preloader = document.querySelector('.preloader');
+          const root = document.getElementById('root');
+          
+          preloader.classList.add('fade-out');
+          root.classList.add('visible');
+          
+          setTimeout(() => {
+            preloader.style.display = 'none';
+          }, 500);
+        }, 3000);
       });
     </script>
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
