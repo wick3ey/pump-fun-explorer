@@ -31,6 +31,11 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
     []
   );
 
+  if (!endpoint) {
+    console.error('Failed to initialize Solana endpoint');
+    return <div>Failed to initialize wallet connection</div>;
+  }
+
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider 

@@ -12,7 +12,9 @@ import Index from "./pages/Index";
 import CreateToken from "./pages/CreateToken";
 import TokenProfile from "./pages/TokenProfile";
 import Memescope from "./pages/Memescope";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "./components/ui/use-toast";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,42 +26,80 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <WalletContextProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <BrowserRouter>
-            <div className="min-h-screen bg-[#13141F]">
-              <Suspense fallback={
-                <div className="min-h-screen bg-[#13141F] flex items-center justify-center">
-                  <div className="text-white">Loading...</div>
-                </div>
-              }>
-                <Header />
-                <Toaster />
-                <Sonner />
-                <main className="flex flex-col">
-                  <div className="mt-16">
-                    <TrendingTokensBanner />
-                    <PowerBanner />
+const AppContent = () => {
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        console.log('User signed in:', session?.user?.id);
+        toast({
+          title: "Signed in successfully",
+          description: "Welcome back!",
+        });
+      }
+      if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
+        toast({
+          title: "Signed out",
+          description: "Come back soon!",
+        });
+      }
+      if (event === 'USER_UPDATED') {
+        console.log('User updated:', session?.user?.id);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [toast]);
+
+  return (
+    <div className="min-h-screen bg-[#13141F]">
+      <Header />
+      <Toaster />
+      <Sonner />
+      <main className="flex flex-col">
+        <div className="mt-16">
+          <TrendingTokensBanner />
+          <PowerBanner />
+        </div>
+        <div className="container mx-auto px-4 py-4">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/create" element={<CreateToken />} />
+            <Route path="/token/:symbol" element={<TokenProfile />} />
+            <Route path="/memescope" element={<Memescope />} />
+          </Routes>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <WalletContextProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <BrowserRouter>
+              <Suspense 
+                fallback={
+                  <div className="min-h-screen bg-[#13141F] flex items-center justify-center">
+                    <div className="text-white">Loading...</div>
                   </div>
-                  <div className="container mx-auto px-4 py-4">
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/create" element={<CreateToken />} />
-                      <Route path="/token/:symbol" element={<TokenProfile />} />
-                      <Route path="/memescope" element={<Memescope />} />
-                    </Routes>
-                  </div>
-                </main>
+                }
+              >
+                <AppContent />
               </Suspense>
-            </div>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </WalletContextProvider>
-  </QueryClientProvider>
-);
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </WalletContextProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
