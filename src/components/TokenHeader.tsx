@@ -10,10 +10,10 @@ interface TokenHeaderProps {
   symbol: string;
   description: string;
   pfpUrl: string;
-  headerUrl: string;
+  headerUrl?: string; // Made optional since not all tokens will have a header
 }
 
-export const TokenHeader = ({ name, symbol, description }: TokenHeaderProps) => {
+export const TokenHeader = ({ name, symbol, description, pfpUrl, headerUrl }: TokenHeaderProps) => {
   const { toast } = useToast();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const { isAuthenticated } = useAuth();
@@ -30,15 +30,24 @@ export const TokenHeader = ({ name, symbol, description }: TokenHeaderProps) => 
     });
   };
 
+  const headerStyle = headerUrl 
+    ? { backgroundImage: `url(${headerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : { background: 'linear-gradient(to right, rgb(126, 34, 206), rgb(37, 99, 235))' };
+
   return (
     <>
-      <div className="relative w-full h-48 bg-gradient-to-r from-purple-900 to-blue-900 rounded-lg overflow-hidden mb-6">
+      <div className="relative w-full h-48 rounded-lg overflow-hidden mb-6" style={headerStyle}>
+        <div className="absolute inset-0 bg-black/30" /> {/* Overlay for better text readability */}
         <div className="relative h-full flex items-center px-6">
           <div className="flex items-center gap-6">
             <img 
-              src="/placeholder.svg"
+              src={pfpUrl || "/placeholder.svg"}
               alt={`${symbol} logo`}
               className="w-24 h-24 rounded-full border-4 border-white/10"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/placeholder.svg";
+              }}
             />
             <div className="text-white">
               <h1 className="text-3xl font-bold mb-2">{name} ({symbol})</h1>

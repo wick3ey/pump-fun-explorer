@@ -16,13 +16,15 @@ const TokenProfile = () => {
   const { data: token } = useQuery({
     queryKey: ['token', symbol],
     queryFn: async () => {
+      // In a real implementation, this would fetch from your API
+      // and include the headerUrl if it exists
       if (symbol === 'DOGE') {
         return {
           name: "Dogecoin",
           symbol: "DOGE",
           description: "The Original Meme Coin",
           pfpUrl: "/lovable-uploads/6b165013-9c87-47f9-8ac0-9127b2f927e6.png",
-          headerUrl: "/lovable-uploads/ace4dc8b-8a5d-4d71-9f5d-b0815369aff5.png"
+          headerUrl: "/lovable-uploads/ace4dc8b-8a5d-4d71-9f5d-b0815369aff5.png" // Only included for tokens created through your platform
         };
       }
       
@@ -31,7 +33,7 @@ const TokenProfile = () => {
         symbol: symbol,
         description: `${symbol} Token on Solana`,
         pfpUrl: "/placeholder.svg",
-        headerUrl: ""
+        // No headerUrl for tokens not created through your platform
       };
     }
   });
