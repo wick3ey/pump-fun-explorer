@@ -2,16 +2,21 @@ import { Buffer } from 'buffer';
 
 export const initializeBufferPolyfills = () => {
   try {
-    // Initialize Buffer globally before anything else
+    // Initialize Buffer and other globals before anything else
     if (typeof window !== 'undefined') {
-      window.Buffer = Buffer;
+      // Ensure Buffer is available on window
+      window.Buffer = window.Buffer || Buffer;
+      
+      // Set up global object
       (window as any).global = window;
-      (window as any).process = {
+      
+      // Ensure process is available
+      (window as any).process = (window as any).process || {
         env: { NODE_ENV: process.env.NODE_ENV },
         browser: true,
         version: '',
         cwd: () => '/',
-        nextTick: (fn: Function, ...args: any[]) => queueMicrotask(() => fn(...args)),
+        nextTick: (fn: Function, ...args: any[]) => setTimeout(() => fn(...args), 0),
       };
     }
 
@@ -20,13 +25,13 @@ export const initializeBufferPolyfills = () => {
     
     // Verify Buffer functionality
     try {
-      Buffer.from('test');
+      const testBuffer = Buffer.from('test');
+      Buffer.alloc(1); // Test alloc specifically
+      return testBuffer.length > 0;
     } catch (e) {
-      console.error('Buffer.from is not working:', e);
+      console.error('Buffer functionality test failed:', e);
       return false;
     }
-
-    return true;
   } catch (error) {
     console.error('Failed to initialize polyfills:', error);
     return false;
@@ -34,6 +39,13 @@ export const initializeBufferPolyfills = () => {
 };
 
 export const ensureBufferCompat = () => {
-  const testBuffer = Buffer.from('test');
-  return testBuffer.length > 0;
+  try {
+    // Test both Buffer.from and Buffer.alloc
+    const testBuffer1 = Buffer.from('test');
+    const testBuffer2 = Buffer.alloc(1);
+    return testBuffer1.length > 0 && testBuffer2.length === 1;
+  } catch (error) {
+    console.error('Buffer compatibility check failed:', error);
+    return false;
+  }
 };
