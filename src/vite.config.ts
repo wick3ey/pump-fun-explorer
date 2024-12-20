@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false, // Inaktiverar sourcemaps för att undvika relaterade fel
+    sourcemap: false, // Disable sourcemaps to avoid related errors
     rollupOptions: {
       output: {
         manualChunks: {
@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      stream: 'stream-browserify',
+      stream: 'readable-stream',
       http: 'stream-http',
       https: 'https-browserify',
       process: 'process/browser',

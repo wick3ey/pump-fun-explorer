@@ -5,10 +5,11 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// Sätt globala variabler för polyfills
+// Set global variables for polyfills
 window.Buffer = Buffer;
+window.global = window;
 
-// Initialisera root-element
+// Initialize root element
 const rootElement = document.getElementById('root');
   
 if (!rootElement) {
