@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, ReactNode, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Session, User } from "@supabase/supabase-js";
@@ -21,44 +21,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(session?.user || null);
     setIsAuthenticated(!!session?.user);
   }, []);
-
-  const initSession = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      // Clear any existing session on init
-      await supabase.auth.signOut();
-      updateAuthState(null);
-    } catch (error) {
-      console.error('Session initialization error:', error);
-      updateAuthState(null);
-      toast({
-        title: "Session Error",
-        description: "Please log in again",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [updateAuthState, toast]);
-
-  useEffect(() => {
-    initSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        updateAuthState(session);
-      } else if (event === 'SIGNED_OUT') {
-        updateAuthState(null);
-        navigate('/');
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate, initSession, updateAuthState]);
 
   const login = async () => {
     try {

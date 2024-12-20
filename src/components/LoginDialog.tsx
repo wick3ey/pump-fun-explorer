@@ -1,9 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Chrome } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { UsernameSetupDialog } from "./UsernameSetupDialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,22 +19,6 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
   const navigate = useNavigate();
   const { login, isLoading } = useAuth();
 
-  const checkUserProfile = async (userId: string) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', userId)
-        .single();
-      
-      if (error) throw error;
-      return !!profile?.username;
-    } catch (error) {
-      console.error('Error checking user profile:', error);
-      return false;
-    }
-  };
-
   const handleGoogleSignIn = async () => {
     try {
       setIsGoogleSignInActive(true);
@@ -51,34 +34,6 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
       setIsGoogleSignInActive(false);
     }
   };
-
-  useEffect(() => {
-    if (!open) {
-      setIsGoogleSignInActive(false);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        const hasProfile = await checkUserProfile(session.user.id);
-        if (!hasProfile) {
-          setShowUsernameSetup(true);
-        } else {
-          onOpenChange(false);
-          navigate('/');
-          toast({
-            title: "Welcome back!",
-            description: "Successfully signed in",
-          });
-        }
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate, onOpenChange, toast]);
 
   return (
     <>

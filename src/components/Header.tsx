@@ -137,7 +137,7 @@ export const Header = () => {
                   </div>
                   <div className="mt-auto space-y-6">
                     <Button 
-                      onClick={() => setShowLoginDialog(true)}
+                      onClick={handleAuthAction}
                       className="w-full bg-[#9b87f5] hover:bg-[#8b77e5] text-white text-lg py-4"
                     >
                       Log in
