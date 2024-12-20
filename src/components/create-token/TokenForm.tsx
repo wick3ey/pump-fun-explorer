@@ -87,8 +87,8 @@ export const TokenForm = () => {
 
     setIsCreating(true);
     try {
-      const result = await createToken(
-        {
+      const result = await createToken({
+        metadata: {
           name: values.name,
           symbol: values.symbol,
           description: values.description,
@@ -100,9 +100,9 @@ export const TokenForm = () => {
           tokenMode: values.tokenMode,
           power: values.power,
         },
-        values.initialBuyAmount,
+        initialBuyAmount: values.initialBuyAmount,
         wallet
-      );
+      });
 
       if (result.success) {
         toast({

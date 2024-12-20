@@ -1,4 +1,4 @@
-import { Connection } from '@solana/web3.js';
+import { Connection, PublicKey, Keypair, VersionedTransaction } from '@solana/web3.js';
 import { toast } from "@/components/ui/use-toast";
 import { uploadMetadataToIPFS } from './ipfsService';
 import { getCreateTransaction, sendTransactionWithRetry } from './transactionService';
