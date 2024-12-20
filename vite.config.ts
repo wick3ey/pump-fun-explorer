@@ -27,10 +27,25 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      stream: 'vite-compatible-readable-stream',
+      http: 'stream-http',
+      https: 'https-browserify',
       process: 'process/browser',
-      stream: 'stream-browserify',
       zlib: 'browserify-zlib',
-      util: 'util'
+      util: 'util',
+      url: 'url',
+      assert: 'assert',
+      crypto: 'crypto-browserify',
+      os: 'os-browserify',
+      path: 'path-browserify',
+      vm: 'vm-browserify',
+    },
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis'
+      },
     },
   },
   define: {
