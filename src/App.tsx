@@ -32,11 +32,11 @@ const App = () => (
       <WalletContextProvider>
         <AuthProvider>
           <TooltipProvider>
-            <div className="min-h-screen bg-[#13141F]">
-              <Header />
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+            <BrowserRouter>
+              <div className="min-h-screen bg-[#13141F]">
+                <Header />
+                <Toaster />
+                <Sonner />
                 <main className="flex flex-col">
                   <div className="mt-16">
                     <TrendingTokensBanner />
@@ -51,8 +51,8 @@ const App = () => (
                     </Routes>
                   </div>
                 </main>
-              </BrowserRouter>
-            </div>
+              </div>
+            </BrowserRouter>
           </TooltipProvider>
         </AuthProvider>
       </WalletContextProvider>
