@@ -1,12 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Mic, MicOff, Users } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { LoginDialog } from "./LoginDialog";
-import { useAuth } from "@/contexts/AuthContext";
 import AgoraRTC, { IAgoraRTCRemoteUser, IMicrophoneAudioTrack } from "agora-rtc-sdk-ng";
-import { supabase } from "@/integrations/supabase/client";
 
 interface VoiceChatProps {
   tokenSymbol: string;
@@ -20,55 +17,14 @@ type Participant = {
 
 export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   const [isMuted, setIsMuted] = useState(true);
-  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [client, setClient] = useState<ReturnType<typeof AgoraRTC.createClient> | null>(null);
   const [audioTrack, setAudioTrack] = useState<IMicrophoneAudioTrack | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  
-  const { isAuthenticated } = useAuth();
   const { toast } = useToast();
 
   const appId = ""; // You'll need to add your Agora App ID
 
-  useEffect(() => {
-    const fetchUsername = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', user.id)
-          .single();
-        setUsername(profile?.username || null);
-      }
-    };
-
-    if (isAuthenticated) {
-      fetchUsername();
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (!appId) {
-      console.error("Agora App ID is required");
-      return;
-    }
-
-    const agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-    setClient(agoraClient);
-
-    return () => {
-      agoraClient.leave();
-    };
-  }, [appId]);
-
   const handleJoinVoice = async () => {
-    if (!isAuthenticated) {
-      setShowLoginDialog(true);
-      return;
-    }
-
     if (!client) {
       toast({
         title: "Error",
@@ -79,24 +35,19 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
     }
 
     try {
-      // Initialize microphone track
       const track = await AgoraRTC.createMicrophoneAudioTrack();
       setAudioTrack(track);
 
-      // Join the channel
       const uid = await client.join(appId, tokenSymbol, null);
       
-      // Publish audio track
       await client.publish(track);
 
-      // Update participants list
       setParticipants(prev => [...prev, { 
         id: uid, 
-        name: username || `User#${uid}`, 
+        name: `User#${uid}`, 
         speaking: false 
       }]);
 
-      // Set up user joined listener
       client.on("user-joined", (user: IAgoraRTCRemoteUser) => {
         setParticipants(prev => [...prev, { 
           id: user.uid, 
@@ -109,7 +60,6 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
         });
       });
 
-      // Set up user left listener
       client.on("user-left", (user: IAgoraRTCRemoteUser) => {
         setParticipants(prev => prev.filter(p => p.id !== user.uid));
         toast({
@@ -132,11 +82,6 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   };
 
   const handleMuteToggle = async () => {
-    if (!isAuthenticated) {
-      setShowLoginDialog(true);
-      return;
-    }
-    
     if (audioTrack) {
       if (isMuted) {
         await audioTrack.setEnabled(true);
@@ -151,70 +96,52 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
     }
   };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (audioTrack) {
-        audioTrack.close();
-      }
-      if (client) {
-        client.leave();
-      }
-    };
-  }, [audioTrack, client]);
-
   return (
-    <>
-      <Card className="bg-[#1A1F2C] border-[#2A2F3C] p-4">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Voice Chat - {tokenSymbol}</h3>
-            <div className="flex items-center space-x-2">
-              <Users className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-400">{participants.length}</span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            {participants.map((participant) => (
-              <div 
-                key={participant.id}
-                className="flex items-center justify-between p-2 rounded-lg bg-[#2A2F3C]"
-              >
-                <span className="text-white">{participant.name}</span>
-                {participant.speaking && (
-                  <span className="text-xs text-green-400">Speaking...</span>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-center space-x-4">
-            <Button
-              variant="outline"
-              className="bg-[#2A2F3C] text-white hover:bg-[#3A3F4C]"
-              onClick={handleJoinVoice}
-            >
-              Join Voice
-            </Button>
-            <Button
-              variant="outline"
-              className={`${
-                isMuted 
-                  ? 'bg-[#2A2F3C] text-white hover:bg-[#3A3F4C]' 
-                  : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-              }`}
-              onClick={handleMuteToggle}
-            >
-              {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-            </Button>
+    <Card className="bg-[#1A1F2C] border-[#2A2F3C] p-4">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-white">Voice Chat - {tokenSymbol}</h3>
+          <div className="flex items-center space-x-2">
+            <Users className="h-4 w-4 text-gray-400" />
+            <span className="text-gray-400">{participants.length}</span>
           </div>
         </div>
-      </Card>
-      <LoginDialog 
-        open={showLoginDialog} 
-        onOpenChange={setShowLoginDialog} 
-      />
-    </>
+
+        <div className="space-y-2">
+          {participants.map((participant) => (
+            <div 
+              key={participant.id}
+              className="flex items-center justify-between p-2 rounded-lg bg-[#2A2F3C]"
+            >
+              <span className="text-white">{participant.name}</span>
+              {participant.speaking && (
+                <span className="text-xs text-green-400">Speaking...</span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-center space-x-4">
+          <Button
+            variant="outline"
+            className="bg-[#2A2F3C] text-white hover:bg-[#3A3F4C]"
+            onClick={handleJoinVoice}
+          >
+            Join Voice
+          </Button>
+          <Button
+            variant="outline"
+            className={`${
+              isMuted 
+                ? 'bg-[#2A2F3C] text-white hover:bg-[#3A3F4C]' 
+                : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+            }`}
+            onClick={handleMuteToggle}
+          >
+            {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </Button>
+        </div>
+      </div>
+    </Card>
   );
 };
