@@ -31,9 +31,17 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      buffer: 'buffer',
+      stream: 'stream-browserify',
+      util: 'util',
     },
   },
+  define: {
+    'process.env': {},
+    'global': 'globalThis',
+  },
   optimizeDeps: {
+    include: ['buffer', 'process'],
     esbuildOptions: {
       target: 'esnext',
       supported: {
