@@ -2,18 +2,38 @@ import { Buffer } from 'buffer';
 
 export const initializeBufferPolyfills = () => {
   try {
-    // Ensure Buffer is available globally
+    // Ensure Buffer and process are available globally
     if (typeof window !== 'undefined') {
       window.Buffer = Buffer;
       (window as any).global = window;
+      
+      // Initialize process if not available
+      if (!(window as any).process) {
+        (window as any).process = {
+          env: { NODE_ENV: process.env.NODE_ENV },
+          browser: true,
+          version: '',
+          cwd: () => '/',
+        };
+      }
     }
     
     // Initialize Buffer globally
     (globalThis as any).Buffer = Buffer;
     
+    // Initialize process globally if not available
+    if (!(globalThis as any).process) {
+      (globalThis as any).process = {
+        env: { NODE_ENV: process.env.NODE_ENV },
+        browser: true,
+        version: '',
+        cwd: () => '/',
+      };
+    }
+    
     return true;
   } catch (error) {
-    console.error('Failed to initialize Buffer polyfills:', error);
+    console.error('Failed to initialize polyfills:', error);
     return false;
   }
 };
