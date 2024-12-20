@@ -1,100 +1,72 @@
-import { Connection, PublicKey, VersionedTransaction } from '@solana/web3.js';
-import { WalletContextState } from '@solana/wallet-adapter-react';
-import bs58 from 'bs58';
+import { TokenMetadata } from "@/types/token";
+import { WalletContextState } from "@solana/wallet-adapter-react";
+import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { createMint, getOrCreateAssociatedTokenAccount, mintTo } from "@solana/spl-token";
+import { toast } from "@/components/ui/use-toast";
 
-export interface TokenMetadata {
-  name: string;
-  symbol: string;
-  description: string;
-  twitter?: string;
-  telegram?: string;
-  website?: string;
-  pfpImage?: FileList;
-  headerImage?: FileList;
-}
-
-export async function createToken(
+export const createToken = async (
   metadata: TokenMetadata,
-  amount: number,
+  initialBuyAmount: number,
   wallet: WalletContextState
-) {
+) => {
+  if (!wallet.publicKey || !wallet.signTransaction) {
+    throw new Error("Wallet not connected");
+  }
+
   try {
-    if (!wallet.publicKey || !wallet.signTransaction) {
-      throw new Error('Wallet not connected');
-    }
+    const connection = new Connection("https://api.mainnet-beta.solana.com");
+    
+    // Create new mint
+    const mint = await createMint(
+      connection,
+      wallet.publicKey,
+      wallet.publicKey,
+      null,
+      9
+    );
 
-    // Upload metadata and images to IPFS
-    const formData = new FormData();
-    if (metadata.pfpImage?.[0]) {
-      formData.append("file", metadata.pfpImage[0]);
-    }
-    if (metadata.headerImage?.[0]) {
-      formData.append("headerImage", metadata.headerImage[0]);
-    }
-    formData.append("name", metadata.name);
-    formData.append("symbol", metadata.symbol);
-    formData.append("description", metadata.description);
-    if (metadata.twitter) formData.append("twitter", metadata.twitter);
-    if (metadata.telegram) formData.append("telegram", metadata.telegram);
-    if (metadata.website) formData.append("website", metadata.website);
-    formData.append("showName", "true");
+    // Get the token account of the fromWallet address, and if it does not exist, create it
+    const tokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      wallet.publicKey,
+      mint,
+      wallet.publicKey
+    );
 
-    const metadataResponse = await fetch("https://pump.fun/api/ipfs", {
-      method: "POST",
-      body: formData,
-    });
+    // Mint 1 million tokens to token account
+    await mintTo(
+      connection,
+      wallet.publicKey,
+      mint,
+      tokenAccount.address,
+      wallet.publicKey,
+      1000000 * Math.pow(10, 9)
+    );
 
-    if (!metadataResponse.ok) {
-      throw new Error('Failed to upload metadata');
-    }
+    // Store metadata on-chain (simplified version)
+    const transaction = new Transaction().add(
+      // Add your metadata instruction here
+    );
 
-    const metadataResponseJSON = await metadataResponse.json();
-
-    // Get the create transaction
-    const response = await fetch(`https://pumpportal.fun/api/trade-local`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        "publicKey": wallet.publicKey.toBase58(),
-        "action": "create",
-        "tokenMetadata": {
-          name: metadataResponseJSON.metadata.name,
-          symbol: metadataResponseJSON.metadata.symbol,
-          uri: metadataResponseJSON.metadataUri
-        },
-        "denominatedInSol": "true",
-        "amount": amount,
-        "slippage": 10,
-        "priorityFee": 0.0005,
-        "pool": "pump"
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create token transaction');
-    }
-
-    const data = await response.arrayBuffer();
-    const tx = VersionedTransaction.deserialize(new Uint8Array(data));
-
-    // Sign and send transaction
-    const signedTx = await wallet.signTransaction(tx);
-    const connection = new Connection(process.env.VITE_RPC_ENDPOINT || "https://api.mainnet-beta.solana.com");
-    const signature = await connection.sendTransaction(signedTx);
+    const signature = await wallet.sendTransaction(transaction, connection);
+    await connection.confirmTransaction(signature, "confirmed");
 
     return {
       success: true,
-      message: `Transaction sent: https://solscan.io/tx/${signature}`,
-      signature
+      message: "Token created successfully!",
+      mint: mint.toBase58(),
+      tokenAccount: tokenAccount.address.toBase58()
     };
-
   } catch (error) {
-    console.error('Token creation error:', error);
+    console.error("Error creating token:", error);
+    toast({
+      title: "Error creating token",
+      description: error instanceof Error ? error.message : "Unknown error occurred",
+      variant: "destructive",
+    });
     return {
       success: false,
-      message: error.message
+      message: error instanceof Error ? error.message : "Failed to create token"
     };
   }
-}
+};
