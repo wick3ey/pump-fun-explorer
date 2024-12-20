@@ -4,8 +4,9 @@ import { WalletModalProvider, WalletMultiButton } from '@solana/wallet-adapter-r
 import { 
   PhantomWalletAdapter,
   SolflareWalletAdapter,
-  BackpackWalletAdapter,
   TorusWalletAdapter,
+  LedgerWalletAdapter,
+  SlopeWalletAdapter
 } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
 import { useToast } from '@/components/ui/use-toast';
@@ -23,8 +24,9 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
-      new BackpackWalletAdapter(),
       new TorusWalletAdapter(),
+      new LedgerWalletAdapter(),
+      new SlopeWalletAdapter()
     ],
     []
   );
