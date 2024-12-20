@@ -17,12 +17,21 @@ export const UsernameSetupDialog = ({ open, onOpenChange, onComplete }: Username
   const { toast } = useToast();
 
   const handleSubmit = async () => {
+    if (!username.trim()) {
+      toast({
+        title: "Username required",
+        description: "Please enter a username",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsChecking(true);
       
       // Check if username is available
       const { data: isAvailable, error: checkError } = await supabase
-        .rpc('is_username_available', { username });
+        .rpc('is_username_available', { username: username.trim() });
 
       if (checkError) throw checkError;
       
@@ -42,7 +51,7 @@ export const UsernameSetupDialog = ({ open, onOpenChange, onComplete }: Username
       // Insert profile
       const { error: insertError } = await supabase
         .from('profiles')
-        .insert([{ id: user.id, username }]);
+        .insert([{ id: user.id, username: username.trim() }]);
 
       if (insertError) throw insertError;
 

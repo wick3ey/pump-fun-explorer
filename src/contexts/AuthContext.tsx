@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useCallback } from "react";
+import { createContext, useContext, ReactNode, useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Session, User } from "@supabase/supabase-js";
@@ -21,6 +21,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(session?.user || null);
     setIsAuthenticated(!!session?.user);
   }, []);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        updateAuthState(session);
+        
+        // Check if user has a profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.username) {
+          toast({
+            title: "Welcome back!",
+            description: `Welcome back, ${profile.username}!`,
+          });
+          navigate('/');
+        }
+      } else if (event === 'SIGNED_OUT') {
+        updateAuthState(null);
+        navigate('/');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [updateAuthState, navigate, toast]);
 
   const login = async () => {
     try {
