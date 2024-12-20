@@ -31,16 +31,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initSession = useCallback(async () => {
     try {
       setIsLoading(true);
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) throw error;
-
-      if (session && await verifySession(session)) {
-        updateAuthState(session);
-      } else {
-        await supabase.auth.signOut();
-        updateAuthState(null);
-      }
+      // Clear any existing session on init
+      await supabase.auth.signOut();
+      updateAuthState(null);
     } catch (error) {
       console.error('Session initialization error:', error);
       updateAuthState(null);
