@@ -9,11 +9,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { TokenImageUpload, tokenImageSchema } from "./TokenImageUpload";
 import { PowerSelector } from "./PowerSelector";
 import { Rocket } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { SocialLinksSection } from "./SocialLinksSection";
 import { SafeDegenToggle } from "./SafeDegenToggle";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useWallet } from '@solana/wallet-adapter-react';
+import { createToken } from "@/lib/token/tokenCreator";
 
 const formSchema = z.object({
   name: z.string().min(1, "Token name is required"),
@@ -24,13 +24,13 @@ const formSchema = z.object({
   twitter: z.string().optional(),
   isSafeDegen: z.boolean().default(true),
   power: z.string().min(1, "Power selection is required"),
+  initialBuyAmount: z.number().min(0.1, "Minimum buy amount is 0.1 SOL"),
 }).merge(tokenImageSchema);
 
 export const TokenForm = () => {
   const { toast } = useToast();
-  const [showMoreOptions, setShowMoreOptions] = useState(false);
-  const [showBuyDialog, setShowBuyDialog] = useState(false);
-  const [initialBuyAmount, setInitialBuyAmount] = useState("");
+  const wallet = useWallet();
+  const [isCreating, setIsCreating] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -43,38 +43,57 @@ export const TokenForm = () => {
       twitter: "",
       isSafeDegen: true,
       power: "100",
+      initialBuyAmount: 0.1,
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setShowBuyDialog(true);
-  };
+    if (!wallet.connected) {
+      toast({
+        title: "Wallet not connected",
+        description: "Please connect your wallet to create a token",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const handleCreateToken = () => {
-    setShowBuyDialog(false);
-    const powerCost = {
-      "100": 0.7,
-      "500": 1.5,
-      "1000": 3.5,
-    }[form.getValues("power")] || 0;
-    
-    const totalCost = Number(initialBuyAmount) + powerCost;
-    
-    console.log("Creating token with:", {
-      ...form.getValues(),
-      initialBuyAmount,
-      powerCost,
-      totalCost
-    });
-    
-    toast({
-      title: "Token Created!",
-      description: `Successfully created ${form.getValues("name")} (${form.getValues("symbol")}) with ${form.getValues("power")} POWER`,
-    });
-  };
+    setIsCreating(true);
+    try {
+      const result = await createToken(
+        {
+          name: values.name,
+          symbol: values.symbol,
+          description: values.description,
+          twitter: values.twitter,
+          telegram: values.telegram,
+          website: values.website,
+          image: values.image,
+        },
+        values.initialBuyAmount,
+        wallet
+      );
 
-  const handleQuickSelect = (amount: string) => {
-    setInitialBuyAmount(amount);
+      if (result.success) {
+        toast({
+          title: "Token Created!",
+          description: result.message,
+        });
+      } else {
+        toast({
+          title: "Error creating token",
+          description: result.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create token. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -142,95 +161,47 @@ export const TokenForm = () => {
           )}
         />
 
-        <Collapsible open={showMoreOptions} onOpenChange={setShowMoreOptions}>
-          <CollapsibleTrigger className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors">
-            {showMoreOptions ? "Hide more options ↑" : "Show more options ↓"}
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-6 mt-6">
-            <SocialLinksSection form={form} />
-          </CollapsibleContent>
-        </Collapsible>
+        <FormField
+          control={form.control}
+          name="initialBuyAmount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-white">Initial Buy Amount (SOL)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  placeholder="0.1"
+                  {...field}
+                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                  className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <SocialLinksSection form={form} />
 
         <div className="space-y-4">
           <p className="text-sm text-gray-400 italic">tip: coin data cannot be changed after creation</p>
           <Button 
             type="submit" 
+            disabled={isCreating || !wallet.connected}
             className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-[1.02]"
           >
-            <Rocket className="mr-2 h-5 w-5" /> Launch Coin! 🚀
+            {isCreating ? (
+              "Creating Token..."
+            ) : (
+              <>
+                <Rocket className="mr-2 h-5 w-5" /> Launch Coin! 🚀
+              </>
+            )}
           </Button>
         </div>
       </form>
-
-      <Dialog open={showBuyDialog} onOpenChange={setShowBuyDialog}>
-        <DialogContent className="bg-[#1A1F2C] border-[#2A2F3C] text-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Initial Supply Purchase</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Choose how many {form.getValues("symbol")} you want to buy (optional)
-              <p className="mt-2 text-sm">Power cost: {
-                {
-                  "100": "0.7",
-                  "500": "1.5",
-                  "1000": "3.5",
-                }[form.getValues("power")] || "0"
-              } SOL</p>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex gap-2 mb-4">
-              <Button 
-                type="button"
-                onClick={() => handleQuickSelect("1")}
-                className="flex-1 bg-[#2A2F3C] hover:bg-[#3A3F4C] text-white"
-              >
-                1 SOL
-              </Button>
-              <Button 
-                type="button"
-                onClick={() => handleQuickSelect("3")}
-                className="flex-1 bg-[#2A2F3C] hover:bg-[#3A3F4C] text-white"
-              >
-                3 SOL
-              </Button>
-              <Button 
-                type="button"
-                onClick={() => handleQuickSelect("5")}
-                className="flex-1 bg-[#2A2F3C] hover:bg-[#3A3F4C] text-white"
-              >
-                5 SOL
-              </Button>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Input
-                type="number"
-                placeholder="0.0"
-                value={initialBuyAmount}
-                onChange={(e) => setInitialBuyAmount(e.target.value)}
-                className="bg-[#13141F]/50 border-[#2A2F3C] text-white"
-              />
-              <span className="text-white">SOL</span>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowBuyDialog(false)}
-              className="bg-transparent border-[#2A2F3C] text-white hover:bg-[#2A2F3C]"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleCreateToken}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-            >
-              Create Coin
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Form>
   );
 };
