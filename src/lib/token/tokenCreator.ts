@@ -1,25 +1,8 @@
 import { TokenMetadata } from "@/types/token";
 import { WalletContextState } from "@solana/wallet-adapter-react";
-import { Connection, Transaction, SystemProgram, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { createMint, getOrCreateAssociatedTokenAccount, mintTo } from "@solana/spl-token";
+import { Connection, VersionedTransaction } from "@solana/web3.js";
 import { toast } from "@/components/ui/use-toast";
-import { Buffer } from 'buffer';
-
-// Polyfill Buffer for browser environment
-if (typeof window !== 'undefined') {
-  window.Buffer = Buffer;
-}
-
-const calculateTotalCost = (initialBuyAmount: number, power: string): number => {
-  const powerCosts: { [key: string]: number } = {
-    "0": 0,
-    "100": 0.7,
-    "500": 1.5,
-    "1000": 3.5
-  };
-  
-  return initialBuyAmount + (powerCosts[power] || 0);
-};
+import bs58 from "bs58";
 
 export const createToken = async (
   metadata: TokenMetadata,
@@ -31,88 +14,82 @@ export const createToken = async (
   }
 
   try {
-    // Use environment variable for RPC endpoint
-    const connection = new Connection(import.meta.env.VITE_RPC_ENDPOINT || "https://api.mainnet-beta.solana.com");
-    
-    // Calculate total cost including power boost
-    const totalCost = calculateTotalCost(initialBuyAmount, metadata.power || "0");
-    
-    // Create transaction for the initial payment
-    const paymentTransaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: wallet.publicKey,
-        toPubkey: Keypair.generate().publicKey, // Replace with your project's wallet
-        lamports: totalCost * LAMPORTS_PER_SOL
-      })
+    // Create form data for IPFS metadata
+    const formData = new FormData();
+    formData.append("file", metadata.pfpImage);
+    formData.append("name", metadata.name);
+    formData.append("symbol", metadata.symbol);
+    formData.append("description", metadata.description);
+    formData.append("twitter", metadata.twitter || "");
+    formData.append("telegram", metadata.telegram || "");
+    formData.append("website", metadata.website || "");
+    formData.append("showName", "true");
+
+    // Upload metadata to IPFS
+    const metadataResponse = await fetch("https://pump.fun/api/ipfs", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!metadataResponse.ok) {
+      throw new Error("Failed to upload metadata to IPFS");
+    }
+
+    const metadataResponseJSON = await metadataResponse.json();
+
+    // Get the create transaction from Pump.fun API
+    const response = await fetch(`https://pumpportal.fun/api/trade-local`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        publicKey: wallet.publicKey.toBase58(),
+        action: "create",
+        tokenMetadata: {
+          name: metadata.name,
+          symbol: metadata.symbol,
+          uri: metadataResponseJSON.metadataUri,
+        },
+        denominatedInSol: "true",
+        amount: initialBuyAmount,
+        slippage: 10,
+        priorityFee: 0.0005,
+        pool: "pump",
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create token: ${response.statusText}`);
+    }
+
+    const data = await response.arrayBuffer();
+    const tx = VersionedTransaction.deserialize(new Uint8Array(data));
+
+    // Sign the transaction
+    const signedTx = await wallet.signTransaction(tx);
+
+    // Use RPC endpoint from environment variable
+    const connection = new Connection(
+      import.meta.env.VITE_RPC_ENDPOINT || "https://api.mainnet-beta.solana.com",
+      'confirmed'
     );
 
-    // Get the latest blockhash
-    const { blockhash } = await connection.getLatestBlockhash();
-    paymentTransaction.recentBlockhash = blockhash;
-    paymentTransaction.feePayer = wallet.publicKey;
-
-    // Request wallet signature
-    const signedTx = await wallet.signTransaction(paymentTransaction);
-    const signature = await connection.sendRawTransaction(signedTx.serialize());
-    await connection.confirmTransaction(signature, "confirmed");
-
-    // Create mint authority
-    const mintAuthority = Keypair.generate();
-    
-    // Create new mint
-    const mint = await createMint(
-      connection,
-      mintAuthority,
-      mintAuthority.publicKey,
-      mintAuthority.publicKey,
-      9
-    );
-
-    // Create token account
-    const tokenAccount = await getOrCreateAssociatedTokenAccount(
-      connection,
-      mintAuthority,
-      mint,
-      wallet.publicKey
-    );
-
-    // Mint initial supply
-    await mintTo(
-      connection,
-      mintAuthority,
-      mint,
-      tokenAccount.address,
-      mintAuthority,
-      1000000 * Math.pow(10, 9)
-    );
-
-    // Transfer ownership
-    const transferOwnershipTx = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: mintAuthority.publicKey,
-        toPubkey: wallet.publicKey,
-        lamports: 0
-      })
-    );
-
-    transferOwnershipTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-    transferOwnershipTx.feePayer = wallet.publicKey;
-    
-    const signedTransferTx = await wallet.signTransaction(transferOwnershipTx);
-    const transferSignature = await connection.sendRawTransaction(signedTransferTx.serialize());
-    await connection.confirmTransaction(transferSignature, "confirmed");
+    // Send the transaction
+    const signature = await connection.sendTransaction(signedTx);
 
     toast({
       title: "Success!",
-      description: "Token created successfully",
+      description: `Token created successfully! View on Solscan: https://solscan.io/tx/${signature}`,
     });
 
     return {
       success: true,
       message: "Token created successfully!",
-      mint: mint.toBase58(),
-      tokenAccount: tokenAccount.address.toBase58()
+      signature,
+      txUrl: `https://solscan.io/tx/${signature}`,
     };
+
   } catch (error) {
     console.error("Error creating token:", error);
     toast({
@@ -122,7 +99,7 @@ export const createToken = async (
     });
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to create token"
+      message: error instanceof Error ? error.message : "Failed to create token",
     };
   }
 };
