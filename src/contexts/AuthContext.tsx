@@ -39,46 +39,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session.user);
         setIsAuthenticated(true);
-
-        if (event === 'SIGNED_IN') {
-          // Check if user has a profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('id', session.user.id)
-            .single();
-
-          if (!profile?.username) {
-            // User needs to set up username
-            navigate('/');
-          } else {
-            toast({
-              title: "Welcome back!",
-              description: `Signed in as ${profile.username}`,
-            });
-            navigate('/');
-          }
-        }
       } else {
-        // User is signed out
         setSession(null);
         setUser(null);
         setIsAuthenticated(false);
-        
-        if (event === 'SIGNED_OUT') {
-          toast({
-            title: "Signed out",
-            description: "You have been signed out successfully",
-          });
-          navigate('/');
-        }
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [toast, navigate]);
+  }, []);
 
   const login = async () => {
     try {
@@ -105,7 +76,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      // State will be cleared by the onAuthStateChange listener
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully",
+      });
       navigate('/');
     } catch (error) {
       console.error('Logout error:', error);

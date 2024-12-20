@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, Chrome } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,18 +53,43 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
     });
   };
 
-  // Listen for auth state changes
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session?.user) {
-      const hasProfile = await checkUserProfile(session.user.id);
-      if (!hasProfile) {
-        setShowUsernameSetup(true);
-      } else {
-        onOpenChange(false);
-        navigate('/');
+  useEffect(() => {
+    // Check auth state on component mount
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const hasProfile = await checkUserProfile(session.user.id);
+        if (!hasProfile) {
+          setShowUsernameSetup(true);
+        }
       }
-    }
-  });
+    };
+    
+    checkAuth();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        const hasProfile = await checkUserProfile(session.user.id);
+        if (!hasProfile) {
+          setShowUsernameSetup(true);
+        } else {
+          onOpenChange(false);
+          navigate('/');
+          toast({
+            title: "Welcome back!",
+            description: "Successfully signed in",
+          });
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, onOpenChange, toast]);
 
   return (
     <>
@@ -111,6 +136,10 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
           setShowUsernameSetup(false);
           onOpenChange(false);
           navigate('/');
+          toast({
+            title: "Welcome to SolUp!",
+            description: "Your profile has been set up successfully",
+          });
         }}
       />
     </>
