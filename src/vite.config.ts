@@ -26,6 +26,11 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "stream": "stream-browserify",
+      "crypto": "crypto-browserify",
+      "http": "stream-http",
+      "https": "https-browserify",
+      "zlib": "browserify-zlib"
     },
   },
   define: {

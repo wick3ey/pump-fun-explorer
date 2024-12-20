@@ -4,8 +4,8 @@ import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { 
   PhantomWalletAdapter, 
   SolflareWalletAdapter,
-  BackpackWalletAdapter,
-  CoinbaseWalletAdapter
+  GlowWalletAdapter,
+  LedgerWalletAdapter
 } from '@solana/wallet-adapter-wallets';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl } from '@solana/web3.js';
@@ -26,15 +26,15 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
-      new BackpackWalletAdapter(),
-      new CoinbaseWalletAdapter()
+      new GlowWalletAdapter(),
+      new LedgerWalletAdapter()
     ],
     []
   );
 
   useEffect(() => {
     const handleWalletError = (error: Error) => {
-      console.error('Wallet error:', error);
+      console.error('Plånboksfel:', error);
       toast({
         title: "Plånboksfel",
         description: `Ett fel uppstod med plånboken: ${error.message}`,
@@ -53,7 +53,7 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
         wallets={wallets} 
         autoConnect={false}
         onError={(error) => {
-          console.error('Wallet error:', error);
+          console.error('Plånboksfel:', error);
           toast({
             title: "Anslutningsfel",
             description: "Kunde inte ansluta till plånboken. Försök igen.",
