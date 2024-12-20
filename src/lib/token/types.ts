@@ -36,20 +36,5 @@ export interface TransactionConfig {
   };
   metadataUri: string;
   initialBuyAmount: number;
-  mint: PublicKey | string;
-}
-
-export interface TokenData {
-  symbol: string;
-  name: string;
-  marketCap?: number;
-  age?: string;
-  power?: number;
-  chain: string;
-  isSafeDegen: boolean;
-  totalSupply?: number;
-  contractAddress?: string;
-  image?: string;
-  description: string;
-  timestamp: number;
+  mint: PublicKey;
 }

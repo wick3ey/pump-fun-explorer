@@ -1,6 +1,7 @@
-import { Connection, VersionedTransaction, TransactionConfirmationStrategy } from "@solana/web3.js";
+import { Connection, VersionedTransaction, TransactionConfirmationStrategy, SendTransactionError } from "@solana/web3.js";
 import { fetchWithRetry } from "@/lib/utils/apiUtils";
 import { TransactionConfig } from "./types";
+import { toast } from "@/components/ui/use-toast";
 
 const PUMP_PORTAL_API_BASE = 'https://pumpportal.fun/api';
 const MAX_RETRIES = 3;
@@ -12,12 +13,6 @@ export async function getCreateTransaction(config: TransactionConfig): Promise<U
       throw new Error("Invalid transaction configuration");
     }
 
-    // Validate input parameters
-    if (!config.metadata.name || !config.metadata.symbol || !config.metadata.uri) {
-      throw new Error("Invalid token metadata");
-    }
-
-    // Add security headers and validation
     const response = await fetchWithRetry(`${PUMP_PORTAL_API_BASE}/trade-local`, {
       method: "POST",
       headers: {
@@ -28,11 +23,7 @@ export async function getCreateTransaction(config: TransactionConfig): Promise<U
       body: JSON.stringify({
         publicKey: config.publicKey,
         action: "create",
-        tokenMetadata: {
-          name: config.metadata.name,
-          symbol: config.metadata.symbol,
-          uri: config.metadataUri,
-        },
+        tokenMetadata: config.metadata,
         mint: config.mint.toString(),
         denominatedInSol: "true",
         amount: config.initialBuyAmount,
@@ -63,23 +54,28 @@ export async function sendTransactionWithRetry(
 
   for (let i = 0; i < maxRetries; i++) {
     try {
-      // Add additional transaction validation
       if (!transaction.message || !transaction.message.recentBlockhash) {
         throw new Error("Invalid transaction structure");
       }
 
+      // Get the latest blockhash before sending
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+      transaction.message.recentBlockhash = blockhash;
+
       const signature = await connection.sendTransaction(transaction, {
         maxRetries: 3,
         skipPreflight: false,
+        preflightCommitment: 'processed',
+        minContextSlot: await connection.getSlot('finalized'),
       });
       
       const confirmationStrategy: TransactionConfirmationStrategy = {
         signature,
-        blockhash: transaction.message.recentBlockhash,
-        lastValidBlockHeight: await connection.getBlockHeight()
+        blockhash,
+        lastValidBlockHeight
       };
       
-      const confirmation = await connection.confirmTransaction(confirmationStrategy);
+      const confirmation = await connection.confirmTransaction(confirmationStrategy, 'confirmed');
       
       if (confirmation.value.err) {
         throw new Error(`Transaction confirmed but failed: ${confirmation.value.err}`);
@@ -88,6 +84,17 @@ export async function sendTransactionWithRetry(
       return signature;
     } catch (error) {
       console.error(`Transaction attempt ${i + 1} failed:`, error);
+      
+      if (error instanceof SendTransactionError) {
+        const logs = error.logs;
+        console.error('Transaction logs:', logs);
+        toast({
+          title: "Transaction Failed",
+          description: `Attempt ${i + 1}: ${error.message}`,
+          variant: "destructive",
+        });
+      }
+      
       lastError = error as Error;
       
       if (i < maxRetries - 1) {

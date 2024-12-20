@@ -17,17 +17,14 @@ export const createToken = async ({
     throw new Error("Please connect your wallet to continue");
   }
 
-  // Validate metadata
   if (!metadata.pfpImage || !metadata.name || !metadata.symbol) {
     throw new Error("Please provide all required token information");
   }
 
-  // Validate initial buy amount
   if (initialBuyAmount < 0.1) {
     throw new Error("Minimum initial buy amount is 0.1 SOL");
   }
 
-  // Create secure connection with retry logic
   const connection = new Connection(TRUSTED_RPC_ENDPOINT, {
     commitment: 'confirmed',
     confirmTransactionInitialTimeout: TRANSACTION_TIMEOUT,
@@ -58,23 +55,25 @@ export const createToken = async ({
         symbol: metadata.symbol,
         uri: metadataUri,
       },
+      mint: mint.publicKey,
       metadataUri,
       initialBuyAmount,
-      mint: mint.publicKey
     });
 
-    // Verify transaction data before signing
     if (!txData || txData.length === 0) {
       throw new Error("Invalid transaction data received");
     }
 
     const tx = VersionedTransaction.deserialize(txData);
     
-    // Add additional security checks
     if (!tx.message || !tx.message.recentBlockhash) {
       throw new Error("Invalid transaction structure");
     }
 
+    // Add the mint keypair as a signer
+    tx.sign([mint]);
+    
+    // Now let the user sign the transaction
     const signedTx = await wallet.signTransaction(tx);
 
     toast({
@@ -83,12 +82,6 @@ export const createToken = async ({
     });
 
     const signature = await sendTransactionWithRetry(connection, signedTx);
-
-    // Verify transaction success
-    const confirmation = await connection.confirmTransaction(signature);
-    if (confirmation.value.err) {
-      throw new Error(`Transaction failed: ${confirmation.value.err}`);
-    }
 
     toast({
       title: "Success! 🎉",
