@@ -1,14 +1,7 @@
-import { Buffer } from 'buffer';
-import process from 'process/browser';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-
-// Initialize required globals
-window.Buffer = Buffer;
-window.global = window;
-window.process = process;
 
 // Initialize root element
 const rootElement = document.getElementById('root');
