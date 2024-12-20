@@ -30,7 +30,7 @@ const AppContent = () => {
       <Header />
       <Toaster />
       <Sonner />
-      <main className="flex flex-col pt-32"> {/* Changed from mt-16 to pt-32 to account for the fixed header height */}
+      <main className="flex flex-col pt-20"> {/* Reduced padding from pt-32 to pt-20 */}
         <div>
           <TrendingTokensBanner />
           <PowerBanner />
