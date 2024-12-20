@@ -1,4 +1,4 @@
-import { FC, ReactNode, useMemo, useState, useEffect } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { 
@@ -17,9 +17,7 @@ interface WalletContextProviderProps {
 
 export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children }) => {
   const { toast } = useToast();
-  const [isConnecting, setIsConnecting] = useState(false);
   
-  // Use QuickNode RPC endpoint from environment variable or fallback to public endpoint
   const endpoint = import.meta.env.VITE_RPC_ENDPOINT || clusterApiUrl('mainnet-beta');
   
   const wallets = useMemo(
@@ -31,21 +29,6 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
     ],
     []
   );
-
-  useEffect(() => {
-    const handleWalletError = (error: Error) => {
-      console.error('Plånboksfel:', error);
-      toast({
-        title: "Plånboksfel",
-        description: `Ett fel uppstod med plånboken: ${error.message}`,
-        variant: "destructive",
-      });
-      setIsConnecting(false);
-    };
-
-    window.addEventListener('walletError', handleWalletError as any);
-    return () => window.removeEventListener('walletError', handleWalletError as any);
-  }, [toast]);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
@@ -59,7 +42,6 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
             description: "Kunde inte ansluta till plånboken. Försök igen.",
             variant: "destructive",
           });
-          setIsConnecting(false);
         }}
       >
         <WalletModalProvider>

@@ -6,16 +6,27 @@ import { useState } from "react";
 import { LoginDialog } from "./LoginDialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useWallet } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 export const Header = () => {
   const [isDegenMode, setIsDegenMode] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const location = useLocation();
-  const { connected } = useWallet();
+  const { connected, connect, disconnect } = useWallet();
 
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+
+  const handleWalletClick = async () => {
+    if (connected) {
+      await disconnect();
+    } else {
+      try {
+        await connect();
+      } catch (error) {
+        console.error('Plånboksfel:', error);
+      }
+    }
   };
 
   return (
@@ -62,7 +73,13 @@ export const Header = () => {
               Log in
             </Button>
             <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
-            <WalletMultiButton />
+            <Button
+              onClick={handleWalletClick}
+              className="bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white flex items-center gap-2"
+            >
+              <Wallet className="h-4 w-4" />
+              {connected ? 'Disconnect' : 'Connect Wallet'}
+            </Button>
           </div>
 
           {/* Mobile Menu */}
@@ -122,7 +139,13 @@ export const Header = () => {
                       Log in
                     </Button>
                     <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
-                    <WalletMultiButton className="w-full" />
+                    <Button
+                      onClick={handleWalletClick}
+                      className="w-full bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white flex items-center justify-center gap-2 text-lg py-4"
+                    >
+                      <Wallet className="h-5 w-5" />
+                      {connected ? 'Disconnect' : 'Connect Wallet'}
+                    </Button>
                   </div>
                 </div>
               </SheetContent>
