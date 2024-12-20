@@ -2,6 +2,7 @@ import { createContext, useContext, ReactNode, useEffect, useState } from "react
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Session, User } from "@supabase/supabase-js";
+import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -18,6 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check active sessions and set the user
@@ -27,56 +29,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(!!session);
     });
 
-    console.log("Auth provider mounted");
-  }, []);
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session);
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsAuthenticated(!!session);
+
+      if (event === 'SIGNED_IN') {
+        toast({
+          title: "Welcome!",
+          description: "You have successfully signed in",
+        });
+        navigate('/');
+      }
+
+      if (event === 'SIGNED_OUT') {
+        toast({
+          title: "Signed out",
+          description: "You have been signed out successfully",
+        });
+        navigate('/');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [toast, navigate]);
 
   const login = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}`,
+      },
+    });
 
-      if (error) {
-        console.error('Auth error:', error);
-        toast({
-          title: "Authentication Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+    if (error) {
       console.error('Login error:', error);
       toast({
         title: "Login Error",
-        description: "An unexpected error occurred during login",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
   const logout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Logout error:', error);
-        toast({
-          title: "Logout Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
-        setSession(null);
-      }
-    } catch (error) {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
       console.error('Logout error:', error);
       toast({
         title: "Logout Error",
-        description: "An unexpected error occurred during logout",
+        description: error.message,
         variant: "destructive",
       });
     }

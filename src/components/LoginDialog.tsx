@@ -1,9 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { Mail } from "lucide-react";
+import { Mail, Chrome } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface LoginDialogProps {
   open: boolean;
@@ -11,126 +12,81 @@ interface LoginDialogProps {
 }
 
 export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [showPayment, setShowPayment] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleGoogleSignIn = async () => {
-    // Placeholder for future authentication implementation
-    toast({
-      title: "Authentication not implemented",
-      description: "Please implement your preferred authentication method",
-    });
-  };
-
-  const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Placeholder for future authentication implementation
-    if (isSignUp) {
-      setShowPayment(true);
-    } else {
-      toast({
-        title: "Authentication not implemented",
-        description: "Please implement your preferred authentication method",
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}`,
+        },
       });
+
+      if (error) {
+        console.error('Auth error:', error);
+        toast({
+          title: "Authentication Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Error",
+        description: "An unexpected error occurred during login",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handlePayment = async (method: 'sol' | 'card') => {
+  const handleEmailSignIn = async () => {
     toast({
-      title: `${method === 'sol' ? 'SOL' : 'Card'} payment initiated`,
-      description: "Payment processing coming soon",
+      title: "Coming Soon",
+      description: "Email authentication will be available soon",
     });
   };
-
-  if (showPayment) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="bg-[#1A1F2C] text-white">
-          <DialogHeader>
-            <DialogTitle>Subscribe to pump.fun</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              $4/month subscription fee helps keep our community clean from bots and spam.
-              This subscription enables access to voice chat and messaging features.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <Button
-              className="w-full bg-blue-500 hover:bg-blue-600"
-              onClick={() => handlePayment('sol')}
-            >
-              Pay with SOL
-            </Button>
-            <Button
-              className="w-full bg-purple-500 hover:bg-purple-600"
-              onClick={() => handlePayment('card')}
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              Pay with Card
-            </Button>
-            <p className="text-sm text-gray-400 text-center">
-              Secure payment processing. Cancel anytime.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#1A1F2C] text-white">
         <DialogHeader>
-          <DialogTitle>{isSignUp ? 'Create Account' : 'Welcome Back'}</DialogTitle>
+          <DialogTitle>Welcome to SolUp</DialogTitle>
           <DialogDescription className="text-gray-400">
-            {isSignUp 
-              ? 'Create an account to access voice chat and messaging features' 
-              : 'Log in to your pump.fun account'}
+            Sign in to access all features and start trading
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleEmailSignIn} className="space-y-4 pt-4">
-          {isSignUp && (
-            <Input
-              placeholder="Username"
-              className="bg-[#13141F]/50 border-[#2A2F3C] text-white"
-            />
-          )}
-          <Input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="bg-[#13141F]/50 border-[#2A2F3C] text-white"
-          />
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="bg-[#13141F]/50 border-[#2A2F3C] text-white"
-          />
-          <Button type="submit" className="w-full bg-[#9b87f5] hover:bg-[#8b77e5]">
-            {isSignUp ? 'Sign Up' : 'Log In'}
-          </Button>
+        <div className="space-y-4 pt-4">
           <Button
-            type="button"
-            className="w-full bg-red-500 hover:bg-red-600"
+            className="w-full bg-white hover:bg-gray-100 text-black"
             onClick={handleGoogleSignIn}
+            disabled={isLoading}
+          >
+            <Chrome className="mr-2 h-4 w-4" />
+            {isLoading ? 'Signing in...' : 'Continue with Google'}
+          </Button>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-700" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-[#1A1F2C] px-2 text-gray-400">Or continue with</span>
+            </div>
+          </div>
+          <Button
+            className="w-full bg-[#2A2F3C] hover:bg-[#3A3F4C] text-white"
+            onClick={handleEmailSignIn}
           >
             <Mail className="mr-2 h-4 w-4" />
-            Sign {isSignUp ? 'up' : 'in'} with Gmail
+            Email
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full text-gray-400 hover:text-white"
-            onClick={() => setIsSignUp(!isSignUp)}
-          >
-            {isSignUp ? 'Already have an account? Log in' : "Don't have an account? Sign up"}
-          </Button>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
