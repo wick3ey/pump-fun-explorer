@@ -6,10 +6,10 @@ import { Form } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import { TokenImageUpload, tokenImageSchema } from "./TokenImageUpload";
 import { PowerSelector } from "./PowerSelector";
+import { TokenModeSelector } from "./TokenModeSelector";
 import { Rocket } from "lucide-react";
 import { useState } from "react";
 import { SocialLinksSection } from "./SocialLinksSection";
-import { SafeDegenToggle } from "./SafeDegenToggle";
 import { useWallet } from '@solana/wallet-adapter-react';
 import { createToken } from "@/lib/token/tokenCreator";
 import { FormFields } from "./FormFields";
@@ -21,7 +21,9 @@ const formSchema = z.object({
   telegram: z.string().optional(),
   website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   twitter: z.string().optional(),
-  isSafeDegen: z.boolean().default(true),
+  tokenMode: z.enum(["og", "doxxed", "locked"], {
+    required_error: "Please select a token mode",
+  }),
   power: z.string().min(1, "Power selection is required"),
   initialBuyAmount: z.number().min(0.1, "Minimum buy amount is 0.1 SOL"),
 }).merge(tokenImageSchema);
@@ -40,8 +42,8 @@ export const TokenForm = () => {
       telegram: "",
       website: "",
       twitter: "",
-      isSafeDegen: true,
-      power: "100",
+      tokenMode: "og",
+      power: "0",
       initialBuyAmount: 0.1,
     },
   });
@@ -53,6 +55,15 @@ export const TokenForm = () => {
         description: "Please connect your wallet to create a token",
         variant: "destructive",
       });
+      return;
+    }
+
+    if (values.tokenMode === "doxxed") {
+      toast({
+        title: "KYC Required",
+        description: "You will be redirected to complete KYC verification before token creation.",
+      });
+      // Implement KYC flow here
       return;
     }
 
@@ -68,6 +79,7 @@ export const TokenForm = () => {
           website: values.website,
           pfpImage: values.pfpImage,
           headerImage: values.headerImage,
+          tokenMode: values.tokenMode,
         },
         values.initialBuyAmount,
         wallet
@@ -100,7 +112,7 @@ export const TokenForm = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <TokenImageUpload form={form} />
-        <SafeDegenToggle form={form} />
+        <TokenModeSelector form={form} />
         <PowerSelector form={form} />
         <FormFields form={form} />
         <SocialLinksSection form={form} />
@@ -116,7 +128,7 @@ export const TokenForm = () => {
               "Creating Token..."
             ) : (
               <>
-                <Rocket className="mr-2 h-5 w-5" /> Launch Coin! 🚀
+                <Rocket className="mr-2 h-5 w-5" /> Launch Token! 🚀
               </>
             )}
           </Button>
