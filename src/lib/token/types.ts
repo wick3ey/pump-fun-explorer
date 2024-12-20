@@ -1,22 +1,41 @@
-import { TokenMetadata } from "@/types/token";
-import { WalletContextState } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 
-export interface CreateTokenResponse {
-  success: boolean;
-  message: string;
-  signature?: string;
-  txUrl?: string;
-}
-
-export interface TokenCreationConfig {
-  metadata: TokenMetadata;
-  initialBuyAmount: number;
-  wallet: WalletContextState;
+export interface TokenMetadata {
+  name: string;
+  symbol: string;
+  description: string;
+  twitter?: string;
+  telegram?: string;
+  website?: string;
+  pfpImage: File;
+  headerImage: File;
+  tokenMode: 'og' | 'doxxed' | 'locked';
+  power: string;
 }
 
 export interface TransactionConfig {
   publicKey: string;
-  metadata: TokenMetadata;
+  metadata: {
+    name: string;
+    symbol: string;
+    uri: string;
+  };
   metadataUri: string;
   initialBuyAmount: number;
+  mint: PublicKey | string; // Allow both PublicKey and string
+}
+
+export interface TokenData {
+  symbol: string;
+  name: string;
+  marketCap?: number;
+  age?: string;
+  power?: number;
+  chain: string;
+  isSafeDegen: boolean;
+  totalSupply?: number;
+  contractAddress?: string;
+  image?: string;
+  description: string;
+  timestamp: number;
 }

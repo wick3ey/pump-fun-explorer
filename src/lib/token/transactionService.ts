@@ -6,6 +6,11 @@ const PUMP_PORTAL_API_BASE = 'https://pumpportal.fun/api';
 
 export async function getCreateTransaction(config: TransactionConfig): Promise<Uint8Array> {
   try {
+    // Ensure we have a valid mint address
+    if (!config.mint) {
+      throw new Error("Mint address is required");
+    }
+
     const response = await fetchWithRetry(`${PUMP_PORTAL_API_BASE}/trade-local`, {
       method: "POST",
       headers: {
@@ -19,6 +24,7 @@ export async function getCreateTransaction(config: TransactionConfig): Promise<U
           symbol: config.metadata.symbol,
           uri: config.metadataUri,
         },
+        mint: config.mint.toString(), // Ensure mint is converted to string
         denominatedInSol: "true",
         amount: config.initialBuyAmount,
         slippage: 10,
@@ -53,7 +59,6 @@ export async function sendTransactionWithRetry(
         skipPreflight: false,
       });
       
-      // Fix: Use the correct type for confirmation strategy
       const confirmationStrategy: TransactionConfirmationStrategy = {
         signature,
         blockhash: transaction.message.recentBlockhash,
