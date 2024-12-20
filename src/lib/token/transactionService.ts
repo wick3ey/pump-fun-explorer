@@ -38,17 +38,18 @@ export async function getCreateTransaction(config: TransactionConfig): Promise<U
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Client-Version": "1.0.0",
-        "X-Request-Timestamp": Date.now().toString(),
       },
       body: JSON.stringify({
         publicKey: config.publicKey,
         action: "create",
-        tokenMetadata: config.metadata,
+        tokenMetadata: {
+          name: config.metadata.name,
+          symbol: config.metadata.symbol,
+          uri: config.metadata.uri
+        },
         mint: config.mint.toString(),
         denominatedInSol: "true",
         amount: config.initialBuyAmount,
-        supply: config.supply,
         slippage: 10,
         priorityFee: 0.0005,
         pool: "pump"
