@@ -1,67 +1,172 @@
+@keyframes matrix-rain {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100%; }
+}
+
 .preloader {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: #000000;
+  background: #0a0f1a;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+  overflow: hidden;
 }
 
-.degen-title {
-  font-family: 'Courier New', monospace;
-  font-size: 5rem;
-  font-weight: bold;
-  color: #00ff00;
+.preloader::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(0deg, 
+    rgba(10, 15, 26, 0.8) 0%,
+    rgba(139, 92, 246, 0.1) 50%,
+    rgba(10, 15, 26, 0.8) 100%
+  );
+  animation: matrix-rain 20s linear infinite;
+  opacity: 0.3;
+}
+
+.preloader.fade-out {
+  opacity: 0;
+}
+
+.loader-content {
   text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.degen-text {
+  font-family: monospace;
+  font-size: 4.5rem;
+  color: #8B5CF6;
+  margin: 0;
   opacity: 0;
-  animation: glowIn 2s ease-out forwards;
+  transform: translateY(20px);
+  animation: 
+    glitch 1s ease forwards,
+    glitch-skew 1s infinite linear alternate-reverse;
   text-shadow: 
-    0 0 7px #00ff00,
-    0 0 10px #00ff00,
-    0 0 21px #00ff00,
-    0 0 42px #00ff00;
+    0 0 5px #8B5CF6,
+    0 0 10px #8B5CF6,
+    0 0 20px #8B5CF6,
+    0 0 40px #8B5CF6;
 }
 
-.subtitle {
-  font-family: 'Courier New', monospace;
-  font-size: 1.5rem;
-  color: #00ff00;
-  margin-top: 1rem;
+.zone-text {
+  font-family: monospace;
+  font-size: 3rem;
+  color: #1EAEDB;
+  margin: 0;
   opacity: 0;
-  animation: fadeIn 2s ease-out 1s forwards;
+  transform: translateY(20px);
+  animation: 
+    glitch 1s ease 0.5s forwards,
+    glitch-skew 1s infinite linear alternate-reverse;
+  text-shadow: 
+    0 0 5px #1EAEDB,
+    0 0 10px #1EAEDB,
+    0 0 20px #1EAEDB,
+    0 0 40px #1EAEDB;
 }
 
-@keyframes glowIn {
+.progress-bar {
+  width: 300px;
+  height: 2px;
+  background: rgba(30, 174, 219, 0.1);
+  margin-top: 30px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(30, 174, 219, 0.5);
+}
+
+.progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(
+    90deg,
+    #8B5CF6,
+    #1EAEDB,
+    #8B5CF6
+  );
+  background-size: 200% 100%;
+  animation: 
+    progress 3s ease-out forwards,
+    gradient-shift 2s linear infinite;
+}
+
+@keyframes glitch {
   0% {
     opacity: 0;
-    transform: scale(0.8);
-    filter: blur(10px);
+    transform: translateY(20px) skew(0deg);
   }
-  50% {
-    opacity: 0.5;
-    transform: scale(1.1);
-    filter: blur(5px);
+  20% {
+    transform: translateY(10px) skew(20deg);
+  }
+  40% {
+    transform: translateY(0) skew(-15deg);
+  }
+  60% {
+    transform: translateY(-5px) skew(15deg);
+  }
+  80% {
+    transform: translateY(-10px) skew(-10deg);
   }
   100% {
     opacity: 1;
-    transform: scale(1);
-    filter: blur(0);
+    transform: translateY(0) skew(0deg);
   }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes glitch-skew {
+  0% { transform: skew(0deg); }
+  20% { transform: skew(2deg); }
+  40% { transform: skew(-2deg); }
+  60% { transform: skew(1deg); }
+  80% { transform: skew(-1deg); }
+  100% { transform: skew(0deg); }
 }
 
-.fade-out {
-  opacity: 0;
-  transition: opacity 0.5s ease-out;
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.9; }
+}
+
+@keyframes progress {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+.scan-line {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: rgba(139, 92, 246, 0.5);
+  animation: scan 3s linear infinite;
+}
+
+@keyframes scan {
+  0% { top: 0%; }
+  100% { top: 100%; }
 }
 
 #root {
@@ -71,4 +176,20 @@
 
 #root.visible {
   opacity: 1;
+}
+
+.cyber-grid {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(transparent 0%, rgba(139, 92, 246, 0.1) 2%, transparent 3%) 0 0,
+    linear-gradient(90deg, transparent 0%, rgba(30, 174, 219, 0.1) 2%, transparent 3%) 0 0;
+  background-size: 50px 50px;
+  animation: grid-move 20s linear infinite;
+}
+
+@keyframes grid-move {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(1000px); }
 }
