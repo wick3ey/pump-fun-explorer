@@ -7,7 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { TokenImageUpload, tokenImageSchema } from "./TokenImageUpload";
 import { PowerSelector } from "./PowerSelector";
 import { TokenModeSelector } from "./TokenModeSelector";
-import { Rocket } from "lucide-react";
+import { Rocket, Wallet } from "lucide-react";
 import { useState } from "react";
 import { SocialLinksSection } from "./SocialLinksSection";
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -58,18 +58,8 @@ export const TokenForm = () => {
       return;
     }
 
-    if (values.tokenMode === "doxxed") {
-      toast({
-        title: "KYC Required",
-        description: "You will be redirected to complete KYC verification before token creation.",
-      });
-      // Implement KYC flow here
-      return;
-    }
-
     setIsCreating(true);
     try {
-      // Get the first file from each FileList
       const pfpFile = values.pfpImage[0];
       const headerFile = values.headerImage[0];
 
@@ -84,6 +74,7 @@ export const TokenForm = () => {
           pfpImage: pfpFile,
           headerImage: headerFile,
           tokenMode: values.tokenMode,
+          power: values.power,
         },
         values.initialBuyAmount,
         wallet
@@ -123,19 +114,29 @@ export const TokenForm = () => {
 
         <div className="space-y-4">
           <p className="text-sm text-gray-400 italic">tip: coin data cannot be changed after creation</p>
-          <Button 
-            type="submit" 
-            disabled={isCreating || !wallet.connected}
-            className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-[1.02]"
-          >
-            {isCreating ? (
-              "Creating Token..."
-            ) : (
-              <>
-                <Rocket className="mr-2 h-5 w-5" /> Launch Token! 🚀
-              </>
-            )}
-          </Button>
+          {!wallet.connected ? (
+            <Button 
+              type="button"
+              onClick={() => wallet.connect()}
+              className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+            >
+              <Wallet className="mr-2 h-5 w-5" /> Connect Wallet
+            </Button>
+          ) : (
+            <Button 
+              type="submit" 
+              disabled={isCreating}
+              className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-[1.02]"
+            >
+              {isCreating ? (
+                "Creating Token..."
+              ) : (
+                <>
+                  <Rocket className="mr-2 h-5 w-5" /> Launch Token! 🚀
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </form>
     </Form>

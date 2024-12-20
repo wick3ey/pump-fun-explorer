@@ -1,8 +1,19 @@
 import { TokenMetadata } from "@/types/token";
 import { WalletContextState } from "@solana/wallet-adapter-react";
-import { Connection, Transaction, SystemProgram, Keypair } from "@solana/web3.js";
+import { Connection, Transaction, SystemProgram, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { createMint, getOrCreateAssociatedTokenAccount, mintTo } from "@solana/spl-token";
 import { toast } from "@/components/ui/use-toast";
+
+const calculateTotalCost = (initialBuyAmount: number, power: string): number => {
+  const powerCosts: { [key: string]: number } = {
+    "0": 0,
+    "100": 0.7,
+    "500": 1.5,
+    "1000": 3.5
+  };
+  
+  return initialBuyAmount + (powerCosts[power] || 0);
+};
 
 export const createToken = async (
   metadata: TokenMetadata,
@@ -16,52 +27,77 @@ export const createToken = async (
   try {
     const connection = new Connection("https://api.mainnet-beta.solana.com");
     
-    // Create a new keypair for the mint authority
-    const mintAuthority = Keypair.generate();
+    // Calculate total cost including power boost
+    const totalCost = calculateTotalCost(initialBuyAmount, metadata.power || "0");
     
-    // Create new mint with the generated keypair
-    const mint = await createMint(
-      connection,
-      mintAuthority, // Use the keypair as the payer
-      mintAuthority.publicKey, // Mint authority
-      mintAuthority.publicKey, // Freeze authority
-      9 // Decimals
+    // Create transaction for the initial payment
+    const paymentTransaction = new Transaction().add(
+      SystemProgram.transfer({
+        fromPubkey: wallet.publicKey,
+        toPubkey: Keypair.generate().publicKey, // Replace with your project's wallet
+        lamports: totalCost * LAMPORTS_PER_SOL
+      })
     );
 
-    // Get the token account of the wallet address, and if it does not exist, create it
+    // Get the latest blockhash
+    paymentTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    paymentTransaction.feePayer = wallet.publicKey;
+
+    // Request wallet signature
+    const signedTx = await wallet.signTransaction(paymentTransaction);
+    const signature = await connection.sendRawTransaction(signedTx.serialize());
+    await connection.confirmTransaction(signature, "confirmed");
+
+    // Create mint authority
+    const mintAuthority = Keypair.generate();
+    
+    // Create new mint
+    const mint = await createMint(
+      connection,
+      mintAuthority,
+      mintAuthority.publicKey,
+      mintAuthority.publicKey,
+      9
+    );
+
+    // Create token account
     const tokenAccount = await getOrCreateAssociatedTokenAccount(
       connection,
-      mintAuthority, // Use the keypair as the payer
+      mintAuthority,
       mint,
       wallet.publicKey
     );
 
-    // Mint tokens to the token account
+    // Mint initial supply
     await mintTo(
       connection,
-      mintAuthority, // Use the keypair as the payer
+      mintAuthority,
       mint,
       tokenAccount.address,
-      mintAuthority, // Use the keypair as the mint authority
-      1000000 * Math.pow(10, 9) // Amount to mint
+      mintAuthority,
+      1000000 * Math.pow(10, 9)
     );
 
-    // Create a transaction to transfer ownership of the mint to the wallet
-    const transaction = new Transaction().add(
+    // Transfer ownership
+    const transferOwnershipTx = new Transaction().add(
       SystemProgram.transfer({
         fromPubkey: mintAuthority.publicKey,
         toPubkey: wallet.publicKey,
-        lamports: 0, // Symbolic transfer
+        lamports: 0
       })
     );
 
-    // Sign and send the transaction
-    transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-    transaction.feePayer = wallet.publicKey;
+    transferOwnershipTx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    transferOwnershipTx.feePayer = wallet.publicKey;
     
-    const signedTx = await wallet.signTransaction(transaction);
-    const signature = await connection.sendRawTransaction(signedTx.serialize());
-    await connection.confirmTransaction(signature, "confirmed");
+    const signedTransferTx = await wallet.signTransaction(transferOwnershipTx);
+    const transferSignature = await connection.sendRawTransaction(signedTransferTx.serialize());
+    await connection.confirmTransaction(transferSignature, "confirmed");
+
+    toast({
+      title: "Success!",
+      description: "Token created successfully",
+    });
 
     return {
       success: true,
