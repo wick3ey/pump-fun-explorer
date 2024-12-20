@@ -26,16 +26,16 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#13141F] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    }>
-      <WalletContextProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <BrowserRouter>
-              <div className="min-h-screen bg-[#13141F]">
+    <WalletContextProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <BrowserRouter>
+            <div className="min-h-screen bg-[#13141F]">
+              <Suspense fallback={
+                <div className="min-h-screen bg-[#13141F] flex items-center justify-center">
+                  <div className="text-white">Loading...</div>
+                </div>
+              }>
                 <Header />
                 <Toaster />
                 <Sonner />
@@ -53,12 +53,12 @@ const App = () => (
                     </Routes>
                   </div>
                 </main>
-              </div>
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </WalletContextProvider>
-    </Suspense>
+              </Suspense>
+            </div>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </WalletContextProvider>
   </QueryClientProvider>
 );
 
