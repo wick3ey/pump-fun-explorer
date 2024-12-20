@@ -31,7 +31,8 @@ export const createToken = async (
   }
 
   try {
-    const connection = new Connection("https://api.mainnet-beta.solana.com");
+    // Use environment variable for RPC endpoint
+    const connection = new Connection(import.meta.env.VITE_RPC_ENDPOINT || "https://api.mainnet-beta.solana.com");
     
     // Calculate total cost including power boost
     const totalCost = calculateTotalCost(initialBuyAmount, metadata.power || "0");
@@ -46,7 +47,8 @@ export const createToken = async (
     );
 
     // Get the latest blockhash
-    paymentTransaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    const { blockhash } = await connection.getLatestBlockhash();
+    paymentTransaction.recentBlockhash = blockhash;
     paymentTransaction.feePayer = wallet.publicKey;
 
     // Request wallet signature
