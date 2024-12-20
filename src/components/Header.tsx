@@ -1,14 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { BarChart3, Menu } from "lucide-react";
-import { DegenModeToggle } from "./DegenModeToggle";
-import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
 
 export const Header = () => {
-  const [isDegenMode, setIsDegenMode] = useState(false);
   const location = useLocation();
   const { connected } = useWallet();
 
@@ -53,7 +50,6 @@ export const Header = () => {
           </div>
           
           <div className="hidden md:flex items-center space-x-4">
-            <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
             <WalletMultiButton className="bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white" />
           </div>
 
@@ -106,8 +102,7 @@ export const Header = () => {
                       </Button>
                     </Link>
                   </div>
-                  <div className="mt-auto space-y-6">
-                    <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
+                  <div className="mt-auto">
                     <WalletMultiButton className="w-full bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white" />
                   </div>
                 </div>
