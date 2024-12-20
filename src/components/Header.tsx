@@ -18,8 +18,15 @@ export const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
-            <Link to="/" className="text-xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-              SolUp
+            <Link to="/" className="flex items-center space-x-3">
+              <img 
+                src="/lovable-uploads/3c6eb1d4-4d2f-4f87-a090-6c26cddb19f8.png" 
+                alt="DegenZone Logo" 
+                className="h-8 w-8"
+              />
+              <span className="text-xl font-orbitron font-bold text-white">
+                DegenZone
+              </span>
             </Link>
             <div className="hidden md:flex items-center space-x-4">
               <Link to="/">
