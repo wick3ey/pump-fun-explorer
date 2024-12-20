@@ -1,10 +1,14 @@
 import 'process';
+import { Buffer } from 'buffer';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
-// Initialize root element
+// Sätt globala variabler för polyfills
+window.Buffer = Buffer;
+
+// Initialisera root-element
 const rootElement = document.getElementById('root');
   
 if (!rootElement) {

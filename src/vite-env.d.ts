@@ -2,6 +2,7 @@
 
 interface Window {
   global: typeof window;
+  Buffer: typeof Buffer;
 }
 
 declare module 'process/browser';
@@ -16,4 +17,4 @@ declare module 'assert';
 declare module 'url';
 declare module 'util';
 declare module 'stream-http';
-declare module 'vite-compatible-readable-stream';
+declare module 'buffer';
