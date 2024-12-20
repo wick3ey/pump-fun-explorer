@@ -1,15 +1,15 @@
 import { FC, ReactNode, useMemo } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { WalletModalProvider, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { 
-  PhantomWalletAdapter, 
+  PhantomWalletAdapter,
   SolflareWalletAdapter,
-  CloverWalletAdapter,
-  TorusWalletAdapter
+  BackpackWalletAdapter,
+  TorusWalletAdapter,
 } from '@solana/wallet-adapter-wallets';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl } from '@solana/web3.js';
 import { useToast } from '@/components/ui/use-toast';
+require('@solana/wallet-adapter-react-ui/styles.css');
 
 interface WalletContextProviderProps {
   children: ReactNode;
@@ -17,15 +17,14 @@ interface WalletContextProviderProps {
 
 export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children }) => {
   const { toast } = useToast();
-  
   const endpoint = import.meta.env.VITE_RPC_ENDPOINT || clusterApiUrl('mainnet-beta');
   
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
-      new CloverWalletAdapter(),
-      new TorusWalletAdapter()
+      new BackpackWalletAdapter(),
+      new TorusWalletAdapter(),
     ],
     []
   );
@@ -34,12 +33,12 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider 
         wallets={wallets} 
-        autoConnect={false}
+        autoConnect={true}
         onError={(error) => {
-          console.error('Plånboksfel:', error);
+          console.error('Wallet error:', error);
           toast({
-            title: "Anslutningsfel",
-            description: "Kunde inte ansluta till plånboken. Försök igen.",
+            title: "Wallet Error",
+            description: "Could not connect to wallet. Please try again.",
             variant: "destructive",
           });
         }}

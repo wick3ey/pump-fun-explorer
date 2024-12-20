@@ -1,32 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
-import { BarChart3, Wallet, Menu } from "lucide-react";
+import { BarChart3, Menu } from "lucide-react";
 import { DegenModeToggle } from "./DegenModeToggle";
 import { useState } from "react";
 import { LoginDialog } from "./LoginDialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
 
 export const Header = () => {
   const [isDegenMode, setIsDegenMode] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const location = useLocation();
-  const { connected, connect, disconnect } = useWallet();
+  const { connected } = useWallet();
 
   const isActive = (path: string) => {
     return location.pathname === path;
-  };
-
-  const handleWalletClick = async () => {
-    if (connected) {
-      await disconnect();
-    } else {
-      try {
-        await connect();
-      } catch (error) {
-        console.error('Plånboksfel:', error);
-      }
-    }
   };
 
   return (
@@ -73,13 +62,7 @@ export const Header = () => {
               Log in
             </Button>
             <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
-            <Button
-              onClick={handleWalletClick}
-              className="bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white flex items-center gap-2"
-            >
-              <Wallet className="h-4 w-4" />
-              {connected ? 'Disconnect' : 'Connect Wallet'}
-            </Button>
+            <WalletMultiButton className="bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white" />
           </div>
 
           {/* Mobile Menu */}
@@ -139,13 +122,7 @@ export const Header = () => {
                       Log in
                     </Button>
                     <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
-                    <Button
-                      onClick={handleWalletClick}
-                      className="w-full bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white flex items-center justify-center gap-2 text-lg py-4"
-                    >
-                      <Wallet className="h-5 w-5" />
-                      {connected ? 'Disconnect' : 'Connect Wallet'}
-                    </Button>
+                    <WalletMultiButton className="w-full bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white" />
                   </div>
                 </div>
               </SheetContent>
