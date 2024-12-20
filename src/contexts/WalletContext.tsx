@@ -18,7 +18,7 @@ interface WalletContextProviderProps {
 
 export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children }) => {
   const { toast } = useToast();
-  const endpoint = import.meta.env.VITE_RPC_ENDPOINT || clusterApiUrl('mainnet-beta');
+  const endpoint = useMemo(() => clusterApiUrl('mainnet-beta'), []);
   
   const wallets = useMemo(
     () => [
