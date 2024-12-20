@@ -26,10 +26,24 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "stream": "stream-browserify",
+      "crypto": "crypto-browserify",
+      "http": "stream-http",
+      "https": "https-browserify",
+      "zlib": "browserify-zlib",
+      "buffer": "buffer",
     },
   },
   define: {
     'process.env': {},
     global: 'globalThis',
+    'Buffer': ['buffer', 'Buffer'],
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis'
+      }
+    }
+  }
 }));
