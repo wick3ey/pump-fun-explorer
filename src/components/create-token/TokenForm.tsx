@@ -69,6 +69,10 @@ export const TokenForm = () => {
 
     setIsCreating(true);
     try {
+      // Get the first file from each FileList
+      const pfpFile = values.pfpImage[0];
+      const headerFile = values.headerImage[0];
+
       const result = await createToken(
         {
           name: values.name,
@@ -77,8 +81,8 @@ export const TokenForm = () => {
           twitter: values.twitter,
           telegram: values.telegram,
           website: values.website,
-          pfpImage: values.pfpImage,
-          headerImage: values.headerImage,
+          pfpImage: pfpFile,
+          headerImage: headerFile,
           tokenMode: values.tokenMode,
         },
         values.initialBuyAmount,

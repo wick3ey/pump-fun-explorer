@@ -29,8 +29,8 @@ export interface TokenMetadata {
   twitter?: string;
   telegram?: string;
   website?: string;
-  pfpImage?: File;
-  headerImage?: File;
+  pfpImage: File;
+  headerImage: File;
   tokenMode: 'og' | 'doxxed' | 'locked';
 }
 
