@@ -14,25 +14,29 @@ interface LoginDialogProps {
 }
 
 export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
-  const [isLoading, setIsLoading] = useState(false);
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isLoading } = useAuth();
 
   const checkUserProfile = async (userId: string) => {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', userId)
-      .single();
-    
-    return !!profile?.username;
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', userId)
+        .single();
+      
+      if (error) throw error;
+      return !!profile?.username;
+    } catch (error) {
+      console.error('Error checking user profile:', error);
+      return false;
+    }
   };
 
   const handleGoogleSignIn = async () => {
     try {
-      setIsLoading(true);
       await login();
     } catch (error) {
       console.error('Login error:', error);
@@ -41,8 +45,6 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
         description: "An unexpected error occurred during login",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -54,7 +56,6 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
   };
 
   useEffect(() => {
-    // Check auth state on component mount
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -65,12 +66,13 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
       }
     };
     
-    checkAuth();
+    if (open) {
+      checkAuth();
+    }
+  }, [open]);
 
-    // Listen for auth state changes
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event);
-      
       if (event === 'SIGNED_IN' && session?.user) {
         const hasProfile = await checkUserProfile(session.user.id);
         if (!hasProfile) {
@@ -103,12 +105,17 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <Button
-              className="w-full bg-white hover:bg-gray-100 text-black"
+              className="w-full bg-white hover:bg-gray-100 text-black relative"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
             >
               <Chrome className="mr-2 h-4 w-4" />
               {isLoading ? 'Signing in...' : 'Continue with Google'}
+              {isLoading && (
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
+                </div>
+              )}
             </Button>
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
