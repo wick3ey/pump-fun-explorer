@@ -3,16 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
-import { AuthContextType } from "./auth/types";
-import { clearAuthState } from "./auth/utils";
+
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  isAuthenticated: boolean;
+  login: () => Promise<void>;
+  logout: () => Promise<void>;
+  isLoading: boolean;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -24,15 +31,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+      if (event === 'SIGNED_IN' && session?.user) {
         updateAuthState(session);
         
-        // Check if user has a profile
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('username')
           .eq('id', session.user.id)
           .single();
+
+        if (error) {
+          toast({
+            title: "Error fetching profile",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
 
         if (profile?.username) {
           toast({
@@ -43,8 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else if (event === 'SIGNED_OUT') {
         updateAuthState(null);
-        clearAuthState();
         navigate('/');
+        toast({
+          title: "Signed out",
+          description: "You have been signed out successfully",
+        });
       }
     });
 
@@ -65,7 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         },
       });
-
       if (error) throw error;
     } catch (error) {
       console.error('Login error:', error);
@@ -86,7 +103,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       
       updateAuthState(null);
-      clearAuthState();
       navigate('/');
       
       toast({

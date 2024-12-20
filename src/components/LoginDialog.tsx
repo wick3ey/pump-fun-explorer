@@ -18,7 +18,7 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
   const [isGoogleSignInActive, setIsGoogleSignInActive] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { login, isLoading } = useAuth();
+  const { login } = useAuth();
 
   const handleGoogleSignIn = async () => {
     try {
@@ -78,7 +78,7 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
               <Button
                 className="w-full bg-white hover:bg-gray-100 text-black"
                 onClick={handleGoogleSignIn}
-                disabled={isLoading}
+                disabled={isGoogleSignInActive}
               >
                 <Chrome className="mr-2 h-4 w-4" />
                 Continue with Google

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UsernameSetupDialogProps {
   open: boolean;
@@ -15,6 +16,7 @@ export const UsernameSetupDialog = ({ open, onOpenChange, onComplete }: Username
   const [username, setUsername] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSubmit = async () => {
     if (!username.trim()) {
@@ -44,8 +46,6 @@ export const UsernameSetupDialog = ({ open, onOpenChange, onComplete }: Username
         return;
       }
 
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
       // Insert profile
