@@ -15,6 +15,7 @@ interface LoginDialogProps {
 
 export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
   const [showUsernameSetup, setShowUsernameSetup] = useState(false);
+  const [isGoogleSignInActive, setIsGoogleSignInActive] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { login, isLoading } = useAuth();
@@ -37,6 +38,7 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
 
   const handleGoogleSignIn = async () => {
     try {
+      setIsGoogleSignInActive(true);
       await login();
     } catch (error) {
       console.error('Login error:', error);
@@ -45,6 +47,8 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
         description: "An unexpected error occurred during login",
         variant: "destructive",
       });
+    } finally {
+      setIsGoogleSignInActive(false);
     }
   };
 
@@ -104,19 +108,21 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-4">
-            <Button
-              className="w-full bg-white hover:bg-gray-100 text-black relative"
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-            >
-              <Chrome className="mr-2 h-4 w-4" />
-              {isLoading ? 'Signing in...' : 'Continue with Google'}
-              {isLoading && (
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
-                </div>
-              )}
-            </Button>
+            {isGoogleSignInActive ? (
+              <div className="w-full bg-white/10 p-4 rounded-lg flex items-center justify-center space-x-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span className="text-white">Signing in...</span>
+              </div>
+            ) : (
+              <Button
+                className="w-full bg-white hover:bg-gray-100 text-black"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+              >
+                <Chrome className="mr-2 h-4 w-4" />
+                Continue with Google
+              </Button>
+            )}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-gray-700" />
