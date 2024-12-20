@@ -1,5 +1,6 @@
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { TokenRow } from "@/integrations/supabase/types";
 
 export interface DexToken {
   chainId: string;
@@ -46,7 +47,7 @@ export const fetchTrendingTokens = async (): Promise<DexToken[]> => {
     console.log('Fetched tokens:', tokens);
 
     // Transform the tokens into the expected DexToken format
-    const formattedTokens: DexToken[] = tokens.map(token => ({
+    const formattedTokens: DexToken[] = (tokens as TokenRow[]).map(token => ({
       chainId: 'solana',
       pairAddress: token.contract_address || '',
       baseToken: {
@@ -54,7 +55,7 @@ export const fetchTrendingTokens = async (): Promise<DexToken[]> => {
         name: token.name,
         symbol: token.symbol,
       },
-      priceUsd: '0', // You might want to fetch this from another source
+      priceUsd: '0',
       volume: {
         h24: 0,
         h1: 0,
@@ -64,7 +65,7 @@ export const fetchTrendingTokens = async (): Promise<DexToken[]> => {
       },
       marketCap: Number(token.market_cap) || 0,
       info: {
-        imageUrl: `/placeholder.svg`, // You might want to store image URLs in your tokens table
+        imageUrl: `/placeholder.svg`,
       },
       power: token.power || 0,
     }));
