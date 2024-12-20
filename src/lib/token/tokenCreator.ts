@@ -1,4 +1,4 @@
-import { Connection, PublicKey, Keypair } from '@solana/web3.js';
+import { Connection, PublicKey, Keypair, VersionedTransaction } from '@solana/web3.js';
 import { toast } from "@/components/ui/use-toast";
 import { uploadMetadataToIPFS } from './ipfsService';
 import { getCreateTransaction, sendTransactionWithRetry } from './transactionService';
@@ -19,6 +19,12 @@ export const validateInitialBuy = (amount: number): string | null => {
     return `Maximum allowed amount is ${MAX_SOL_AMOUNT} SOL`;
   }
   return null;
+};
+
+export const calculateTokenSupply = (initialBuyAmount: number): number => {
+  const baseSupply = 1000000;
+  const multiplier = Math.sqrt(initialBuyAmount * 100);
+  return Math.floor(baseSupply * multiplier);
 };
 
 export const createToken = async ({
@@ -80,11 +86,14 @@ export const createToken = async ({
 
     const metadataUri = await uploadMetadataToIPFS(metadata);
     console.log("Metadata uploaded to IPFS:", metadataUri);
-    
+
     // Generate a new keypair for the mint account
     const entropy = new Uint8Array(32);
     window.crypto.getRandomValues(entropy);
     const mintKeypair = Keypair.fromSeed(entropy);
+
+    const supply = calculateTokenSupply(initialBuyAmount);
+    console.log("Calculated token supply:", supply);
 
     toast({
       title: "Metadata secured",
@@ -101,6 +110,7 @@ export const createToken = async ({
       mint: mintKeypair.publicKey,
       metadataUri,
       initialBuyAmount,
+      supply,
     });
 
     const tx = VersionedTransaction.deserialize(txData);
