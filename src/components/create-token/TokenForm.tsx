@@ -13,6 +13,7 @@ import { SocialLinksSection } from "./SocialLinksSection";
 import { useWallet } from '@solana/wallet-adapter-react';
 import { createToken } from "@/lib/token/tokenCreator";
 import { FormFields } from "./FormFields";
+import { useNavigate } from "react-router-dom";
 
 const formSchema = z.object({
   name: z.string().min(1, "Token name is required"),
@@ -32,6 +33,7 @@ export const TokenForm = () => {
   const { toast } = useToast();
   const wallet = useWallet();
   const [isCreating, setIsCreating] = useState(false);
+  const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -74,11 +76,17 @@ export const TokenForm = () => {
       return;
     }
 
+    if (!values.pfpImage?.[0] || !values.headerImage?.[0]) {
+      toast({
+        title: "Missing Images",
+        description: "Please upload both profile and header images",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsCreating(true);
     try {
-      const pfpFile = values.pfpImage[0];
-      const headerFile = values.headerImage[0];
-
       const result = await createToken(
         {
           name: values.name,
@@ -87,8 +95,8 @@ export const TokenForm = () => {
           twitter: values.twitter,
           telegram: values.telegram,
           website: values.website,
-          pfpImage: pfpFile,
-          headerImage: headerFile,
+          pfpImage: values.pfpImage[0],
+          headerImage: values.headerImage[0],
           tokenMode: values.tokenMode,
           power: values.power,
         },
@@ -99,14 +107,10 @@ export const TokenForm = () => {
       if (result.success) {
         toast({
           title: "Token Created!",
-          description: result.message,
+          description: `Your token has been created successfully! View transaction: ${result.txUrl}`,
         });
-      } else {
-        toast({
-          title: "Error creating token",
-          description: result.message,
-          variant: "destructive",
-        });
+        // Navigate to token profile page after successful creation
+        navigate(`/token/${values.symbol}`);
       }
     } catch (error) {
       console.error("Token creation error:", error);
