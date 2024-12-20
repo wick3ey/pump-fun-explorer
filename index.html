@@ -9,29 +9,31 @@
     <meta property="og:image" content="/og-image.png" />
     <meta name="keywords" content="solana, token creation, cryptocurrency, blockchain, secure" />
     <link rel="icon" type="image/png" href="/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/styles/preloader.css" />
     <!-- Security headers -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self' https:;
       script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
-      style-src 'self' 'unsafe-inline' https:;
+      style-src 'self' 'unsafe-inline' https: https://fonts.googleapis.com;
       img-src 'self' https: data: blob:;
       connect-src 'self' https: wss:;
-      font-src 'self' https:;
+      font-src 'self' https: https://fonts.gstatic.com;
       object-src 'none';
       media-src 'self' https:;
       frame-src 'self' https:;
     " />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin" />
-    <link rel="stylesheet" href="/src/styles/preloader.css" />
   </head>
   <body>
     <div class="preloader">
-      <div class="cyber-grid"></div>
-      <div class="scan-line"></div>
+      <div class="cyber-grid-container"></div>
       <div class="loader-content">
-        <div class="degen-text">DEGEN</div>
-        <div class="zone-text">ZONE</div>
+        <div class="degen-text" data-text="DEGEN">DEGEN</div>
+        <div class="zone-text" data-text="ZONE">ZONE</div>
         <div class="progress-container">
           <div class="progress-bar"></div>
         </div>
