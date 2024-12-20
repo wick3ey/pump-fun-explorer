@@ -2,9 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import { TokenImageUpload, tokenImageSchema } from "./TokenImageUpload";
 import { PowerSelector } from "./PowerSelector";
@@ -14,6 +12,7 @@ import { SocialLinksSection } from "./SocialLinksSection";
 import { SafeDegenToggle } from "./SafeDegenToggle";
 import { useWallet } from '@solana/wallet-adapter-react';
 import { createToken } from "@/lib/token/tokenCreator";
+import { FormFields } from "./FormFields";
 
 const formSchema = z.object({
   name: z.string().min(1, "Token name is required"),
@@ -67,7 +66,8 @@ export const TokenForm = () => {
           twitter: values.twitter,
           telegram: values.telegram,
           website: values.website,
-          image: values.image,
+          pfpImage: values.pfpImage,
+          headerImage: values.headerImage,
         },
         values.initialBuyAmount,
         wallet
@@ -100,89 +100,9 @@ export const TokenForm = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <TokenImageUpload form={form} />
-        
         <SafeDegenToggle form={form} />
-        
         <PowerSelector form={form} />
-
-        <div className="grid gap-8 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-white">Token Name</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="e.g. Pepe Token" 
-                    {...field}
-                    className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="symbol"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-white">Token Symbol</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="e.g. PEPE" 
-                    {...field}
-                    className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-white">Description</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Describe your token..." 
-                  {...field}
-                  className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500 min-h-[120px]"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="initialBuyAmount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-white">Initial Buy Amount (SOL)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number"
-                  step="0.1"
-                  min="0.1"
-                  placeholder="0.1"
-                  {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                  className="bg-[#13141F]/50 border-[#2A2F3C] text-white placeholder:text-gray-500 focus:ring-purple-500"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
+        <FormFields form={form} />
         <SocialLinksSection form={form} />
 
         <div className="space-y-4">

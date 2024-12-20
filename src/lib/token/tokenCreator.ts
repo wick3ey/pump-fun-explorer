@@ -1,6 +1,5 @@
 import { Connection, PublicKey, VersionedTransaction } from '@solana/web3.js';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { toast } from "@/components/ui/use-toast";
+import { WalletContextState } from '@solana/wallet-adapter-react';
 import bs58 from 'bs58';
 
 export interface TokenMetadata {
@@ -10,23 +9,27 @@ export interface TokenMetadata {
   twitter?: string;
   telegram?: string;
   website?: string;
-  image?: File;
+  pfpImage?: FileList;
+  headerImage?: FileList;
 }
 
 export async function createToken(
   metadata: TokenMetadata,
   amount: number,
-  wallet: ReturnType<typeof useWallet>
+  wallet: WalletContextState
 ) {
   try {
     if (!wallet.publicKey || !wallet.signTransaction) {
       throw new Error('Wallet not connected');
     }
 
-    // Upload metadata and image to IPFS
+    // Upload metadata and images to IPFS
     const formData = new FormData();
-    if (metadata.image) {
-      formData.append("file", metadata.image);
+    if (metadata.pfpImage?.[0]) {
+      formData.append("file", metadata.pfpImage[0]);
+    }
+    if (metadata.headerImage?.[0]) {
+      formData.append("headerImage", metadata.headerImage[0]);
     }
     formData.append("name", metadata.name);
     formData.append("symbol", metadata.symbol);
@@ -82,9 +85,9 @@ export async function createToken(
     const signature = await connection.sendTransaction(signedTx);
 
     return {
-      signature,
       success: true,
-      message: `Transaction sent: https://solscan.io/tx/${signature}`
+      message: `Transaction sent: https://solscan.io/tx/${signature}`,
+      signature
     };
 
   } catch (error) {
