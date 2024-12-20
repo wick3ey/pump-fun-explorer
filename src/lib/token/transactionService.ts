@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 const PUMP_PORTAL_API_BASE = 'https://pumpportal.fun/api';
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
+const TRADING_FEE_PERCENTAGE = 0.5; // 0.5% trading fee
+const ESTIMATED_SOL_NETWORK_FEE = 0.000005; // Approximate Solana network fee in SOL
 
 export async function getCreateTransaction(config: TransactionConfig): Promise<Uint8Array> {
   try {
@@ -15,6 +17,22 @@ export async function getCreateTransaction(config: TransactionConfig): Promise<U
     if (!config.mint || !config.publicKey) {
       throw new Error("Invalid transaction configuration");
     }
+
+    // Calculate fees
+    const tradingFee = (config.initialBuyAmount * TRADING_FEE_PERCENTAGE) / 100;
+    const totalAmount = config.initialBuyAmount + ESTIMATED_SOL_NETWORK_FEE;
+
+    console.log("Fee breakdown:", {
+      tradingFee: `${tradingFee} SOL (${TRADING_FEE_PERCENTAGE}%)`,
+      networkFee: `${ESTIMATED_SOL_NETWORK_FEE} SOL (estimated)`,
+      totalAmount: `${totalAmount} SOL`
+    });
+
+    // Show fee breakdown to user
+    toast({
+      title: "Transaction Fee Breakdown",
+      description: `Trading fee: ${tradingFee.toFixed(4)} SOL\nNetwork fee: ~${ESTIMATED_SOL_NETWORK_FEE} SOL\nTotal: ${totalAmount.toFixed(4)} SOL`,
+    });
 
     const response = await fetchWithRetry(`${PUMP_PORTAL_API_BASE}/trade-local`, {
       method: "POST",
