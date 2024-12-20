@@ -22,9 +22,8 @@ export const validateInitialBuy = (amount: number): string | null => {
 };
 
 export const calculateTokenSupply = (initialBuyAmount: number): number => {
-  // Improved token supply calculation based on initial buy amount
-  const baseSupply = 1000000; // 1 million base supply
-  const multiplier = Math.sqrt(initialBuyAmount * 100); // Square root scaling
+  const baseSupply = 1000000;
+  const multiplier = Math.sqrt(initialBuyAmount * 100);
   return Math.floor(baseSupply * multiplier);
 };
 
@@ -52,19 +51,27 @@ export const createToken = async ({
   });
 
   try {
-    // Create token record in Supabase
+    // Get user's auth ID from Supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.id) {
+      throw new Error("Användaren är inte autentiserad");
+    }
+
+    // Create token record in Supabase with auth user ID
     const { data: tokenData, error: tokenError } = await supabase
       .from('tokens')
       .insert([{
         name: metadata.name,
         symbol: metadata.symbol,
         description: metadata.description,
-        creator_id: wallet.publicKey.toString(),
+        creator_id: user.id, // Use auth user ID instead of wallet public key
+        contract_address: null, // Will be updated after token creation
       }])
       .select()
       .single();
 
     if (tokenError) {
+      console.error("Token creation error:", tokenError);
       throw new Error(`Kunde inte skapa token: ${tokenError.message}`);
     }
 
@@ -120,12 +127,24 @@ export const createToken = async ({
 
     const signature = await sendTransactionWithRetry(connection, signedTx);
 
-    // Record transaction in Supabase
+    // Update token with contract address
+    const { error: updateError } = await supabase
+      .from('tokens')
+      .update({ 
+        contract_address: mint.publicKey.toString(),
+      })
+      .eq('id', tokenData.id);
+
+    if (updateError) {
+      console.error("Kunde inte uppdatera token kontraktadress:", updateError);
+    }
+
+    // Record initial transaction
     const { error: txError } = await supabase
       .from('transactions')
       .insert({
         token_id: tokenData.id,
-        user_id: wallet.publicKey.toString(),
+        user_id: user.id,
         amount: initialBuyAmount,
         price: initialBuyAmount,
         status: 'completed',
@@ -134,16 +153,6 @@ export const createToken = async ({
 
     if (txError) {
       console.error("Kunde inte registrera transaktion:", txError);
-    }
-
-    // Update token with contract address
-    const { error: updateError } = await supabase
-      .from('tokens')
-      .update({ contract_address: mint.publicKey.toString() })
-      .eq('id', tokenData.id);
-
-    if (updateError) {
-      console.error("Kunde inte uppdatera token kontraktadress:", updateError);
     }
 
     toast({
