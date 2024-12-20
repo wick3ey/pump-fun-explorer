@@ -16,16 +16,16 @@ export const Header = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#13141F] border-b border-gray-800 shadow-lg">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-6">
-            <Link to="/" className="flex items-center space-x-4">
+        <div className="flex items-center justify-between h-20">
+          <div className="flex items-center space-x-8">
+            <Link to="/" className="flex items-center space-x-6">
               <img 
                 src="/lovable-uploads/3c6eb1d4-4d2f-4f87-a090-6c26cddb19f8.png" 
                 alt="DegenZone Logo" 
-                className="h-12 w-12 hover:scale-105 transition-transform"
+                className="h-16 w-16 hover:scale-105 transition-transform"
               />
-              <span className="text-2xl font-orbitron font-bold bg-gradient-radial from-[#9b87f5] via-[#7E69AB] to-[#6E59A5] bg-clip-text text-transparent hover:from-[#8B5CF6] hover:via-[#D946EF] hover:to-[#F97316] transition-colors">
-                DegenZone
+              <span className="text-3xl tracking-[0.2em] font-orbitron font-bold bg-gradient-radial from-[#64E5FF] via-[#337FFF] to-[#1E45FF] bg-clip-text text-transparent hover:from-[#64E5FF] hover:via-[#337FFF] hover:to-[#1E45FF] transition-colors uppercase">
+                Degen Zone
               </span>
             </Link>
             <div className="hidden md:flex items-center space-x-4">
