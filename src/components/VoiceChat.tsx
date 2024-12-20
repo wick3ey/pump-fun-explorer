@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { LoginDialog } from "./LoginDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import AgoraRTC, { IAgoraRTCRemoteUser, IMicrophoneAudioTrack } from "agora-rtc-sdk-ng";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VoiceChatProps {
   tokenSymbol: string;
@@ -23,11 +24,30 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [client, setClient] = useState<ReturnType<typeof AgoraRTC.createClient> | null>(null);
   const [audioTrack, setAudioTrack] = useState<IMicrophoneAudioTrack | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
 
   const appId = ""; // You'll need to add your Agora App ID
+
+  useEffect(() => {
+    const fetchUsername = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single();
+        setUsername(profile?.username || null);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchUsername();
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!appId) {
@@ -70,11 +90,19 @@ export const VoiceChat = ({ tokenSymbol }: VoiceChatProps) => {
       await client.publish(track);
 
       // Update participants list
-      setParticipants(prev => [...prev, { id: uid, name: `User#${uid}`, speaking: false }]);
+      setParticipants(prev => [...prev, { 
+        id: uid, 
+        name: username || `User#${uid}`, 
+        speaking: false 
+      }]);
 
       // Set up user joined listener
       client.on("user-joined", (user: IAgoraRTCRemoteUser) => {
-        setParticipants(prev => [...prev, { id: user.uid, name: `User#${user.uid}`, speaking: false }]);
+        setParticipants(prev => [...prev, { 
+          id: user.uid, 
+          name: `User#${user.uid}`, 
+          speaking: false 
+        }]);
         toast({
           title: "User joined",
           description: `User#${user.uid} joined the voice chat`,

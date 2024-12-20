@@ -15,14 +15,33 @@ export const Header = () => {
   const location = useLocation();
   const { connected } = useWallet();
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setIsSignedIn(!!session);
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', session.user.id)
+          .single();
+        setUsername(profile?.username || null);
+      } else {
+        setUsername(null);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleAuthAction = async () => {
+    if (isSignedIn) {
+      await supabase.auth.signOut();
+    } else {
+      setShowLoginDialog(true);
+    }
+  };
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -66,14 +85,14 @@ export const Header = () => {
           
           <div className="hidden md:flex items-center space-x-4">
             <Button 
-              onClick={() => setShowLoginDialog(true)}
+              onClick={handleAuthAction}
               className={`${
                 isSignedIn 
-                  ? 'bg-green-500 hover:bg-green-600' 
+                  ? 'bg-red-500 hover:bg-red-600' 
                   : 'bg-[#9b87f5] hover:bg-[#8b77e5]'
               } text-white`}
             >
-              {isSignedIn ? 'SIGNED IN' : 'LOG IN'}
+              {isSignedIn ? 'Sign Out' : 'LOG IN'}
             </Button>
             <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
             <WalletMultiButton className="bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white" />

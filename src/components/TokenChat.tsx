@@ -2,9 +2,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LoginDialog } from "./LoginDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ChatMessage {
   id: number;
@@ -17,6 +18,7 @@ export const TokenChat = () => {
   const [message, setMessage] = useState("");
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const { isAuthenticated } = useAuth();
+  const [username, setUsername] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
@@ -32,6 +34,24 @@ export const TokenChat = () => {
     }
   ]);
 
+  useEffect(() => {
+    const fetchUsername = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single();
+        setUsername(profile?.username || null);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchUsername();
+    }
+  }, [isAuthenticated]);
+
   const handleSendMessage = () => {
     if (!isAuthenticated) {
       setShowLoginDialog(true);
@@ -42,7 +62,7 @@ export const TokenChat = () => {
     
     setMessages([...messages, {
       id: messages.length + 1,
-      user: "You",
+      user: username || "Anonymous",
       message: message.trim(),
       timestamp: "just now"
     }]);
