@@ -18,20 +18,35 @@
   font-weight: 800;
   letter-spacing: 0.15em;
   color: #4DEEEA;
-  animation: text-glitch 3s infinite;
+  animation: text-glitch 1.5s infinite;
 }
 
 @keyframes text-glitch {
   0% {
     text-shadow: 2px 2px #74EBD5, -2px -2px #4DEEEA;
   }
-  2% {
+  1% {
     text-shadow: -2px -2px #74EBD5, 2px 2px #4DEEEA;
   }
-  4% {
+  2% {
     text-shadow: 2px -2px #74EBD5, -2px 2px #4DEEEA;
   }
-  6% {
+  3% {
+    text-shadow: 0 0 #74EBD5, 0 0 #4DEEEA;
+  }
+  50% {
+    text-shadow: 0 0 #74EBD5, 0 0 #4DEEEA;
+  }
+  51% {
+    text-shadow: 2px 2px #74EBD5, -2px -2px #4DEEEA;
+  }
+  52% {
+    text-shadow: -2px -2px #74EBD5, 2px 2px #4DEEEA;
+  }
+  53% {
+    text-shadow: 2px -2px #74EBD5, -2px 2px #4DEEEA;
+  }
+  54% {
     text-shadow: 0 0 #74EBD5, 0 0 #4DEEEA;
   }
   100% {
