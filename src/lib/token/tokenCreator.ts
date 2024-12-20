@@ -3,6 +3,12 @@ import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Connection, Transaction, SystemProgram, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { createMint, getOrCreateAssociatedTokenAccount, mintTo } from "@solana/spl-token";
 import { toast } from "@/components/ui/use-toast";
+import { Buffer } from 'buffer';
+
+// Polyfill Buffer for browser environment
+if (typeof window !== 'undefined') {
+  window.Buffer = Buffer;
+}
 
 const calculateTotalCost = (initialBuyAmount: number, power: string): number => {
   const powerCosts: { [key: string]: number } = {
