@@ -19,6 +19,12 @@ declare global {
       NODE_ENV: 'development' | 'production';
       // Add other env variables here
     }
+    interface Process {
+      browser: boolean;
+      version: string;
+      cwd: () => string;
+      nextTick: (callback: Function, ...args: any[]) => void;
+    }
   }
 }
 

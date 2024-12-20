@@ -2,13 +2,16 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import { initializeBufferPolyfills } from './utils/bufferPolyfills';
+import { initializeBufferPolyfills, ensureBufferCompat } from './utils/bufferPolyfills';
 
 // Initialize Buffer polyfills
 const bufferInitialized = initializeBufferPolyfills();
 if (!bufferInitialized) {
   console.error('Failed to initialize Buffer polyfills. Some features may not work correctly.');
 }
+
+// Ensure Buffer compatibility
+ensureBufferCompat();
 
 // Initialize root element
 const rootElement = document.getElementById('root');

@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => ({
       "https": "https-browserify",
       "zlib": "browserify-zlib",
       "buffer": "buffer",
-      "process": "process/browser.js",
+      "process": "process",
       "util": "util",
       "assert": "assert",
       "fs": "memfs",
