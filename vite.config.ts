@@ -19,7 +19,9 @@ export default defineConfig(({ mode }) => ({
       },
     },
     commonjsOptions: {
+      include: [/node_modules/],
       transformMixedEsModules: true,
+      requireReturnsDefault: 'auto',
     },
   },
   plugins: [
@@ -29,13 +31,13 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "stream": "vite-compatible-readable-stream",
+      "stream": "stream-browserify",
       "crypto": "crypto-browserify",
       "http": "stream-http",
       "https": "https-browserify",
       "zlib": "browserify-zlib",
       "buffer": "buffer",
-      "process": "process/browser",
+      "process": "process/browser.js",
       "util": "util",
       "assert": "assert",
       "fs": "memfs",
@@ -51,7 +53,7 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: [
       'buffer',
-      'process/browser',
+      'process',
       'memfs',
       'util',
       'assert',
@@ -62,7 +64,6 @@ export default defineConfig(({ mode }) => ({
       'browserify-zlib',
       'https-browserify',
       'stream-http',
-      'vite-compatible-readable-stream',
     ],
     esbuildOptions: {
       target: 'esnext',
