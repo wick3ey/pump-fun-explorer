@@ -8,6 +8,12 @@ import './index.css';
 globalThis.Buffer = Buffer;
 window.Buffer = Buffer;
 
+// Make sure Buffer is available globally
+if (typeof window !== 'undefined') {
+  window.global = window;
+  window.Buffer = Buffer;
+}
+
 // Initialize root element
 const rootElement = document.getElementById('root');
   
