@@ -2,6 +2,7 @@ import { Connection, VersionedTransaction, TransactionConfirmationStrategy, Send
 import { fetchWithRetry } from "@/lib/utils/apiUtils";
 import { TransactionConfig } from "./types";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const PUMP_PORTAL_API_BASE = 'https://pumpportal.fun/api';
 const MAX_RETRIES = 3;
@@ -58,7 +59,6 @@ export async function sendTransactionWithRetry(
         throw new Error("Invalid transaction structure");
       }
 
-      // Get the latest blockhash before sending
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
       transaction.message.recentBlockhash = blockhash;
 
@@ -78,7 +78,9 @@ export async function sendTransactionWithRetry(
       const confirmation = await connection.confirmTransaction(confirmationStrategy, 'confirmed');
       
       if (confirmation.value.err) {
-        throw new Error(`Transaction confirmed but failed: ${confirmation.value.err}`);
+        const error = new Error(`Transaction confirmed but failed: ${confirmation.value.err}`);
+        await recordTransactionError(signature, error.message);
+        throw error;
       }
       
       return signature;
@@ -88,6 +90,10 @@ export async function sendTransactionWithRetry(
       if (error instanceof SendTransactionError) {
         const logs = error.logs;
         console.error('Transaction logs:', logs);
+        
+        // Record the error in Supabase
+        await recordTransactionError(null, error.message);
+        
         toast({
           title: "Transaction Failed",
           description: `Attempt ${i + 1}: ${error.message}`,
@@ -104,4 +110,22 @@ export async function sendTransactionWithRetry(
   }
   
   throw lastError || new Error('Transaction failed after multiple attempts');
+}
+
+async function recordTransactionError(signature: string | null, errorMessage: string) {
+  try {
+    const { error } = await supabase
+      .from('transactions')
+      .insert([{
+        status: 'failed',
+        error_message: errorMessage,
+        signature,
+      }]);
+
+    if (error) {
+      console.error("Failed to record transaction error:", error);
+    }
+  } catch (err) {
+    console.error("Error recording transaction failure:", err);
+  }
 }

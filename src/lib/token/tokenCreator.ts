@@ -3,6 +3,7 @@ import { toast } from "@/components/ui/use-toast";
 import { uploadMetadataToIPFS } from './ipfsService';
 import { getCreateTransaction, sendTransactionWithRetry } from './transactionService';
 import { CreateTokenResponse, TokenCreationConfig } from './types';
+import { supabase } from "@/integrations/supabase/client";
 
 const TRUSTED_RPC_ENDPOINT = import.meta.env.VITE_RPC_ENDPOINT || "https://api.mainnet-beta.solana.com";
 const MAX_RETRIES = 3;
@@ -31,6 +32,22 @@ export const createToken = async ({
   });
 
   try {
+    // First create the token record in Supabase
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('tokens')
+      .insert([{
+        name: metadata.name,
+        symbol: metadata.symbol,
+        description: metadata.description,
+        creator_id: wallet.publicKey.toString(),
+      }])
+      .select()
+      .single();
+
+    if (tokenError) {
+      throw new Error(`Failed to create token record: ${tokenError.message}`);
+    }
+
     toast({
       title: "Creating Your Token",
       description: "Securely uploading metadata to IPFS...",
@@ -38,7 +55,6 @@ export const createToken = async ({
 
     const metadataUri = await uploadMetadataToIPFS(metadata);
     
-    // Generate a new mint keypair with additional entropy
     const entropy = new Uint8Array(32);
     window.crypto.getRandomValues(entropy);
     const mint = Keypair.fromSeed(entropy);
@@ -70,10 +86,8 @@ export const createToken = async ({
       throw new Error("Invalid transaction structure");
     }
 
-    // Add the mint keypair as a signer
     tx.sign([mint]);
     
-    // Now let the user sign the transaction
     const signedTx = await wallet.signTransaction(tx);
 
     toast({
@@ -82,6 +96,32 @@ export const createToken = async ({
     });
 
     const signature = await sendTransactionWithRetry(connection, signedTx);
+
+    // Record the transaction in Supabase
+    const { error: txError } = await supabase
+      .from('transactions')
+      .insert([{
+        token_id: tokenData.id,
+        user_id: wallet.publicKey.toString(),
+        amount: initialBuyAmount,
+        price: initialBuyAmount, // Initial price is 1:1
+        status: 'completed',
+        signature,
+      }]);
+
+    if (txError) {
+      console.error("Failed to record transaction:", txError);
+    }
+
+    // Update the token with contract address
+    const { error: updateError } = await supabase
+      .from('tokens')
+      .update({ contract_address: mint.publicKey.toString() })
+      .eq('id', tokenData.id);
+
+    if (updateError) {
+      console.error("Failed to update token contract address:", updateError);
+    }
 
     toast({
       title: "Success! 🎉",
