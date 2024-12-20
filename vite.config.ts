@@ -10,7 +10,6 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     outDir: 'dist',
-    sourcemap: mode === 'development',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -27,25 +26,6 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      stream: 'vite-compatible-readable-stream',
-      http: 'stream-http',
-      https: 'https-browserify',
-      process: 'process/browser',
-      zlib: 'browserify-zlib',
-      util: 'util',
-      url: 'url',
-      assert: 'assert',
-      crypto: 'crypto-browserify',
-      os: 'os-browserify',
-      path: 'path-browserify',
-      vm: 'vm-browserify',
-    },
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      define: {
-        global: 'globalThis'
-      },
     },
   },
   define: {
