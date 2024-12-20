@@ -15,7 +15,7 @@ export const Header = () => {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const location = useLocation();
   const { connected } = useWallet();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, isLoading } = useAuth();
   const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
@@ -89,13 +89,20 @@ export const Header = () => {
           <div className="hidden md:flex items-center space-x-4">
             <Button 
               onClick={handleAuthAction}
+              disabled={isLoading}
               className={`${
                 isAuthenticated 
                   ? 'bg-red-500 hover:bg-red-600' 
                   : 'bg-[#9b87f5] hover:bg-[#8b77e5]'
-              } text-white`}
+              } text-white relative min-w-[100px]`}
             >
-              {isAuthenticated ? 'Sign Out' : 'LOG IN'}
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                </div>
+              ) : (
+                isAuthenticated ? 'SIGN OUT' : 'LOG IN'
+              )}
             </Button>
             <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
             <WalletMultiButton className="bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white" />

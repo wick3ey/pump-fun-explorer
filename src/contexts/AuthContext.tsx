@@ -23,7 +23,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Memoized session initialization
   const initSession = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
