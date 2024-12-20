@@ -36,6 +36,9 @@ export const createToken = async ({
     });
 
     const metadataUri = await uploadMetadataToIPFS(metadata);
+    
+    // Generate a new mint keypair for the token
+    const mint = new Keypair();
 
     toast({
       title: "Metadata Uploaded",
@@ -44,9 +47,14 @@ export const createToken = async ({
 
     const txData = await getCreateTransaction({
       publicKey: wallet.publicKey.toBase58(),
-      metadata,
+      metadata: {
+        name: metadata.name,
+        symbol: metadata.symbol,
+        uri: metadataUri,
+      },
       metadataUri,
-      initialBuyAmount
+      initialBuyAmount,
+      mint: mint.publicKey
     });
 
     const tx = VersionedTransaction.deserialize(txData);
