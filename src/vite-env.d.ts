@@ -18,4 +18,4 @@ declare module 'url';
 declare module 'util';
 declare module 'stream-http';
 declare module 'buffer';
-declare module 'readable-stream';
+declare module 'vite-compatible-readable-stream';
