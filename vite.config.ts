@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => ({
       "process": "process/browser",
       "util": "util",
       "assert": "assert",
-      "fs": false,
+      "fs": "memfs",
       "path": "path-browserify",
       "os": "os-browserify/browser",
     },
