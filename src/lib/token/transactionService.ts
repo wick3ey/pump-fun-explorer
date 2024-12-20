@@ -1,4 +1,4 @@
-import { Connection, VersionedTransaction, TransactionConfirmationStrategy, SendTransactionError } from "@solana/web3.js";
+import { Connection, VersionedTransaction, TransactionConfirmationStrategy, SendTransactionError, Keypair } from "@solana/web3.js";
 import { fetchWithRetry } from "@/lib/utils/apiUtils";
 import { TransactionConfig } from "./types";
 import { toast } from "@/components/ui/use-toast";
@@ -7,8 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 const PUMP_PORTAL_API_BASE = 'https://pumpportal.fun/api';
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
-const TRADING_FEE_PERCENTAGE = 0.5; // 0.5% trading fee
-const ESTIMATED_SOL_NETWORK_FEE = 0.000005; // Approximate Solana network fee in SOL
+const TRADING_FEE_PERCENTAGE = 0.5;
+const ESTIMATED_SOL_NETWORK_FEE = 0.000005;
 
 export async function getCreateTransaction(config: TransactionConfig): Promise<Uint8Array> {
   try {
@@ -28,12 +28,6 @@ export async function getCreateTransaction(config: TransactionConfig): Promise<U
       totalAmount: `${totalAmount} SOL`
     });
 
-    // Show fee breakdown to user
-    toast({
-      title: "Transaction Fee Breakdown",
-      description: `Trading fee: ${tradingFee.toFixed(4)} SOL\nNetwork fee: ~${ESTIMATED_SOL_NETWORK_FEE} SOL\nTotal: ${totalAmount.toFixed(4)} SOL`,
-    });
-
     const response = await fetchWithRetry(`${PUMP_PORTAL_API_BASE}/trade-local`, {
       method: "POST",
       headers: {
@@ -45,7 +39,7 @@ export async function getCreateTransaction(config: TransactionConfig): Promise<U
         tokenMetadata: {
           name: config.metadata.name,
           symbol: config.metadata.symbol,
-          uri: config.metadata.uri
+          uri: config.metadataUri
         },
         mint: config.mint.toString(),
         denominatedInSol: "true",
@@ -71,6 +65,7 @@ export async function getCreateTransaction(config: TransactionConfig): Promise<U
 export async function sendTransactionWithRetry(
   connection: Connection,
   transaction: VersionedTransaction,
+  mintKeypair: Keypair,
   maxRetries = MAX_RETRIES
 ): Promise<string> {
   let lastError: Error | null = null;
@@ -85,6 +80,9 @@ export async function sendTransactionWithRetry(
 
       console.log("Using blockhash:", blockhash);
 
+      // Sign with mint keypair first, then let wallet sign
+      transaction.sign([mintKeypair]);
+      
       // Send with more aggressive confirmation strategy
       const signature = await connection.sendTransaction(transaction, {
         maxRetries: 5,

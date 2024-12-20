@@ -1,4 +1,4 @@
-import { Connection, PublicKey, Keypair, VersionedTransaction } from '@solana/web3.js';
+import { Connection, PublicKey, Keypair } from '@solana/web3.js';
 import { toast } from "@/components/ui/use-toast";
 import { uploadMetadataToIPFS } from './ipfsService';
 import { getCreateTransaction, sendTransactionWithRetry } from './transactionService';
@@ -19,12 +19,6 @@ export const validateInitialBuy = (amount: number): string | null => {
     return `Maximum allowed amount is ${MAX_SOL_AMOUNT} SOL`;
   }
   return null;
-};
-
-export const calculateTokenSupply = (initialBuyAmount: number): number => {
-  const baseSupply = 1000000;
-  const multiplier = Math.sqrt(initialBuyAmount * 100);
-  return Math.floor(baseSupply * multiplier);
 };
 
 export const createToken = async ({
@@ -90,10 +84,7 @@ export const createToken = async ({
     // Generate a new keypair for the mint account
     const entropy = new Uint8Array(32);
     window.crypto.getRandomValues(entropy);
-    const mint = Keypair.fromSeed(entropy);
-
-    const supply = calculateTokenSupply(initialBuyAmount);
-    console.log("Calculated token supply:", supply);
+    const mintKeypair = Keypair.fromSeed(entropy);
 
     toast({
       title: "Metadata secured",
@@ -107,21 +98,15 @@ export const createToken = async ({
         symbol: metadata.symbol,
         uri: metadataUri,
       },
-      mint: mint.publicKey,
+      mint: mintKeypair.publicKey,
       metadataUri,
       initialBuyAmount,
-      supply,
     });
 
-    if (!txData || txData.length === 0) {
-      throw new Error("Invalid transaction data received");
-    }
-
-    console.log("Transaction data received, deserializing...");
     const tx = VersionedTransaction.deserialize(txData);
+    console.log("Transaction data received, deserializing...");
     
     console.log("Signing transaction with mint account...");
-    tx.sign([mint]);
     
     console.log("Getting wallet signature...");
     const signedTx = await wallet.signTransaction(tx);
@@ -132,13 +117,13 @@ export const createToken = async ({
     });
 
     console.log("Sending transaction to network...");
-    const signature = await sendTransactionWithRetry(connection, signedTx);
+    const signature = await sendTransactionWithRetry(connection, signedTx, mintKeypair);
 
     // Update token with contract address
     const { error: updateError } = await supabase
       .from('tokens')
       .update({ 
-        contract_address: mint.publicKey.toString(),
+        contract_address: mintKeypair.publicKey.toString(),
       })
       .eq('id', tokenData.id);
 
