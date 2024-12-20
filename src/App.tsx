@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WalletContextProvider } from "@/contexts/WalletContext";
 import { TrendingTokensBanner } from "./components/TrendingTokensBanner";
@@ -13,6 +13,7 @@ import CreateToken from "./pages/CreateToken";
 import TokenProfile from "./pages/TokenProfile";
 import Memescope from "./pages/Memescope";
 import { Suspense } from "react";
+import { Routes, Route } from "react-router-dom";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,8 +53,8 @@ const App = () => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <WalletContextProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <WalletContextProvider>
             <TooltipProvider>
               <Suspense 
                 fallback={
@@ -65,8 +66,8 @@ const App = () => {
                 <AppContent />
               </Suspense>
             </TooltipProvider>
-          </AuthProvider>
-        </WalletContextProvider>
+          </WalletContextProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
   );
