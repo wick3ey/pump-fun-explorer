@@ -13,8 +13,12 @@ interface WalletContextProviderProps {
 }
 
 export const WalletContextProvider: FC<WalletContextProviderProps> = ({ children }) => {
-  // Use environment variable for RPC endpoint
-  const endpoint = import.meta.env.VITE_RPC_ENDPOINT || clusterApiUrl('mainnet-beta');
+  // Use QuickNode RPC endpoint from environment variable
+  const endpoint = import.meta.env.VITE_RPC_ENDPOINT;
+  
+  if (!endpoint) {
+    console.error('No RPC endpoint provided in environment variables');
+  }
   
   const wallets = useMemo(
     () => [
