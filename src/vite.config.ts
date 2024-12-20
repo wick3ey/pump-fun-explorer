@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => ({
     commonjsOptions: {
       include: [/node_modules/],
       transformMixedEsModules: true,
+      requireReturnsDefault: 'auto',
     },
   },
   plugins: [
@@ -36,7 +37,7 @@ export default defineConfig(({ mode }) => ({
       "https": "https-browserify",
       "zlib": "browserify-zlib",
       "buffer": "buffer",
-      "process": "process/browser.js", // Updated path
+      "process": "process",
       "util": "util",
       "assert": "assert",
       "fs": "memfs",
@@ -52,7 +53,7 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     include: [
       'buffer',
-      'process/browser.js', // Updated path
+      'process',
       'memfs',
       'util',
       'assert',

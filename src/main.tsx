@@ -1,3 +1,6 @@
+import { Buffer } from 'buffer';
+window.Buffer = Buffer;
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
@@ -8,10 +11,14 @@ import { initializeBufferPolyfills, ensureBufferCompat } from './utils/bufferPol
 const bufferInitialized = initializeBufferPolyfills();
 if (!bufferInitialized) {
   console.error('Failed to initialize Buffer polyfills. Some features may not work correctly.');
+  throw new Error('Buffer initialization failed');
 }
 
-// Ensure Buffer compatibility
-ensureBufferCompat();
+// Verify Buffer compatibility
+if (!ensureBufferCompat()) {
+  console.error('Buffer compatibility check failed');
+  throw new Error('Buffer compatibility check failed');
+}
 
 // Initialize root element
 const rootElement = document.getElementById('root');
