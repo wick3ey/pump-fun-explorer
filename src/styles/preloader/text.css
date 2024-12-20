@@ -1,58 +1,42 @@
 .degen-text, .zone-text {
   font-family: 'Orbitron', sans-serif;
-  font-size: 4.5rem;
+  font-size: 3.5rem;
   font-weight: 900;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  position: relative;
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.degen-text {
   color: #fff;
-  animation: text-reveal 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  animation-delay: 0.5s;
+  text-shadow: 0 0 10px rgba(77, 238, 234, 0.5);
 }
 
 .zone-text {
-  color: #ea384c;
-  margin-top: -1rem;
-  animation: text-reveal 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards,
-             glitch 5s infinite linear alternate-reverse;
-  animation-delay: 0.7s;
+  color: #4DEEEA;
+  animation: text-glitch 3s infinite;
 }
 
-@keyframes text-reveal {
+@keyframes text-glitch {
   0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes glitch {
-  0% {
-    text-shadow: 3px 3px 0 #00fffc, -3px -3px 0 #fc00ff;
-    transform: translate(0);
+    text-shadow: 2px 2px #74EBD5, -2px -2px #4DEEEA;
   }
   2% {
-    text-shadow: 3px 3px 0 #00fffc, -3px -3px 0 #fc00ff;
-    transform: translate(2px, 2px);
+    text-shadow: -2px -2px #74EBD5, 2px 2px #4DEEEA;
   }
   4% {
-    text-shadow: 3px 3px 0 #00fffc, -3px -3px 0 #fc00ff;
-    transform: translate(-2px, -2px);
+    text-shadow: 2px -2px #74EBD5, -2px 2px #4DEEEA;
   }
   6% {
-    text-shadow: 3px 3px 0 #00fffc, -3px -3px 0 #fc00ff;
-    transform: translate(0);
+    text-shadow: 0 0 #74EBD5, 0 0 #4DEEEA;
   }
   100% {
-    text-shadow: 3px 3px 0 #00fffc, -3px -3px 0 #fc00ff;
-    transform: translate(0);
+    text-shadow: 0 0 #74EBD5, 0 0 #4DEEEA;
+  }
+}
+
+@media (max-width: 768px) {
+  .degen-text, .zone-text {
+    font-size: 2.5rem;
+  }
+  
+  .progress-container {
+    width: 250px;
   }
 }
