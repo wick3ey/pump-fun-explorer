@@ -18,6 +18,9 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
   plugins: [
     react(),
@@ -26,15 +29,49 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "stream": "stream-browserify",
+      "stream": "vite-compatible-readable-stream",
       "crypto": "crypto-browserify",
       "http": "stream-http",
       "https": "https-browserify",
-      "zlib": "browserify-zlib"
+      "zlib": "browserify-zlib",
+      "buffer": "buffer",
+      "process": "process/browser",
+      "util": "util",
+      "assert": "assert",
+      "fs": "memfs",
+      "path": "path-browserify",
+      "os": "os-browserify/browser",
     },
   },
   define: {
     'process.env': {},
     global: 'globalThis',
+    'Buffer': ['buffer', 'Buffer'],
   },
+  optimizeDeps: {
+    include: [
+      'buffer',
+      'process/browser',
+      'memfs',
+      'util',
+      'assert',
+      'stream-browserify',
+      'path-browserify',
+      'crypto-browserify',
+      'os-browserify/browser',
+      'browserify-zlib',
+      'https-browserify',
+      'stream-http',
+      'vite-compatible-readable-stream',
+    ],
+    esbuildOptions: {
+      target: 'esnext',
+      supported: {
+        'top-level-await': true
+      },
+      define: {
+        global: 'globalThis'
+      }
+    }
+  }
 }));

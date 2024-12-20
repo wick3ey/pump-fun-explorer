@@ -1,17 +1,13 @@
-import { Buffer } from 'buffer';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { initializeBufferPolyfills } from './utils/bufferPolyfills';
 
-// Polyfill Buffer for the browser
-globalThis.Buffer = Buffer;
-window.Buffer = Buffer;
-
-// Make sure Buffer is available globally
-if (typeof window !== 'undefined') {
-  window.global = window;
-  window.Buffer = Buffer;
+// Initialize Buffer polyfills
+const bufferInitialized = initializeBufferPolyfills();
+if (!bufferInitialized) {
+  console.error('Failed to initialize Buffer polyfills. Some features may not work correctly.');
 }
 
 // Initialize root element
