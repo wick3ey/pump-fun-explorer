@@ -60,6 +60,12 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
   };
 
   useEffect(() => {
+    if (!open) {
+      setIsGoogleSignInActive(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -111,7 +117,7 @@ export const LoginDialog = ({ open, onOpenChange }: LoginDialogProps) => {
             {isGoogleSignInActive ? (
               <div className="w-full bg-white/10 p-4 rounded-lg flex items-center justify-center space-x-2">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span className="text-white">Signing in...</span>
+                <span className="text-white">Signing in with Google...</span>
               </div>
             ) : (
               <Button

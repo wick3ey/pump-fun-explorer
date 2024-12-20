@@ -23,26 +23,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Clear session and user data
+  const clearAuthState = useCallback(() => {
+    setSession(null);
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('supabase.auth.token');
+  }, []);
+
+  // Initialize session with strict checking
   const initSession = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setSession(session);
-        setUser(session.user);
-        setIsAuthenticated(true);
+      setIsLoading(true);
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        throw error;
       }
+
+      if (!session || !session.user) {
+        clearAuthState();
+        return;
+      }
+
+      // Verify session is still valid
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!profile) {
+        console.warn('No profile found for user, logging out');
+        await supabase.auth.signOut();
+        clearAuthState();
+        return;
+      }
+
+      setSession(session);
+      setUser(session.user);
+      setIsAuthenticated(true);
     } catch (error) {
       console.error('Session initialization error:', error);
+      clearAuthState();
       toast({
-        title: "Error",
-        description: "Failed to initialize session",
+        title: "Session Error",
+        description: "Please log in again",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [clearAuthState, toast]);
 
+  // Set up auth state listener
   useEffect(() => {
     initSession();
 
@@ -56,18 +90,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session.user);
         setIsAuthenticated(true);
         navigate('/');
-      } else if (event === 'SIGNED_OUT') {
-        setSession(null);
-        setUser(null);
-        setIsAuthenticated(false);
+        
+        toast({
+          title: "Welcome back!",
+          description: `Signed in successfully`,
+        });
+      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        clearAuthState();
         navigate('/');
+        
+        toast({
+          title: "Signed out",
+          description: "You have been signed out successfully",
+        });
       }
     });
 
+    // Auto-logout after 1 hour of inactivity
+    let inactivityTimeout: NodeJS.Timeout;
+    
+    const resetInactivityTimer = () => {
+      clearTimeout(inactivityTimeout);
+      inactivityTimeout = setTimeout(async () => {
+        if (isAuthenticated) {
+          await logout();
+          toast({
+            title: "Session Expired",
+            description: "You have been logged out due to inactivity",
+            variant: "destructive",
+          });
+        }
+      }, 60 * 60 * 1000); // 1 hour
+    };
+
+    window.addEventListener('mousemove', resetInactivityTimer);
+    window.addEventListener('keypress', resetInactivityTimer);
+
     return () => {
       subscription.unsubscribe();
+      window.removeEventListener('mousemove', resetInactivityTimer);
+      window.removeEventListener('keypress', resetInactivityTimer);
+      clearTimeout(inactivityTimeout);
     };
-  }, [navigate, initSession]);
+  }, [navigate, initSession, clearAuthState, isAuthenticated]);
 
   const login = async () => {
     try {
@@ -101,16 +166,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      // Clear local state immediately
-      setSession(null);
-      setUser(null);
-      setIsAuthenticated(false);
+      clearAuthState();
+      navigate('/');
       
       toast({
         title: "Signed out",
         description: "You have been signed out successfully",
       });
-      navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
       toast({
