@@ -3,26 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import { BarChart3, Menu } from "lucide-react";
 import { DegenModeToggle } from "./DegenModeToggle";
 import { useState } from "react";
-import { LoginDialog } from "./LoginDialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useAuth } from "@/contexts/AuthContext";
 
 export const Header = () => {
   const [isDegenMode, setIsDegenMode] = useState(false);
-  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const location = useLocation();
   const { connected } = useWallet();
-  const { isAuthenticated, logout, isLoading } = useAuth();
-
-  const handleAuthAction = async () => {
-    if (isAuthenticated) {
-      await logout();
-    } else {
-      setShowLoginDialog(true);
-    }
-  };
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -65,23 +53,6 @@ export const Header = () => {
           </div>
           
           <div className="hidden md:flex items-center space-x-4">
-            <Button 
-              onClick={handleAuthAction}
-              disabled={isLoading}
-              className={`${
-                isAuthenticated 
-                  ? 'bg-red-500 hover:bg-red-600' 
-                  : 'bg-[#9b87f5] hover:bg-[#8b77e5]'
-              } text-white relative min-w-[100px]`}
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                </div>
-              ) : (
-                isAuthenticated ? 'SIGN OUT' : 'LOG IN'
-              )}
-            </Button>
             <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
             <WalletMultiButton className="bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white" />
           </div>
@@ -136,23 +107,6 @@ export const Header = () => {
                     </Link>
                   </div>
                   <div className="mt-auto space-y-6">
-                    <Button 
-                      onClick={handleAuthAction}
-                      disabled={isLoading}
-                      className={`w-full ${
-                        isAuthenticated 
-                          ? 'bg-red-500 hover:bg-red-600' 
-                          : 'bg-[#9b87f5] hover:bg-[#8b77e5]'
-                      } text-white text-lg py-4`}
-                    >
-                      {isLoading ? (
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        </div>
-                      ) : (
-                        isAuthenticated ? 'SIGN OUT' : 'LOG IN'
-                      )}
-                    </Button>
                     <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
                     <WalletMultiButton className="w-full bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white" />
                   </div>
@@ -162,7 +116,6 @@ export const Header = () => {
           </div>
         </div>
       </div>
-      <LoginDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} />
     </header>
   );
 };

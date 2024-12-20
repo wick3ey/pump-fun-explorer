@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
 import { WalletContextProvider } from "@/contexts/WalletContext";
 import { TrendingTokensBanner } from "./components/TrendingTokensBanner";
 import { PowerBanner } from "./components/PowerBanner";
@@ -53,21 +52,19 @@ const App = () => {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <WalletContextProvider>
-            <TooltipProvider>
-              <Suspense 
-                fallback={
-                  <div className="min-h-screen bg-[#13141F] flex items-center justify-center">
-                    <div className="text-white">Loading...</div>
-                  </div>
-                }
-              >
-                <AppContent />
-              </Suspense>
-            </TooltipProvider>
-          </WalletContextProvider>
-        </AuthProvider>
+        <WalletContextProvider>
+          <TooltipProvider>
+            <Suspense 
+              fallback={
+                <div className="min-h-screen bg-[#13141F] flex items-center justify-center">
+                  <div className="text-white">Loading...</div>
+                </div>
+              }
+            >
+              <AppContent />
+            </Suspense>
+          </TooltipProvider>
+        </WalletContextProvider>
       </QueryClientProvider>
     </BrowserRouter>
   );
