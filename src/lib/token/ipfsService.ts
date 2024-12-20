@@ -1,7 +1,8 @@
 import { TokenMetadata } from "@/types/token";
 import { fetchWithRetry } from "@/lib/utils/apiUtils";
 
-const PUMP_API_BASE = 'https://pump.fun/api';
+const SUPABASE_PROJECT_ID = 'zyyipfdnmnqhiarszuqh';
+const EDGE_FUNCTION_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/ipfs-upload`;
 
 export async function uploadMetadataToIPFS(metadata: TokenMetadata): Promise<string> {
   const formData = new FormData();
@@ -15,7 +16,7 @@ export async function uploadMetadataToIPFS(metadata: TokenMetadata): Promise<str
   formData.append("showName", "true");
 
   try {
-    const response = await fetchWithRetry(`${PUMP_API_BASE}/ipfs`, {
+    const response = await fetchWithRetry(EDGE_FUNCTION_URL, {
       method: "POST",
       body: formData,
     }, {
