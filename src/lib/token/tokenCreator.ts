@@ -13,10 +13,10 @@ const MAX_SOL_AMOUNT = 100;
 
 export const validateInitialBuy = (amount: number): string | null => {
   if (isNaN(amount) || amount < MIN_SOL_AMOUNT) {
-    return `Minsta tillåtna belopp är ${MIN_SOL_AMOUNT} SOL`;
+    return `Minimum allowed amount is ${MIN_SOL_AMOUNT} SOL`;
   }
   if (amount > MAX_SOL_AMOUNT) {
-    return `Högsta tillåtna belopp är ${MAX_SOL_AMOUNT} SOL`;
+    return `Maximum allowed amount is ${MAX_SOL_AMOUNT} SOL`;
   }
   return null;
 };
@@ -32,8 +32,10 @@ export const createToken = async ({
   initialBuyAmount,
   wallet
 }: TokenCreationConfig): Promise<CreateTokenResponse> => {
+  console.log("Starting token creation process");
+  
   if (!wallet.connected || !wallet.publicKey || !wallet.signTransaction) {
-    throw new Error("Vänligen anslut din plånbok för att fortsätta");
+    throw new Error("Please connect your wallet to continue");
   }
 
   const validationError = validateInitialBuy(initialBuyAmount);
@@ -42,7 +44,7 @@ export const createToken = async ({
   }
 
   if (!metadata.pfpImage || !metadata.name || !metadata.symbol) {
-    throw new Error("Vänligen fyll i all nödvändig information om token");
+    throw new Error("Please fill in all required token information");
   }
 
   const connection = new Connection(TRUSTED_RPC_ENDPOINT, {
@@ -51,46 +53,50 @@ export const createToken = async ({
   });
 
   try {
+    console.log("Creating token with metadata:", metadata);
+
     // Get user's auth ID from Supabase
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.id) {
-      throw new Error("Användaren är inte autentiserad");
+      throw new Error("User is not authenticated");
     }
 
-    // Create token record in Supabase with auth user ID
+    // Create token record in Supabase
     const { data: tokenData, error: tokenError } = await supabase
       .from('tokens')
       .insert([{
         name: metadata.name,
         symbol: metadata.symbol,
         description: metadata.description,
-        creator_id: user.id, // Use auth user ID instead of wallet public key
-        contract_address: null, // Will be updated after token creation
+        creator_id: user.id,
+        contract_address: null,
       }])
       .select()
       .single();
 
     if (tokenError) {
       console.error("Token creation error:", tokenError);
-      throw new Error(`Kunde inte skapa token: ${tokenError.message}`);
+      throw new Error(`Could not create token: ${tokenError.message}`);
     }
 
     toast({
-      title: "Skapar din token",
-      description: "Laddar upp metadata till IPFS...",
+      title: "Creating your token",
+      description: "Uploading metadata to IPFS...",
     });
 
     const metadataUri = await uploadMetadataToIPFS(metadata);
+    console.log("Metadata uploaded to IPFS:", metadataUri);
     
     const entropy = new Uint8Array(32);
     window.crypto.getRandomValues(entropy);
     const mint = Keypair.fromSeed(entropy);
 
     const supply = calculateTokenSupply(initialBuyAmount);
+    console.log("Calculated token supply:", supply);
 
     toast({
-      title: "Metadata säkrad",
-      description: "Förbereder säker transaktion...",
+      title: "Metadata secured",
+      description: "Preparing secure transaction...",
     });
 
     const txData = await getCreateTransaction({
@@ -107,24 +113,28 @@ export const createToken = async ({
     });
 
     if (!txData || txData.length === 0) {
-      throw new Error("Ogiltig transaktionsdata mottagen");
+      throw new Error("Invalid transaction data received");
     }
 
+    console.log("Transaction data received, deserializing...");
     const tx = VersionedTransaction.deserialize(txData);
     
     if (!tx.message || !tx.message.recentBlockhash) {
-      throw new Error("Ogiltig transaktionsstruktur");
+      throw new Error("Invalid transaction structure");
     }
 
+    console.log("Signing transaction with mint account...");
     tx.sign([mint]);
     
+    console.log("Getting wallet signature...");
     const signedTx = await wallet.signTransaction(tx);
 
     toast({
-      title: "Transaktion signerad",
-      description: "Skickar till Solana-nätverket säkert...",
+      title: "Transaction signed",
+      description: "Sending to Solana network securely...",
     });
 
+    console.log("Sending transaction to network...");
     const signature = await sendTransactionWithRetry(connection, signedTx);
 
     // Update token with contract address
@@ -136,7 +146,7 @@ export const createToken = async ({
       .eq('id', tokenData.id);
 
     if (updateError) {
-      console.error("Kunde inte uppdatera token kontraktadress:", updateError);
+      console.error("Could not update token contract address:", updateError);
     }
 
     // Record initial transaction
@@ -152,28 +162,28 @@ export const createToken = async ({
       });
 
     if (txError) {
-      console.error("Kunde inte registrera transaktion:", txError);
+      console.error("Could not record transaction:", txError);
     }
 
     toast({
-      title: "Framgång! 🎉",
-      description: `Token skapad! Se på Solscan: https://solscan.io/tx/${signature}`,
+      title: "Success! 🎉",
+      description: `Token created! View on Solscan: https://solscan.io/tx/${signature}`,
     });
 
     return {
       success: true,
-      message: "Token skapad framgångsrikt!",
+      message: "Token created successfully!",
       signature,
       txUrl: `https://solscan.io/tx/${signature}`,
     };
 
   } catch (error) {
-    console.error("Fel vid skapande av token:", error);
+    console.error("Error creating token:", error);
     
-    const errorMessage = error instanceof Error ? error.message : "Kunde inte skapa token";
+    const errorMessage = error instanceof Error ? error.message : "Could not create token";
 
     toast({
-      title: "Fel vid skapande av token",
+      title: "Error creating token",
       description: errorMessage,
       variant: "destructive",
     });

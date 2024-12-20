@@ -10,8 +10,10 @@ const RETRY_DELAY = 1000;
 
 export async function getCreateTransaction(config: TransactionConfig): Promise<Uint8Array> {
   try {
+    console.log("Creating transaction with config:", config);
+    
     if (!config.mint || !config.publicKey) {
-      throw new Error("Ogiltig transaktionskonfiguration");
+      throw new Error("Invalid transaction configuration");
     }
 
     const response = await fetchWithRetry(`${PUMP_PORTAL_API_BASE}/trade-local`, {
@@ -37,13 +39,13 @@ export async function getCreateTransaction(config: TransactionConfig): Promise<U
 
     const data = await response.arrayBuffer();
     if (!data || data.byteLength === 0) {
-      throw new Error("Ogiltig transaktionsdata mottagen");
+      throw new Error("Invalid transaction data received");
     }
 
     return new Uint8Array(data);
   } catch (error) {
-    console.error("Fel vid skapande av transaktion:", error);
-    throw new Error("Kunde inte skapa token-transaktion. Försök igen.");
+    console.error("Error creating transaction:", error);
+    throw new Error("Could not create token transaction. Please try again.");
   }
 }
 
@@ -56,19 +58,26 @@ export async function sendTransactionWithRetry(
 
   for (let i = 0; i < maxRetries; i++) {
     try {
+      console.log(`Attempt ${i + 1} to send transaction`);
+
       if (!transaction.message || !transaction.message.recentBlockhash) {
-        throw new Error("Ogiltig transaktionsstruktur");
+        throw new Error("Invalid transaction structure");
       }
 
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+      // Get a fresh blockhash for each attempt
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
       transaction.message.recentBlockhash = blockhash;
+
+      console.log("Using blockhash:", blockhash);
 
       const signature = await connection.sendTransaction(transaction, {
         maxRetries: 3,
         skipPreflight: false,
-        preflightCommitment: 'processed',
+        preflightCommitment: 'confirmed',
         minContextSlot: await connection.getSlot('finalized'),
       });
+      
+      console.log("Transaction sent with signature:", signature);
       
       const confirmationStrategy: TransactionConfirmationStrategy = {
         signature,
@@ -79,37 +88,40 @@ export async function sendTransactionWithRetry(
       const confirmation = await connection.confirmTransaction(confirmationStrategy, 'confirmed');
       
       if (confirmation.value.err) {
-        const error = new Error(`Transaktion bekräftad men misslyckades: ${confirmation.value.err}`);
+        const error = new Error(`Transaction confirmed but failed: ${confirmation.value.err}`);
         await recordTransactionError(signature, error.message, 0);
         throw error;
       }
       
+      console.log("Transaction confirmed successfully");
       return signature;
     } catch (error) {
-      console.error(`Transaktionsförsök ${i + 1} misslyckades:`, error);
+      console.error(`Transaction attempt ${i + 1} failed:`, error);
       
       if (error instanceof SendTransactionError) {
         const logs = error.logs;
-        console.error('Transaktionsloggar:', logs);
+        console.error('Transaction logs:', logs);
         
-        await recordTransactionError(null, error instanceof Error ? error.message : 'Okänt fel', 0);
+        await recordTransactionError(null, error instanceof Error ? error.message : 'Unknown error', 0);
         
         toast({
-          title: "Transaktion misslyckades",
-          description: `Försök ${i + 1}: ${error instanceof Error ? error.message : 'Okänt fel'}`,
+          title: "Transaction failed",
+          description: `Attempt ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
           variant: "destructive",
         });
       }
       
-      lastError = error instanceof Error ? error : new Error('Okänt fel inträffade');
+      lastError = error instanceof Error ? error : new Error('Unknown error occurred');
       
       if (i < maxRetries - 1) {
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, i)));
+        const delay = RETRY_DELAY * Math.pow(2, i);
+        console.log(`Waiting ${delay}ms before next attempt...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
   }
   
-  throw lastError || new Error('Transaktion misslyckades efter flera försök');
+  throw lastError || new Error('Transaction failed after multiple attempts');
 }
 
 async function recordTransactionError(signature: string | null, errorMessage: string, amount: number) {
@@ -126,9 +138,9 @@ async function recordTransactionError(signature: string | null, errorMessage: st
       });
 
     if (error) {
-      console.error("Kunde inte registrera transaktionsfel:", error);
+      console.error("Could not record transaction error:", error);
     }
   } catch (err) {
-    console.error("Fel vid registrering av transaktionsmisslyckande:", err);
+    console.error("Error recording transaction failure:", err);
   }
 }
