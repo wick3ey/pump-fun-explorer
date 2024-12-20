@@ -18,6 +18,8 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
     refetchInterval: 60000, // Refetch every minute
   });
 
+  console.log('TokenBoard render:', { tokens, isLoading, error });
+
   const filteredTokens = tokens?.filter(token => 
     token.baseToken.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
     token.baseToken.name.toLowerCase().includes(searchQuery.toLowerCase())

@@ -10,11 +10,6 @@ export interface DexToken {
     name: string;
     symbol: string;
   };
-  quoteToken: {
-    address: string;
-    name: string;
-    symbol: string;
-  };
   priceUsd: string;
   volume: {
     h24: number;
@@ -36,8 +31,10 @@ export interface DexScreenerResponse {
 
 export const fetchTrendingTokens = async (): Promise<DexToken[]> => {
   try {
-    // Fetch Solana tokens with high volume
-    const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/solana/SOL', {
+    console.log('Fetching trending tokens...');
+    
+    // Use search endpoint to get more comprehensive results
+    const response = await fetch('https://api.dexscreener.com/latest/dex/pairs/solana', {
       method: 'GET',
     });
 
@@ -46,18 +43,26 @@ export const fetchTrendingTokens = async (): Promise<DexToken[]> => {
     }
 
     const data: DexScreenerResponse = await response.json();
+    console.log('Raw response:', data);
     
     // Filter for valid tokens and sort by 1h volume
     const solanaTokens = data.pairs
-      .filter(pair => 
-        pair.chainId.toLowerCase() === 'solana' && 
-        pair.baseToken.name && 
-        pair.baseToken.symbol &&
-        pair.volume?.h1 > 0
-      )
+      .filter(pair => {
+        const isValid = 
+          pair.chainId.toLowerCase() === 'solana' && 
+          pair.baseToken.name && 
+          pair.baseToken.symbol &&
+          pair.volume?.h1 > 0;
+        
+        if (!isValid) {
+          console.log('Filtered out token:', pair.baseToken.symbol, 'due to invalid data');
+        }
+        return isValid;
+      })
       .sort((a, b) => (b.volume?.h1 || 0) - (a.volume?.h1 || 0))
       .slice(0, 50);
 
+    console.log('Filtered tokens:', solanaTokens.length);
     return solanaTokens;
   } catch (error) {
     console.error('Error fetching trending tokens:', error);
