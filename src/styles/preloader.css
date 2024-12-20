@@ -31,7 +31,7 @@
   width: 120px;
   height: 120px;
   opacity: 0;
-  animation: text-reveal 0.8s ease forwards;
+  animation: logo-reveal 0.8s ease forwards;
 }
 
 .logo-container img {
