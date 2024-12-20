@@ -12,9 +12,7 @@ import Index from "./pages/Index";
 import CreateToken from "./pages/CreateToken";
 import TokenProfile from "./pages/TokenProfile";
 import Memescope from "./pages/Memescope";
-import { Suspense, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "./components/ui/use-toast";
+import { Suspense } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,34 +25,6 @@ const queryClient = new QueryClient({
 });
 
 const AppContent = () => {
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        console.log('User signed in:', session?.user?.id);
-        toast({
-          title: "Signed in successfully",
-          description: "Welcome back!",
-        });
-      }
-      if (event === 'SIGNED_OUT') {
-        console.log('User signed out');
-        toast({
-          title: "Signed out",
-          description: "Come back soon!",
-        });
-      }
-      if (event === 'USER_UPDATED') {
-        console.log('User updated:', session?.user?.id);
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [toast]);
-
   return (
     <div className="min-h-screen bg-[#13141F]">
       <Header />
@@ -80,11 +50,11 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <WalletContextProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <BrowserRouter>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <WalletContextProvider>
+          <AuthProvider>
+            <TooltipProvider>
               <Suspense 
                 fallback={
                   <div className="min-h-screen bg-[#13141F] flex items-center justify-center">
@@ -94,11 +64,11 @@ const App = () => {
               >
                 <AppContent />
               </Suspense>
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </WalletContextProvider>
-    </QueryClientProvider>
+            </TooltipProvider>
+          </AuthProvider>
+        </WalletContextProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 };
 
