@@ -4,12 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchTrendingTokens } from "@/services/dexscreener";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface TokenBoardProps {
   searchQuery?: string;
 }
 
 export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
+  const navigate = useNavigate();
   const { data: tokens, isLoading, error } = useQuery({
     queryKey: ['trending-tokens'],
     queryFn: fetchTrendingTokens,
@@ -36,7 +38,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
       <TrendingFilter 
         selectedTimeframe="1h"
         onTimeframeChange={() => {}}
-        sortBy="newest"
+        sortBy="volume"
         onSortChange={() => {}}
       />
       
@@ -68,18 +70,24 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
             {filteredTokens?.map((token, index) => (
               <div 
                 key={`${token.chainId}-${token.pairAddress}`}
-                className="flex items-center justify-between p-4 hover:bg-[#2A2F3C]/50 rounded-lg transition-colors"
+                onClick={() => navigate(`/token/${token.baseToken.symbol}`)}
+                className="flex items-center justify-between p-4 hover:bg-[#2A2F3C]/50 rounded-lg transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-4">
-                  <img 
-                    src={token.info?.imageUrl || "/placeholder.svg"}
-                    alt={token.baseToken.symbol}
-                    className="w-10 h-10 rounded-full"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "/placeholder.svg";
-                    }}
-                  />
+                  <div className="relative">
+                    <span className="absolute -top-2 -left-2 bg-blue-500 text-white text-xs px-2 rounded-full">
+                      #{index + 1}
+                    </span>
+                    <img 
+                      src={token.info?.imageUrl || "/placeholder.svg"}
+                      alt={token.baseToken.symbol}
+                      className="w-10 h-10 rounded-full"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder.svg";
+                      }}
+                    />
+                  </div>
                   <div>
                     <div className="font-medium text-white">
                       {token.baseToken.symbol}
@@ -94,7 +102,7 @@ export const TokenBoard = ({ searchQuery = "" }: TokenBoardProps) => {
                     ${Number(token.priceUsd).toFixed(6)}
                   </div>
                   <div className="text-sm text-gray-400">
-                    MC ${formatNumber(token.marketCap)}
+                    Vol 1h ${formatNumber(token.volume?.h1 || 0)}
                   </div>
                 </div>
               </div>

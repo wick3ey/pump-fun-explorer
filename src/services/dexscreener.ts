@@ -16,6 +16,10 @@ export interface DexToken {
     symbol: string;
   };
   priceUsd: string;
+  volume: {
+    h24: number;
+    h1: number;
+  };
   liquidity: {
     usd: number;
   };
@@ -32,8 +36,8 @@ export interface DexScreenerResponse {
 
 export const fetchTrendingTokens = async (): Promise<DexToken[]> => {
   try {
-    // Specifically search for Solana tokens
-    const response = await fetch('https://api.dexscreener.com/latest/dex/search?q=solana', {
+    // Fetch Solana tokens with high volume
+    const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/solana/SOL', {
       method: 'GET',
     });
 
@@ -43,15 +47,15 @@ export const fetchTrendingTokens = async (): Promise<DexToken[]> => {
 
     const data: DexScreenerResponse = await response.json();
     
-    // Filter for Solana chain tokens and ensure they have valid names and symbols
+    // Filter for valid tokens and sort by 1h volume
     const solanaTokens = data.pairs
       .filter(pair => 
         pair.chainId.toLowerCase() === 'solana' && 
         pair.baseToken.name && 
         pair.baseToken.symbol &&
-        pair.marketCap > 0
+        pair.volume?.h1 > 0
       )
-      .sort((a, b) => b.marketCap - a.marketCap)
+      .sort((a, b) => (b.volume?.h1 || 0) - (a.volume?.h1 || 0))
       .slice(0, 50);
 
     return solanaTokens;
