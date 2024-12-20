@@ -79,7 +79,7 @@ export async function sendTransactionWithRetry(
       
       if (confirmation.value.err) {
         const error = new Error(`Transaction confirmed but failed: ${confirmation.value.err}`);
-        await recordTransactionError(signature, error.message);
+        await recordTransactionError(signature, error.message, 0); // Pass 0 as amount for failed transaction
         throw error;
       }
       
@@ -91,17 +91,17 @@ export async function sendTransactionWithRetry(
         const logs = error.logs;
         console.error('Transaction logs:', logs);
         
-        // Record the error in Supabase
-        await recordTransactionError(null, error.message);
+        // Record the error in Supabase with 0 amount
+        await recordTransactionError(null, error instanceof Error ? error.message : 'Unknown error', 0);
         
         toast({
           title: "Transaction Failed",
-          description: `Attempt ${i + 1}: ${error.message}`,
+          description: `Attempt ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`,
           variant: "destructive",
         });
       }
       
-      lastError = error as Error;
+      lastError = error instanceof Error ? error : new Error('Unknown error occurred');
       
       if (i < maxRetries - 1) {
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, i)));
@@ -112,15 +112,18 @@ export async function sendTransactionWithRetry(
   throw lastError || new Error('Transaction failed after multiple attempts');
 }
 
-async function recordTransactionError(signature: string | null, errorMessage: string) {
+async function recordTransactionError(signature: string | null, errorMessage: string, amount: number) {
   try {
     const { error } = await supabase
       .from('transactions')
-      .insert([{
+      .insert({
         status: 'failed',
         error_message: errorMessage,
         signature,
-      }]);
+        amount: amount,
+        price: amount, // For failed transactions, we set price equal to amount
+        user_id: (await supabase.auth.getUser()).data.user?.id, // Get current user ID
+      });
 
     if (error) {
       console.error("Failed to record transaction error:", error);
