@@ -8,36 +8,39 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Header = () => {
   const [isDegenMode, setIsDegenMode] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const location = useLocation();
   const { connected } = useWallet();
-  const [isSignedIn, setIsSignedIn] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
   const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setIsSignedIn(!!session);
-      if (session?.user) {
+    const fetchUsername = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('username')
-          .eq('id', session.user.id)
+          .eq('id', user.id)
           .single();
         setUsername(profile?.username || null);
       } else {
         setUsername(null);
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
-  }, []);
+    if (isAuthenticated) {
+      fetchUsername();
+    }
+  }, [isAuthenticated]);
 
   const handleAuthAction = async () => {
-    if (isSignedIn) {
-      await supabase.auth.signOut();
+    if (isAuthenticated) {
+      await logout();
     } else {
       setShowLoginDialog(true);
     }
@@ -87,12 +90,12 @@ export const Header = () => {
             <Button 
               onClick={handleAuthAction}
               className={`${
-                isSignedIn 
+                isAuthenticated 
                   ? 'bg-red-500 hover:bg-red-600' 
                   : 'bg-[#9b87f5] hover:bg-[#8b77e5]'
               } text-white`}
             >
-              {isSignedIn ? 'Sign Out' : 'LOG IN'}
+              {isAuthenticated ? 'Sign Out' : 'LOG IN'}
             </Button>
             <DegenModeToggle isDegenMode={isDegenMode} onToggle={setIsDegenMode} />
             <WalletMultiButton className="bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white" />

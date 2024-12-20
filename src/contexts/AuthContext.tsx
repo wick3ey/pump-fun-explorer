@@ -9,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   login: () => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check active sessions and set the user
+    // Check active sessions when the component mounts
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -37,11 +37,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(!!session);
 
       if (event === 'SIGNED_IN') {
-        toast({
-          title: "Welcome!",
-          description: "You have successfully signed in",
-        });
-        navigate('/');
+        // Check if user has a profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', session?.user.id)
+          .single();
+
+        if (!profile?.username) {
+          navigate('/create'); // Redirect to create username if needed
+        } else {
+          toast({
+            title: "Welcome back!",
+            description: `Signed in as ${profile.username}`,
+          });
+          navigate('/');
+        }
       }
 
       if (event === 'SIGNED_OUT') {
@@ -77,12 +88,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      // Clear local state
+      setIsAuthenticated(false);
+      setUser(null);
+      setSession(null);
+      
+      toast({
+        title: "Signed out successfully",
+        description: "Come back soon!",
+      });
+      
+      navigate('/');
+    } catch (error) {
       console.error('Logout error:', error);
       toast({
         title: "Logout Error",
-        description: error.message,
+        description: error instanceof Error ? error.message : "An error occurred during logout",
         variant: "destructive",
       });
     }
