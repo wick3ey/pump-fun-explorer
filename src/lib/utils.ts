@@ -18,9 +18,17 @@ export function formatNumber(num: number): string {
   return num.toFixed(1);
 }
 
-// Add polyfills for browser compatibility
+// Browser polyfills
+declare global {
+  interface Window {
+    global: any;
+    process: any;
+    Buffer: any;
+  }
+}
+
 if (typeof window !== 'undefined') {
   window.global = window;
-  window.process = { env: {} };
+  window.process = { env: {} } as any;
   window.Buffer = window.Buffer || require('buffer').Buffer;
 }

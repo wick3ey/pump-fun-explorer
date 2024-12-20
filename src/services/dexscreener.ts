@@ -32,6 +32,7 @@ export interface DexScreenerResponse {
 
 export const fetchTrendingTokens = async (): Promise<DexToken[]> => {
   try {
+    // Specifically search for Solana tokens
     const response = await fetch('https://api.dexscreener.com/latest/dex/search?q=solana', {
       method: 'GET',
     });
@@ -42,12 +43,20 @@ export const fetchTrendingTokens = async (): Promise<DexToken[]> => {
 
     const data: DexScreenerResponse = await response.json();
     
-    // Sort by market cap and get top 50
-    return data.pairs
-      .filter(pair => pair.marketCap > 0)
+    // Filter for Solana chain tokens and ensure they have valid names and symbols
+    const solanaTokens = data.pairs
+      .filter(pair => 
+        pair.chainId.toLowerCase() === 'solana' && 
+        pair.baseToken.name && 
+        pair.baseToken.symbol &&
+        pair.marketCap > 0
+      )
       .sort((a, b) => b.marketCap - a.marketCap)
       .slice(0, 50);
+
+    return solanaTokens;
   } catch (error) {
+    console.error('Error fetching trending tokens:', error);
     toast({
       title: "Error",
       description: "Failed to fetch trending tokens. Please try again later.",
