@@ -1,103 +1,134 @@
-@import './preloader/animations.css';
-@import './preloader/progress.css';
-@import './preloader/text.css';
-
 .preloader {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100vh;
-  height: 100dvh; /* Dynamic viewport height for mobile */
-  background: #000000;
+  height: 100dvh;
+  background: #13141F;
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  opacity: 1;
-  transition: opacity 0.5s ease-out;
-  overflow: hidden; /* Prevent scrolling while preloader is active */
+  overflow: hidden;
 }
 
 .loader-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 100%;
+  justify-content: space-between;
   height: 100%;
-  padding: clamp(1rem, 5vw, 2rem);
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: clamp(2rem, 5vh, 4rem) 1rem;
+  box-sizing: border-box;
 }
 
 .logo-container {
-  width: min(80vw, 60vh, 600px);
-  height: min(50vh, 40vw, 500px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: min(2vh, 20px);
+  width: clamp(100px, 30vw, 300px);
+  margin-bottom: auto;
 }
 
 .glitch-logo {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
+  height: auto;
   animation: glitch 2s infinite;
 }
 
 .text-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(0.5rem, 2vh, 1rem);
-  margin-bottom: clamp(1rem, 3vh, 2rem);
-  width: 100%;
+  margin: auto 0;
+  text-align: center;
 }
 
-.preloader.fade-out {
-  opacity: 0;
-  pointer-events: none;
+.progress-container {
+  width: min(90vw, 400px);
+  height: clamp(4px, 1vh, 8px);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  margin-top: auto;
 }
 
-/* Landscape orientation adjustments */
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #4DEEEA, #74EBD5);
+  position: relative;
+  animation: progress 3s ease-out forwards;
+  box-shadow: 0 0 10px rgba(77, 238, 234, 0.5);
+}
+
+@keyframes progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+    filter: hue-rotate(0deg);
+  }
+  1% {
+    transform: translate(-2px, 2px);
+    filter: hue-rotate(45deg);
+  }
+  2% {
+    transform: translate(2px, -2px);
+    filter: hue-rotate(-45deg);
+  }
+  3% {
+    transform: translate(0);
+    filter: hue-rotate(0deg);
+  }
+}
+
+/* Landscape mode adjustments */
 @media (orientation: landscape) and (max-height: 600px) {
-  .logo-container {
-    width: min(40vh, 300px);
-    height: min(30vh, 200px);
-  }
-  
   .loader-content {
-    flex-direction: row;
-    gap: 2rem;
+    padding: clamp(1rem, 3vh, 2rem) 1rem;
   }
   
-  .text-container {
-    margin-bottom: 0;
+  .logo-container {
+    width: clamp(80px, 15vw, 150px);
+  }
+  
+  .progress-container {
+    margin-top: clamp(1rem, 2vh, 2rem);
   }
 }
 
-/* Ensure proper sizing on ultra-wide screens */
+/* Ultra-wide screen adjustments */
 @media (min-width: 2000px) {
-  .loader-content {
-    max-width: 1600px;
+  .logo-container {
+    width: clamp(200px, 20vw, 400px);
   }
   
-  .logo-container {
-    width: min(800px, 40vw);
-    height: min(600px, 30vw);
+  .progress-container {
+    width: min(30vw, 600px);
+    height: clamp(6px, 0.8vh, 12px);
   }
 }
 
-/* Handle smaller mobile devices */
+/* Small mobile devices */
 @media (max-width: 360px) {
-  .logo-container {
-    width: 90vw;
-    height: 40vh;
+  .loader-content {
+    padding: 1rem;
   }
   
-  .loader-content {
-    padding: 0.5rem;
+  .logo-container {
+    width: 80px;
   }
+  
+  .progress-container {
+    width: 95vw;
+    height: 3px;
+  }
+}
+
+.fade-out {
+  animation: fade-out 0.5s ease-out forwards;
+}
+
+@keyframes fade-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }
