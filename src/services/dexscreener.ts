@@ -1,8 +1,6 @@
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-
-type Token = Database['public']['Tables']['tokens']['Row'];
+import type { TokenRow } from "@/integrations/supabase/types";
 
 export interface DexToken {
   chainId: string;
@@ -49,7 +47,7 @@ export const fetchTrendingTokens = async (): Promise<DexToken[]> => {
     console.log('Fetched tokens:', tokens);
 
     // Transform the tokens into the expected DexToken format
-    const formattedTokens: DexToken[] = (tokens as Token[]).map(token => ({
+    const formattedTokens: DexToken[] = (tokens as TokenRow[]).map(token => ({
       chainId: 'solana',
       pairAddress: token.contract_address || '',
       baseToken: {
