@@ -1,11 +1,11 @@
 .progress-container {
-  width: min(400px, 80vw);
-  height: 6px;
+  width: min(90vw, 400px);
+  height: clamp(4px, 1vh, 8px);
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
+  border-radius: 999px;
   overflow: hidden;
   position: relative;
-  margin-top: 2vh;
+  margin-top: clamp(1vh, 2vh, 20px);
 }
 
 .progress-bar {
@@ -22,18 +22,26 @@
   100% { width: 100%; }
 }
 
-/* Desktop adjustments */
-@media (min-width: 1024px) {
+/* Landscape mode adjustments */
+@media (orientation: landscape) and (max-height: 600px) {
   .progress-container {
-    width: 400px;
-    height: 8px;
+    width: min(40vw, 300px);
+    margin-top: 1vh;
   }
 }
 
-/* Mobile adjustments */
-@media (max-width: 767px) {
+/* Ultra-wide screen adjustments */
+@media (min-width: 2000px) {
   .progress-container {
-    width: 250px;
-    height: 4px;
+    width: min(30vw, 600px);
+    height: clamp(6px, 0.8vh, 12px);
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 360px) {
+  .progress-container {
+    width: 95vw;
+    height: 3px;
   }
 }
