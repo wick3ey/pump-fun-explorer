@@ -1,6 +1,6 @@
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { TokenRow } from "@/integrations/supabase/types";
+import type { TokenRow } from "@/integrations/supabase/types/tables";
 
 export interface DexToken {
   chainId: string;
