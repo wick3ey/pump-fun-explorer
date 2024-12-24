@@ -4,7 +4,7 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
-import { TokenImageUpload } from "./TokenImageUpload";
+import { TokenImageUpload, tokenImageSchema } from "./TokenImageUpload";
 import { PowerSelector } from "./PowerSelector";
 import { TokenModeSelector } from "./TokenModeSelector";
 import { Rocket, Wallet } from "lucide-react";
@@ -27,6 +27,7 @@ const formSchema = z.object({
   }),
   power: z.string().min(1, "Power selection is required"),
   initialBuyAmount: z.number().min(0.1, "Minimum buy amount is 0.1 SOL"),
+  ...tokenImageSchema.shape
 });
 
 export const TokenForm = () => {

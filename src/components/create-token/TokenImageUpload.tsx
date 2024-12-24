@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
 import { UseFormReturn } from "react-hook-form";
 import { ImagePlus } from "lucide-react";
 import * as z from "zod";
@@ -34,7 +33,6 @@ interface TokenImageUploadProps {
 }
 
 export const TokenImageUpload = ({ form }: TokenImageUploadProps) => {
-  const { toast } = useToast();
   const [pfpPreview, setPfpPreview] = useState<string | null>(null);
   const [headerPreview, setHeaderPreview] = useState<string | null>(null);
 
@@ -50,30 +48,6 @@ export const TokenImageUpload = ({ form }: TokenImageUploadProps) => {
         }
       };
       reader.readAsDataURL(file);
-
-      const img = new Image();
-      img.onload = () => {
-        if (type === 'pfp' && (img.width !== 500 || img.height !== 500)) {
-          toast({
-            title: "Invalid profile image dimensions",
-            description: "Profile image must be exactly 500x500 pixels",
-            variant: "destructive",
-          });
-          e.target.value = '';
-          setPfpPreview(null);
-          form.setValue(type === 'pfp' ? 'pfpImage' : 'headerImage', undefined as any);
-        } else if (type === 'header' && (img.width < 1200 || img.height < 400)) {
-          toast({
-            title: "Invalid header image dimensions",
-            description: "Header image must be at least 1200x400 pixels",
-            variant: "destructive",
-          });
-          e.target.value = '';
-          setHeaderPreview(null);
-          form.setValue('headerImage', undefined as any);
-        }
-      };
-      img.src = URL.createObjectURL(file);
     }
   };
 
@@ -85,7 +59,7 @@ export const TokenImageUpload = ({ form }: TokenImageUploadProps) => {
             <AvatarImage src={pfpPreview || ""} alt="Token preview" className="object-cover" />
             <AvatarFallback className="bg-[#13141F]/80 text-white flex flex-col items-center justify-center">
               <ImagePlus className="w-8 h-8 mb-2" />
-              <span className="text-sm">500x500</span>
+              <span className="text-sm">Profile Image</span>
             </AvatarFallback>
           </Avatar>
           <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -99,7 +73,7 @@ export const TokenImageUpload = ({ form }: TokenImageUploadProps) => {
         name="pfpImage"
         render={({ field: { onChange, value, ...field } }) => (
           <FormItem>
-            <FormLabel className="text-white">Token Profile Image (500x500)</FormLabel>
+            <FormLabel className="text-white">Token Profile Image</FormLabel>
             <FormControl>
               <Input
                 type="file"
@@ -123,7 +97,7 @@ export const TokenImageUpload = ({ form }: TokenImageUploadProps) => {
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
             <ImagePlus className="w-8 h-8 mb-2" />
-            <span className="text-sm">1200x400 minimum</span>
+            <span className="text-sm">Header Image</span>
           </div>
         )}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -136,7 +110,7 @@ export const TokenImageUpload = ({ form }: TokenImageUploadProps) => {
         name="headerImage"
         render={({ field: { onChange, value, ...field } }) => (
           <FormItem>
-            <FormLabel className="text-white">Token Header Image (1200x400 minimum)</FormLabel>
+            <FormLabel className="text-white">Token Header Image</FormLabel>
             <FormControl>
               <Input
                 type="file"
