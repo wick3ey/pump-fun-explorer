@@ -4,6 +4,7 @@ import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const PUMP_PORTAL_API = 'https://pumpportal.fun/api';
+const PUMP_API = 'https://pump.fun/api';
 const TRUSTED_RPC_ENDPOINT = import.meta.env.VITE_RPC_ENDPOINT || "https://api.mainnet-beta.solana.com";
 
 interface CreateTokenResponse {
@@ -24,12 +25,14 @@ async function uploadMetadataToIPFS(metadata: TokenMetadata): Promise<{ metadata
   formData.append("website", metadata.website || "");
   formData.append("showName", "true");
 
-  const response = await fetch(`${PUMP_PORTAL_API}/ipfs`, {
+  console.log("Uploading metadata to IPFS...");
+  const response = await fetch(`${PUMP_API}/ipfs`, {
     method: "POST",
     body: formData,
   });
 
   if (!response.ok) {
+    console.error("IPFS upload failed:", response.status, response.statusText);
     throw new Error("Failed to upload metadata to IPFS");
   }
 
@@ -42,6 +45,7 @@ async function getCreateTransaction(
   metadata: any,
   initialBuyAmount: number
 ): Promise<Uint8Array> {
+  console.log("Getting create transaction...");
   const response = await fetch(`${PUMP_PORTAL_API}/trade-local`, {
     method: "POST",
     headers: {
@@ -65,6 +69,7 @@ async function getCreateTransaction(
   });
 
   if (!response.ok) {
+    console.error("Create transaction failed:", response.status, response.statusText);
     throw new Error(`Failed to get create transaction: ${response.statusText}`);
   }
 
