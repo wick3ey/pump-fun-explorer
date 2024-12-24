@@ -4,14 +4,14 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
-import { TokenImageUpload, tokenImageSchema } from "./TokenImageUpload";
+import { TokenImageUpload } from "./TokenImageUpload";
 import { PowerSelector } from "./PowerSelector";
 import { TokenModeSelector } from "./TokenModeSelector";
 import { Rocket, Wallet } from "lucide-react";
 import { useState } from "react";
 import { SocialLinksSection } from "./SocialLinksSection";
 import { useWallet } from '@solana/wallet-adapter-react';
-import { createToken } from "@/lib/token/tokenCreator";
+import { createToken } from "@/lib/token/createTokenTransaction";
 import { FormFields } from "./FormFields";
 import { useNavigate } from "react-router-dom";
 
@@ -27,7 +27,7 @@ const formSchema = z.object({
   }),
   power: z.string().min(1, "Power selection is required"),
   initialBuyAmount: z.number().min(0.1, "Minimum buy amount is 0.1 SOL"),
-}).merge(tokenImageSchema);
+});
 
 export const TokenForm = () => {
   const { toast } = useToast();
@@ -88,23 +88,19 @@ export const TokenForm = () => {
     setIsCreating(true);
     try {
       const result = await createToken({
-        metadata: {
-          name: values.name,
-          symbol: values.symbol,
-          description: values.description,
-          twitter: values.twitter,
-          telegram: values.telegram,
-          website: values.website,
-          pfpImage: values.pfpImage[0],
-          headerImage: values.headerImage[0],
-          tokenMode: values.tokenMode,
-          power: values.power,
-        },
-        initialBuyAmount: values.initialBuyAmount,
-        wallet
-      });
+        name: values.name,
+        symbol: values.symbol,
+        description: values.description,
+        twitter: values.twitter,
+        telegram: values.telegram,
+        website: values.website,
+        pfpImage: values.pfpImage[0],
+        headerImage: values.headerImage[0],
+        tokenMode: values.tokenMode,
+        power: values.power,
+      }, values.initialBuyAmount, wallet);
 
-      if (result.success) {
+      if (result.success && result.txUrl) {
         toast({
           title: "Token Created!",
           description: `Your token has been created successfully! View transaction: ${result.txUrl}`,
