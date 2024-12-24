@@ -1,8 +1,5 @@
 import { TokenMetadata } from "@/types/token";
-import { fetchWithRetry } from "@/lib/utils/apiUtils";
-
-const SUPABASE_PROJECT_ID = 'zyyipfdnmnqhiarszuqh';
-const EDGE_FUNCTION_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/ipfs-upload`;
+import { supabase } from "@/integrations/supabase/client";
 
 export async function uploadMetadataToIPFS(metadata: TokenMetadata): Promise<string> {
   const formData = new FormData();
@@ -16,19 +13,21 @@ export async function uploadMetadataToIPFS(metadata: TokenMetadata): Promise<str
   formData.append("showName", "true");
 
   try {
-    const response = await fetchWithRetry(EDGE_FUNCTION_URL, {
-      method: "POST",
+    console.log("Uploading metadata to IPFS via Edge Function...");
+    const { data, error } = await supabase.functions.invoke('ipfs-upload', {
       body: formData,
-    }, {
-      maxRetries: 5,
-      baseDelay: 2000,
     });
 
-    const data = await response.json();
+    if (error) {
+      console.error("IPFS upload error:", error);
+      throw new Error("Failed to upload token metadata");
+    }
+
     if (!data.metadataUri) {
       throw new Error("Failed to get metadata URI from IPFS");
     }
 
+    console.log("Successfully uploaded to IPFS:", data);
     return data.metadataUri;
   } catch (error) {
     console.error("IPFS upload error:", error);

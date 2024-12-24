@@ -6,23 +6,28 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    console.log('Received IPFS upload request')
     const formData = await req.formData()
     
+    // Forward the request to pump.fun API
     const response = await fetch('https://pump.fun/api/ipfs', {
       method: 'POST',
       body: formData,
     })
 
     if (!response.ok) {
+      console.error('Error from pump.fun:', response.status, response.statusText)
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
     const data = await response.json()
+    console.log('Successfully uploaded to IPFS:', data)
 
     return new Response(
       JSON.stringify(data),
@@ -34,6 +39,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
+    console.error('Error handling IPFS upload:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
