@@ -11,6 +11,8 @@ import Index from "./pages/Index";
 import CreateToken from "./pages/CreateToken";
 import TokenProfile from "./pages/TokenProfile";
 import Memescope from "./pages/Memescope";
+import Auth from "./pages/Auth";
+import ConnectWallet from "./pages/ConnectWallet";
 import { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 
@@ -30,7 +32,7 @@ const AppContent = () => {
       <Header />
       <Toaster />
       <Sonner />
-      <main className="flex flex-col pt-20"> {/* Reduced padding from pt-32 to pt-20 */}
+      <main className="flex flex-col pt-20">
         <div>
           <TrendingTokensBanner />
           <PowerBanner />
@@ -41,6 +43,8 @@ const AppContent = () => {
             <Route path="/create" element={<CreateToken />} />
             <Route path="/token/:symbol" element={<TokenProfile />} />
             <Route path="/memescope" element={<Memescope />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/connect-wallet" element={<ConnectWallet />} />
           </Routes>
         </div>
       </main>
