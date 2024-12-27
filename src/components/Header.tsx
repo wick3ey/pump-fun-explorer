@@ -47,8 +47,8 @@ export const Header = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast({
-      title: "Utloggad",
-      description: "Du har loggats ut från ditt konto.",
+      title: "Logged Out",
+      description: "You have been logged out of your account.",
     });
     navigate('/auth');
   };
@@ -116,7 +116,7 @@ export const Header = () => {
                   onClick={handleLogout}
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Logga ut
+                  Log Out
                 </Button>
               </>
             ) : (
@@ -124,7 +124,7 @@ export const Header = () => {
                 className="bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white"
                 onClick={() => navigate('/auth')}
               >
-                Logga in
+                Sign In
               </Button>
             )}
           </div>
@@ -191,7 +191,7 @@ export const Header = () => {
                           onClick={handleLogout}
                         >
                           <LogOut className="h-4 w-4 mr-2" />
-                          Logga ut
+                          Log Out
                         </Button>
                       </div>
                     </>
@@ -201,7 +201,7 @@ export const Header = () => {
                         className="w-full bg-[#1A1F2C] hover:bg-[#2A2F3C] text-white"
                         onClick={() => navigate('/auth')}
                       >
-                        Logga in
+                        Sign In
                       </Button>
                     </div>
                   )}

@@ -8,31 +8,30 @@ import {
 export const FAQ = () => {
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Vanliga frågor</h2>
+      <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
       <Accordion type="single" collapsible>
         <AccordionItem value="what">
-          <AccordionTrigger>Vad är pump.fun?</AccordionTrigger>
+          <AccordionTrigger>What is pump.fun?</AccordionTrigger>
           <AccordionContent>
-            Pump.fun är en term som används för att beskriva koordinerade försök att manipulera 
-            priset på kryptovalutor. Detta är en olaglig aktivitet som kan leda till betydande 
-            förluster för investerare.
+            Pump.fun refers to coordinated attempts to manipulate cryptocurrency prices.
+            This is an illegal activity that can lead to significant losses for investors.
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="risks">
-          <AccordionTrigger>Vilka risker finns?</AccordionTrigger>
+          <AccordionTrigger>What are the risks?</AccordionTrigger>
           <AccordionContent>
-            Det finns många allvarliga risker, inklusive:
-            - Stora ekonomiska förluster
-            - Rättsliga konsekvenser
-            - Manipulation av marknaden
-            - Bedrägerier
+            There are many serious risks, including:
+            - Major financial losses
+            - Legal consequences
+            - Market manipulation
+            - Fraud
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="legal">
-          <AccordionTrigger>Är det lagligt?</AccordionTrigger>
+          <AccordionTrigger>Is it legal?</AccordionTrigger>
           <AccordionContent>
-            Nej, pump & dump-scheman är olagliga i de flesta länder och jurisdiktioner. 
-            Det klassas som marknadsmanipulation och kan leda till böter eller fängelse.
+            No, pump & dump schemes are illegal in most countries and jurisdictions.
+            It is classified as market manipulation and can result in fines or imprisonment.
           </AccordionContent>
         </AccordionItem>
       </Accordion>

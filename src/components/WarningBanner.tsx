@@ -5,10 +5,10 @@ export const WarningBanner = () => {
   return (
     <Alert variant="destructive" className="my-6">
       <AlertTriangle className="h-4 w-4" />
-      <AlertTitle>Varning för bedrägerier</AlertTitle>
+      <AlertTitle>Warning: Fraud Risk</AlertTitle>
       <AlertDescription>
-        Pump & dump-scheman är olagliga och kan leda till stora ekonomiska förluster. 
-        Var alltid försiktig med investeringar och gör din egen research.
+        Pump & dump schemes are illegal and can lead to significant financial losses.
+        Always be cautious with investments and do your own research.
       </AlertDescription>
     </Alert>
   );
